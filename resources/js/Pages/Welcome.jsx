@@ -25,28 +25,13 @@ export default function Welcome({ auth }) {
                     {/* Desktop Links */}
                     <ul className="hidden md:flex items-center space-x-10 font-medium text-[1.2rem]">
                         <li>
-                            <Link
-                                href="#"
-                                className="hover:text-yellow-400 transition-colors"
-                            >
-                                Reports
-                            </Link>
+                            <Link href={route('reports')} className="hover:text-yellow-400 transition-colors">Reports</Link>
                         </li>
                         <li>
-                            <Link
-                                href="#"
-                                className="hover:text-yellow-400 transition-colors"
-                            >
-                                Report Form
-                            </Link>
+                            <Link href={route('report.form')} className="hover:text-yellow-400 transition-colors">Report Form</Link>
                         </li>
                         <li>
-                            <Link
-                                href="#"
-                                className="hover:text-yellow-400 transition-colors"
-                            >
-                                About
-                            </Link>
+                            <Link href={route('about')} className="hover:text-yellow-400 transition-colors">About</Link>
                         </li>
                     </ul>
 
@@ -108,19 +93,19 @@ export default function Welcome({ auth }) {
                     }`}
                 >
                     <Link
-                        href="#"
+                        href={route('reports')}
                         className="block py-1 hover:text-yellow-400 transition-colors"
                     >
                         Reports
                     </Link>
                     <Link
-                        href="#"
+                        href={route('report.form')}
                         className="block py-1 hover:text-yellow-400 transition-colors"
                     >
                         Report Form
                     </Link>
                     <Link
-                        href="#"
+                        href={route('about')}
                         className="block py-1 hover:text-yellow-400 transition-colors"
                     >
                         About

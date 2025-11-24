@@ -14,6 +14,19 @@ Route::get('/', function () {
     ]);
 });
 
+// Blank content pages
+Route::get('/reports', function () {
+    return Inertia::render('Reports');
+})->name('reports');
+
+Route::get('/report-form', function () {
+    return Inertia::render('ReportForm');
+})->name('report.form');
+
+Route::get('/about', function () {
+    return Inertia::render('About');
+})->name('about');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
