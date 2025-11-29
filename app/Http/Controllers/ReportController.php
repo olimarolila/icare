@@ -106,7 +106,7 @@ class ReportController extends Controller
             'submitted_at' => now(),
         ]);
 
-        return redirect()->route('admin.reports')->with('success', 'Report submitted. Ticket: ' . $report->ticket_id);
+        return redirect()->route('reports')->with('success', 'Report submitted. Ticket: ' . $report->ticket_id);
     }
 
     /**
@@ -182,6 +182,20 @@ class ReportController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Public listing of reports (non-admin view)
+     */
+    public function publicIndex()
+    {
+        $reports = Report::with('user:id,name')
+            ->latest('submitted_at')
+            ->get(['id','ticket_id','category','street','subject','status','submitted_at','description','images','user_id']);
+
+        return Inertia::render('Reports', [
+            'reports' => $reports,
+        ]);
     }
 }
 

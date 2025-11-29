@@ -25,4 +25,9 @@ class Report extends Model
         'images' => 'array',
         'submitted_at' => 'datetime',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -15,10 +15,8 @@ Route::get('/', function () {
     ]);
 });
 
-// Blank content pages
-Route::get('/reports', function () {
-    return Inertia::render('Reports');
-})->name('reports');
+// Public reports listing
+Route::get('/reports', [ReportController::class, 'publicIndex'])->name('reports');
 
 Route::get('/report-form', function () {
     return Inertia::render('ReportForm');

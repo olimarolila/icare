@@ -7,6 +7,7 @@ export default function AdminReports() {
     const [selected, setSelected] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [status, setStatus] = useState("");
+    const [modalMode, setModalMode] = useState("view"); // 'view' or 'update'
     const [selectedImage, setSelectedImage] = useState(null);
     // Filter states
     const [search, setSearch] = useState(filters.search || "");
@@ -49,9 +50,10 @@ export default function AdminReports() {
         applyFilters(1);
     };
 
-    const openModal = (report) => {
+    const openModal = (report, mode = "view") => {
         setSelected(report);
         setStatus(report.status);
+        setModalMode(mode);
         setShowModal(true);
     };
 
@@ -231,7 +233,10 @@ export default function AdminReports() {
                                                     <div className="flex gap-2">
                                                         <button
                                                             onClick={() =>
-                                                                openModal(r)
+                                                                openModal(
+                                                                    r,
+                                                                    "view"
+                                                                )
                                                             }
                                                             className="text-blue-600 hover:underline"
                                                         >
@@ -239,7 +244,10 @@ export default function AdminReports() {
                                                         </button>
                                                         <button
                                                             onClick={() =>
-                                                                openModal(r)
+                                                                openModal(
+                                                                    r,
+                                                                    "update"
+                                                                )
                                                             }
                                                             className="text-green-600 hover:underline"
                                                         >
@@ -382,46 +390,85 @@ export default function AdminReports() {
                                                 </p>
                                             )}
                                         </div>
-                                        <form
-                                            onSubmit={updateStatus}
-                                            className="pt-2 border-t"
-                                        >
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Status
-                                            </label>
-                                            <select
-                                                value={status}
-                                                onChange={(e) =>
-                                                    setStatus(e.target.value)
-                                                }
-                                                className="border rounded-md px-3 py-2 w-full"
+                                        {modalMode === "update" ? (
+                                            <form
+                                                onSubmit={updateStatus}
+                                                className="pt-2 border-t"
                                             >
-                                                <option value="Pending">
-                                                    Pending
-                                                </option>
-                                                <option value="In Progress">
-                                                    In Progress
-                                                </option>
-                                                <option value="Resolved">
-                                                    Resolved
-                                                </option>
-                                            </select>
-                                            <div className="flex justify-end gap-3 mt-4">
-                                                <button
-                                                    type="button"
-                                                    onClick={closeModal}
-                                                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Status
+                                                </label>
+                                                <select
+                                                    value={status}
+                                                    onChange={(e) =>
+                                                        setStatus(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="border rounded-md px-3 py-2 w-full"
                                                 >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    className="px-4 py-2 rounded-md bg-black text-white hover:bg-yellow-500 hover:text-black transition"
+                                                    <option value="Pending">
+                                                        Pending
+                                                    </option>
+                                                    <option value="In Progress">
+                                                        In Progress
+                                                    </option>
+                                                    <option value="Resolved">
+                                                        Resolved
+                                                    </option>
+                                                </select>
+                                                <div className="flex justify-end gap-3 mt-4">
+                                                    <button
+                                                        type="button"
+                                                        onClick={closeModal}
+                                                        className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        type="submit"
+                                                        className="px-4 py-2 rounded-md bg-black text-white hover:bg-yellow-500 hover:text-black transition"
+                                                    >
+                                                        Save
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        ) : (
+                                            <div className="pt-2 border-t">
+                                                <p className="text-sm text-gray-600">
+                                                    Status:
+                                                </p>
+                                                <span
+                                                    className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full
+                                                    ${
+                                                        status === "Pending"
+                                                            ? "bg-yellow-100 text-yellow-700"
+                                                            : ""
+                                                    }
+                                                    ${
+                                                        status === "In Progress"
+                                                            ? "bg-blue-100 text-blue-700"
+                                                            : ""
+                                                    }
+                                                    ${
+                                                        status === "Resolved"
+                                                            ? "bg-green-100 text-green-700"
+                                                            : ""
+                                                    }`}
                                                 >
-                                                    Save
-                                                </button>
+                                                    {status}
+                                                </span>
+                                                <div className="flex justify-end mt-4">
+                                                    <button
+                                                        type="button"
+                                                        onClick={closeModal}
+                                                        className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+                                                    >
+                                                        Close
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </form>
+                                        )}
                                     </div>
                                 </div>
                             </div>
