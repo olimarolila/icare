@@ -1,26 +1,50 @@
 import { useState } from "react";
-import Navbar from '@/Components/Navbar';
+import Navbar from "@/Components/Navbar";
+import { router } from "@inertiajs/react";
 
 export default function ReportForm({ auth }) {
-
     const categories = [
-        { name: "Building & Facilities", desc: "e.g., damaged public buildings, waiting sheds" },
-        { name: "Flood Control Works", desc: "e.g., drainage, clogged canals, dikes, flooding" },
-        { name: "Parks & Public Spaces", desc: "e.g., playground equipment, benches, landscaping" },
+        {
+            name: "Building & Facilities",
+            desc: "e.g., damaged public buildings, waiting sheds",
+        },
+        {
+            name: "Flood Control Works",
+            desc: "e.g., drainage, clogged canals, dikes, flooding",
+        },
+        {
+            name: "Parks & Public Spaces",
+            desc: "e.g., playground equipment, benches, landscaping",
+        },
         { name: "Road Works", desc: "e.g., potholes, damaged pavements" },
-        { name: "Streetlights & Electrical", desc: "e.g., broken or missing streetlights, exposed wiring" },
-        { name: "Traffic & Signage", desc: "e.g., missing road signs, damaged traffic lights" },
-        { name: "Waste Management", desc: "e.g., uncollected garbage, illegal dumping" },
-        { name: "Water Supply & Plumbing", desc: "e.g., leaks, broken pipes, low water pressure" },
-        { name: "Others", desc: "if the concern doesn't fit the categories above" },
+        {
+            name: "Streetlights & Electrical",
+            desc: "e.g., broken or missing streetlights, exposed wiring",
+        },
+        {
+            name: "Traffic & Signage",
+            desc: "e.g., missing road signs, damaged traffic lights",
+        },
+        {
+            name: "Waste Management",
+            desc: "e.g., uncollected garbage, illegal dumping",
+        },
+        {
+            name: "Water Supply & Plumbing",
+            desc: "e.g., leaks, broken pipes, low water pressure",
+        },
+        {
+            name: "Others",
+            desc: "if the concern doesn't fit the categories above",
+        },
     ];
 
     const [selected, setSelected] = useState(categories[3]); // Default: Road Works
+    const [subject, setSubject] = useState("");
+    const [location, setLocation] = useState("");
     const [description, setDescription] = useState("");
     const [images, setImages] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
-
-
 
     return (
         <div
@@ -30,7 +54,6 @@ export default function ReportForm({ auth }) {
             <Navbar auth={auth} />
 
             <main className="relative z-10 flex flex-col md:flex-row gap-10 items-start justify-start min-h-[80vh] px-8 md:px-20 lg:px-36 pt-20">
-
                 {/* LEFT SIDE MOCKUP */}
                 <section className="max-w-xl">
                     <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
@@ -40,25 +63,60 @@ export default function ReportForm({ auth }) {
                     <div className="h-1 w-40 bg-white mt-4 mb-6"></div>
 
                     <p className="text-lg opacity-90 leading-relaxed max-w-md">
-                        <strong>Heads up:</strong> All form submissions are posted publicly. Help prioritize issues by upvoting reports for barangay officials.
+                        <strong>Heads up:</strong> All form submissions are
+                        posted publicly. Help prioritize issues by upvoting
+                        reports for barangay officials.
                     </p>
 
-                    <img src="/images/logo_cat.PNG" alt="Mascot" className="w-44 mt-8 select-none pointer-events-none"/>
+                    <img
+                        src="/images/logo_cat.PNG"
+                        alt="Mascot"
+                        className="w-44 mt-8 select-none pointer-events-none"
+                    />
                 </section>
 
                 {/* RIGHT SIDE FORM */}
                 <form
                     className="w-full max-w-2xl text-black bg-white/10 backdrop-blur-md p-6 rounded-xl shadow-xl"
-                    onSubmit={(e) => e.preventDefault()} // prevents form submission
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        const data = {
+                            category: selected.name,
+                            street: location,
+                            subject,
+                            description,
+                        };
+                        // Append images as files if present
+                        if (images.length) {
+                            images.forEach((imgObj, idx) => {
+                                data[`images[${idx}]`] = imgObj.file;
+                            });
+                        }
+                        router.post(route("reports.store"), data, {
+                            forceFormData: true,
+                            onSuccess: () => {
+                                setSubject("");
+                                setDescription("");
+                                setImages([]);
+                                setLocation("");
+                                alert("Report submitted successfully");
+                            },
+                        });
+                    }}
                 >
-
                     {/* CATEGORY */}
-                    <label className="block mb-1 font-semibold text-white">CATEGORY:</label>
+                    <label className="block mb-1 font-semibold text-white">
+                        CATEGORY:
+                    </label>
                     <select
                         className="w-full px-4 py-2 rounded-lg bg-white text-black shadow focus:outline-none"
                         value={selected.name}
                         onChange={(e) =>
-                            setSelected(categories.find(c => c.name === e.target.value))
+                            setSelected(
+                                categories.find(
+                                    (c) => c.name === e.target.value
+                                )
+                            )
                         }
                     >
                         {categories.map((cat) => (
@@ -73,21 +131,31 @@ export default function ReportForm({ auth }) {
                     </p>
 
                     {/* LOCATION */}
-                    <label className="block mb-1 font-semibold text-white">Location of Concern:</label>
+                    <label className="block mb-1 font-semibold text-white">
+                        Location of Concern:
+                    </label>
                     <input
                         type="text"
                         className="w-full px-4 py-2 rounded-lg mb-4 bg-white text-black shadow focus:outline-none"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
                     />
 
                     {/* MAIN SUBJECT */}
-                    <label className="block mb-1 font-semibold text-white">Main Subject:</label>
+                    <label className="block mb-1 font-semibold text-white">
+                        Main Subject:
+                    </label>
                     <input
                         type="text"
                         className="w-full px-4 py-2 rounded-lg mb-4 bg-white text-black shadow focus:outline-none"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
                     />
 
                     {/* DESCRIPTION */}
-                    <label className="block mb-1 font-semibold text-white">Description:</label>
+                    <label className="block mb-1 font-semibold text-white">
+                        Description:
+                    </label>
                     <textarea
                         maxLength={100}
                         value={description}
@@ -100,7 +168,9 @@ export default function ReportForm({ auth }) {
                     </p>
 
                     {/* IMAGE UPLOAD */}
-                    <label className="block mb-1 font-semibold text-white mt-3">Upload Images (max 6):</label>
+                    <label className="block mb-1 font-semibold text-white mt-3">
+                        Upload Images (max 6):
+                    </label>
 
                     <input
                         type="file"
@@ -117,18 +187,20 @@ export default function ReportForm({ auth }) {
                                 return;
                             }
 
-                            const newPreviews = files.map(file => ({
+                            const newPreviews = files.map((file) => ({
                                 file,
                                 url: URL.createObjectURL(file),
                             }));
 
-                            setImages(prev => [...prev, ...newPreviews]);
+                            setImages((prev) => [...prev, ...newPreviews]);
                         }}
                     />
 
                     <div
                         className={`w-full border-2 border-dashed rounded-lg p-4 transition ${
-                            isDragging ? "border-green-400 bg-white/20" : "border-blue-300"
+                            isDragging
+                                ? "border-green-400 bg-white/20"
+                                : "border-blue-300"
                         } text-white/80`}
                         onDragOver={(e) => {
                             e.preventDefault();
@@ -139,26 +211,37 @@ export default function ReportForm({ auth }) {
                             e.preventDefault();
                             setIsDragging(false);
 
-                            const files = Array.from(e.dataTransfer.files).filter(f =>
-                                f.type.startsWith("image/")
-                            );
+                            const files = Array.from(
+                                e.dataTransfer.files
+                            ).filter((f) => f.type.startsWith("image/"));
 
                             if (images.length + files.length > 6) {
                                 alert("You can only upload up to 6 images.");
                                 return;
                             }
 
-                            const dropped = files.map(file => ({
+                            const dropped = files.map((file) => ({
                                 file,
                                 url: URL.createObjectURL(file),
                             }));
 
-                            setImages(prev => [...prev, ...dropped]);
+                            setImages((prev) => [...prev, ...dropped]);
                         }}
                     >
                         <p className="text-sm flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="size-6"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"
+                                />
                             </svg>
                             Drag and drop images here
                         </p>
@@ -192,7 +275,11 @@ export default function ReportForm({ auth }) {
                                             type="button"
                                             className="absolute top-1 right-1 bg-red-600 text-white text-xs px-2 py-1 rounded-md shadow"
                                             onClick={() =>
-                                                setImages(prev => prev.filter((_, i) => i !== index))
+                                                setImages((prev) =>
+                                                    prev.filter(
+                                                        (_, i) => i !== index
+                                                    )
+                                                )
                                             }
                                         >
                                             ✕
@@ -210,7 +297,6 @@ export default function ReportForm({ auth }) {
                     >
                         SUBMIT
                     </button>
-
                 </form>
             </main>
         </div>
