@@ -115,7 +115,7 @@ class ReportController extends Controller
     public function update(Request $request, Report $report)
     {
         $validated = $request->validate([
-            'status' => 'required|in:Pending,In Progress,Received',
+            'status' => 'required|in:Pending,In Progress,Resolved',
         ]);
         $report->update(['status' => $validated['status']]);
         return redirect()->back()->with('success', 'Status updated');

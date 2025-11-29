@@ -7,6 +7,7 @@ export default function AdminReports() {
     const [selected, setSelected] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [status, setStatus] = useState("");
+    const [selectedImage, setSelectedImage] = useState(null);
     // Filter states
     const [search, setSearch] = useState(filters.search || "");
     const [ticketId, setTicketId] = useState(filters.ticket_id || "");
@@ -159,7 +160,7 @@ export default function AdminReports() {
                                     <option value="In Progress">
                                         In Progress
                                     </option>
-                                    <option value="Received">Received</option>
+                                    <option value="Resolved">Resolved</option>
                                 </select>
                             </div>
                         </div>
@@ -364,7 +365,13 @@ export default function AdminReports() {
                                                                     "report-img-" +
                                                                     idx
                                                                 }
-                                                                className="h-24 w-full object-cover rounded-md border"
+                                                                onClick={() =>
+                                                                    setSelectedImage(
+                                                                        "/storage/" +
+                                                                            img
+                                                                    )
+                                                                }
+                                                                className="h-24 w-full object-cover rounded-md border cursor-pointer hover:opacity-75 transition"
                                                             />
                                                         )
                                                     )}
@@ -395,8 +402,8 @@ export default function AdminReports() {
                                                 <option value="In Progress">
                                                     In Progress
                                                 </option>
-                                                <option value="Received">
-                                                    Received
+                                                <option value="Resolved">
+                                                    Resolved
                                                 </option>
                                             </select>
                                             <div className="flex justify-end gap-3 mt-4">
@@ -416,6 +423,29 @@ export default function AdminReports() {
                                             </div>
                                         </form>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Image Viewer Modal */}
+                        {selectedImage && (
+                            <div
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+                                onClick={() => setSelectedImage(null)}
+                            >
+                                <div className="relative max-w-5xl max-h-[90vh]">
+                                    <button
+                                        onClick={() => setSelectedImage(null)}
+                                        className="absolute -top-10 right-0 text-white hover:text-yellow-400 text-2xl font-bold"
+                                    >
+                                        ✕
+                                    </button>
+                                    <img
+                                        src={selectedImage}
+                                        alt="Full size"
+                                        className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
                                 </div>
                             </div>
                         )}
