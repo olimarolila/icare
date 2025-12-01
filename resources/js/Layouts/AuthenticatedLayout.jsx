@@ -26,36 +26,38 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </Link>
                             </div>
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route("dashboard")}
-                                    active={route().current("dashboard")}
-                                    className="text-white hover:text-yellow-400"
-                                >
-                                    Dashboard
-                                </NavLink>
-                                <NavLink
-                                    href={route("admin.forum")}
-                                    active={route().current("admin.forum")}
-                                    className="text-white hover:text-yellow-400"
-                                >
-                                    Forum
-                                </NavLink>
-                                <NavLink
-                                    href={route("admin.reports")}
-                                    active={route().current("admin.reports")}
-                                    className="text-white hover:text-yellow-400"
-                                >
-                                    Reports
-                                </NavLink>
-                                <NavLink
-                                    href={route("admin.users")}
-                                    active={route().current("admin.users")}
-                                    className="text-white hover:text-yellow-400"
-                                >
-                                    Users
-                                </NavLink>
-                            </div>
+                            {user?.role === 'admin' && (
+                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink
+                                        href={route("dashboard")}
+                                        active={route().current("dashboard")}
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Dashboard
+                                    </NavLink>
+                                    <NavLink
+                                        href={route("admin.forum")}
+                                        active={route().current("admin.forum")}
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Forum
+                                    </NavLink>
+                                    <NavLink
+                                        href={route("admin.reports")}
+                                        active={route().current("admin.reports")}
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Reports
+                                    </NavLink>
+                                    <NavLink
+                                        href={route("admin.users")}
+                                        active={route().current("admin.users")}
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Users
+                                    </NavLink>
+                                </div>
+                            )}
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
@@ -148,34 +150,38 @@ export default function AuthenticatedLayout({ header, children }) {
                     }
                 >
                     <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route("dashboard")}
-                            active={route().current("dashboard")}
-                            className="text-white hover:text-yellow-400"
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route("admin.forum")}
-                            active={route().current("admin.forum")}
-                            className="text-white hover:text-yellow-400"
-                        >
-                            Forum
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route("admin.reports")}
-                            active={route().current("admin.reports")}
-                            className="text-white hover:text-yellow-400"
-                        >
-                            Reports
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route("admin.users")}
-                            active={route().current("admin.users")}
-                            className="text-white hover:text-yellow-400"
-                        >
-                            Users
-                        </ResponsiveNavLink>
+                        {user?.role === 'admin' && (
+                            <>
+                                <ResponsiveNavLink
+                                    href={route("dashboard")}
+                                    active={route().current("dashboard")}
+                                    className="text-white hover:text-yellow-400"
+                                >
+                                    Dashboard
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("admin.forum")}
+                                    active={route().current("admin.forum")}
+                                    className="text-white hover:text-yellow-400"
+                                >
+                                    Forum
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("admin.reports")}
+                                    active={route().current("admin.reports")}
+                                    className="text-white hover:text-yellow-400"
+                                >
+                                    Reports
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("admin.users")}
+                                    active={route().current("admin.users")}
+                                    className="text-white hover:text-yellow-400"
+                                >
+                                    Users
+                                </ResponsiveNavLink>
+                            </>
+                        )}
                     </div>
 
                     <div className="border-t border-gray-600 pb-1 pt-4">
@@ -214,36 +220,39 @@ export default function AuthenticatedLayout({ header, children }) {
                         : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
                 }`}
             >
-                <Link
-                    href={route("dashboard")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
-                >
-                    Dashboard
-                </Link>
-                <Link
-                    href={"/admin/forum"}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
-                >
-                    Forum
-                </Link>
-                <Link
-                    href={"/admin/reports"}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
-                >
-                    Reports
-                </Link>
-                <Link
-                    href={"/admin/users"}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
-                >
-                    Users
-                </Link>
-                <div className="border-t border-gray-600 my-2" />
+                {user?.role === 'admin' && (
+                    <>
+                        <Link
+                            href={route("dashboard")}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Dashboard
+                        </Link>
+                        <Link
+                            href={"/admin/forum"}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Forum
+                        </Link>
+                        <Link
+                            href={"/admin/reports"}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Reports
+                        </Link>
+                        <Link
+                            href={"/admin/users"}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Users
+                        </Link>
+                        <div className="border-t border-gray-600 my-2" />
+                    </>
+                )}
+
                 {user ? (
                     <>
-                        <span className="block py-1 text-white/80">
-                            {user.email}
-                        </span>
+                        <span className="block py-1 text-white/80">{user.email}</span>
                         <Link
                             href={route("logout")}
                             method="post"

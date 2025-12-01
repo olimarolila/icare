@@ -25,6 +25,7 @@ class Report extends Model
     protected $casts = [
         'images' => 'array',
         'submitted_at' => 'datetime',
+        'user_vote' => 'integer',
     ];
 
     public function user()
@@ -35,5 +36,10 @@ class Report extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function votes()
+    {
+        return $this->hasMany(ReportVote::class);
     }
 }

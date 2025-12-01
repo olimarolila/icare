@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Models\ReportVote;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -189,6 +190,8 @@ class ReportController extends Controller
      */
     public function publicIndex()
     {
+        $userId = auth()->id();
+
         $reports = Report::with([
                 'user:id,name',
                 'comments' => function ($q) {
@@ -196,6 +199,13 @@ class ReportController extends Controller
                 },
             ])
             ->withCount('comments')
+            ->when($userId, function ($q) use ($userId) {
+                $q->addSelect(['user_vote' => ReportVote::select('value')
+                    ->whereColumn('report_id', 'reports.id')
+                    ->where('user_id', $userId)
+                    ->limit(1)
+                ]);
+            })
             ->latest('submitted_at')
             ->get(['id','ticket_id','category','street','subject','status','submitted_at','description','images','user_id','votes']);
 
@@ -213,12 +223,43 @@ class ReportController extends Controller
             'direction' => 'required|in:up,down',
         ]);
 
-        $delta = $data['direction'] === 'up' ? 1 : -1;
-        // Simple add/subtract as requested
-        $report->increment('votes', $delta);
+        $userId = $request->user()->id;
+        $desired = $data['direction'] === 'up' ? 1 : -1;
+
+        $vote = ReportVote::where('report_id', $report->id)
+            ->where('user_id', $userId)
+            ->first();
+
+        $delta = 0;
+        if ($vote) {
+            if ($vote->value === $desired) {
+                // Toggle off to neutral
+                $delta = -$vote->value;
+                $vote->delete();
+            } else {
+                // Switch from -1 to +1 or +1 to -1
+                $delta = $desired - $vote->value; // will be ±2
+                $vote->update(['value' => $desired]);
+            }
+        } else {
+            ReportVote::create([
+                'report_id' => $report->id,
+                'user_id' => $userId,
+                'value' => $desired,
+            ]);
+            $delta = $desired; // ±1
+        }
+
+        if ($delta !== 0) {
+            $report->increment('votes', $delta);
+            $report->refresh();
+        }
 
         if ($request->wantsJson()) {
-            return response()->json(['votes' => $report->votes]);
+            return response()->json([
+                'votes' => $report->votes,
+                'user_vote' => ReportVote::where('report_id', $report->id)->where('user_id', $userId)->value('value') ?? 0,
+            ]);
         }
         return redirect()->back();
     }

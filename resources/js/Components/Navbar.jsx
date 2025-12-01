@@ -3,6 +3,10 @@ import { useState } from "react";
 
 export default function Navbar({ auth }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+    // adjust this according to your actual user field
+    const isAdmin = auth?.user && auth.user.role === "admin";
 
     return (
         <>
@@ -16,6 +20,8 @@ export default function Navbar({ auth }) {
                         />
                     </Link>
                 </div>
+
+                {/* Center menu */}
                 <ul className="hidden md:flex items-center space-x-10 font-medium text-[1.2rem]">
                     <li>
                         <Link
@@ -42,14 +48,57 @@ export default function Navbar({ auth }) {
                         </Link>
                     </li>
                 </ul>
+
+                {/* Right side (desktop) */}
                 <div className="hidden md:flex items-center space-x-8 font-semibold text-[1.2rem]">
                     {auth?.user ? (
-                        <Link
-                            href={route("dashboard")}
-                            className="hover:text-yellow-400 transition-colors"
-                        >
-                            Dashboard
-                        </Link>
+                        <div className="relative">
+                            <button
+                                onClick={() => setUserMenuOpen((s) => !s)}
+                                className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/5 transition-colors"
+                                aria-haspopup="true"
+                                aria-expanded={userMenuOpen}
+                            >
+                                <span className="text-sm">{auth.user.name}</span>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20"
+                                    className="w-4 h-4 text-white/70"
+                                    fill="currentColor"
+                                >
+                                    <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.584l3.71-4.353a.75.75 0 111.14.98l-4.25 5a.75.75 0 01-1.14 0l-4.25-5a.75.75 0 01.02-1.06z" />
+                                </svg>
+                            </button>
+
+                            {userMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-40 bg-black/90 border border-white/10 rounded-md shadow-lg">
+                                    <div className="py-1">
+                                        {isAdmin && (
+                                            <Link
+                                                href={route('dashboard')}
+                                                className="block px-4 py-2 text-sm hover:bg-white/5"
+                                            >
+                                                Dashboard
+                                            </Link>
+                                        )}
+                                        <Link
+                                            href={route('profile.edit')}
+                                            className="block px-4 py-2 text-sm hover:bg-white/5"
+                                        >
+                                            Profile
+                                        </Link>
+                                        <Link
+                                            href={route('logout')}
+                                            method="post"
+                                            as="button"
+                                            className="block w-full text-left px-4 py-2 text-sm hover:bg-red-600 hover:text-white"
+                                        >
+                                            Logout
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     ) : (
                         <>
                             <Link
@@ -67,6 +116,8 @@ export default function Navbar({ auth }) {
                         </>
                     )}
                 </div>
+
+                {/* Mobile menu button */}
                 <button
                     className="md:hidden text-white hover:text-yellow-400 transition-colors"
                     onClick={() => setMenuOpen(!menuOpen)}
@@ -88,56 +139,78 @@ export default function Navbar({ auth }) {
                     </svg>
                 </button>
             </nav>
-            <div
-                className={`fixed top-[65px] left-0 w-full bg-black/80 backdrop-blur-md border-b border-[#7D7D7D] z-30 px-6 py-4 text-center font-medium text-[1rem] transition-all duration-500 ease-in-out transform ${
-                    menuOpen
-                        ? "opacity-100 translate-y-0 max-h-96"
-                        : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
-                }`}
-            >
-                <Link
-                    href={route("reports")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
+
+            {/* Mobile dropdown */}
+                <div
+                    className={`fixed top-[65px] left-0 w-full bg-black/80 backdrop-blur-md border-b border-[#7D7D7D] z-30 px-6 py-4 text-center font-medium text-[1rem] transition-all duration-500 ease-in-out transform ${
+                        menuOpen
+                            ? "opacity-100 translate-y-0 max-h-96"
+                            : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
+                    }`}
                 >
-                    Reports
-                </Link>
-                <Link
-                    href={route("report.form")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
-                >
-                    Report Form
-                </Link>
-                <Link
-                    href={route("about")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
-                >
-                    About
-                </Link>
-                <div className="border-t border-gray-600 my-2" />
-                {auth?.user ? (
                     <Link
-                        href={route("dashboard")}
+                        href={route("reports")}
                         className="block py-1 hover:text-yellow-400 transition-colors"
                     >
-                        Dashboard
+                        Reports
                     </Link>
-                ) : (
-                    <>
-                        <Link
-                            href={route("login")}
-                            className="block py-1 hover:text-yellow-400 transition-colors"
-                        >
-                            Log In
-                        </Link>
-                        <Link
-                            href={route("register")}
-                            className="block py-1 text-yellow-400 hover:text-yellow-300 transition-colors"
-                        >
-                            Register
-                        </Link>
-                    </>
-                )}
-            </div>
+                    <Link
+                        href={route("report.form")}
+                        className="block py-1 hover:text-yellow-400 transition-colors"
+                    >
+                        Report Form
+                    </Link>
+                    <Link
+                        href={route("about")}
+                        className="block py-1 hover:text-yellow-400 transition-colors"
+                    >
+                        About
+                    </Link>
+                    <div className="border-t border-gray-600 my-2" />
+                    {auth?.user ? (
+                        <>
+                            {isAdmin && (
+                                <Link
+                                    href={route("dashboard")}
+                                    className="block py-1 hover:text-yellow-400 transition-colors"
+                                >
+                                    Dashboard
+                                </Link>
+                            )}
+
+                            <Link
+                                href={route('profile.edit')}
+                                className="block py-1 hover:text-yellow-400 transition-colors"
+                            >
+                                Profile
+                            </Link>
+
+                            <Link
+                                href={route('logout')}
+                                method="post"
+                                as="button"
+                                className="block py-1 hover:text-red-400 transition-colors"
+                            >
+                                Logout
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link
+                                href={route("login")}
+                                className="block py-1 hover:text-yellow-400 transition-colors"
+                            >
+                                Log In
+                            </Link>
+                            <Link
+                                href={route("register")}
+                                className="block py-1 text-yellow-400 hover:text-yellow-300 transition-colors"
+                            >
+                                Register
+                            </Link>
+                        </>
+                    )}
+                </div>
         </>
     );
 }
