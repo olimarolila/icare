@@ -13,6 +13,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         @routes
         @viteReactRefresh
         @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])

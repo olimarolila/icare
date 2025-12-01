@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -92,9 +94,74 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
     Route::get('/admin/reports/export', [ReportController::class, 'export'])->name('admin.reports.export');
     Route::patch('/admin/reports/{report}', [ReportController::class, 'update'])->name('admin.reports.update');
 
-    Route::get('/admin/users', function () {
-        return Inertia::render('Admin/Users');
+    Route::get('/admin/users', function (Request $request) {
+        $perPage = (int) $request->input('perPage', 25);
+        $search = $request->input('search');
+        $role = $request->input('role');
+        $sort = $request->input('sort', 'created_at');
+        $direction = $request->input('direction', 'desc');
+
+        $allowedSorts = ['name', 'email', 'role', 'created_at'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'created_at';
+        }
+        $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
+
+        $query = User::query();
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        if ($role) {
+            $query->where('role', $role);
+        }
+
+        $users = $query->orderBy($sort, $direction)->paginate($perPage)->appends($request->query());
+
+        return Inertia::render('Admin/Users', [
+            'users' => $users,
+            'filters' => [
+                'search' => $search,
+                'role' => $role,
+                'perPage' => $perPage,
+                'sort' => $sort,
+                'direction' => $direction,
+            ],
+        ]);
     })->name('admin.users');
+
+    // Return all users as JSON for client-side DataTables
+    Route::get('/admin/users/all', function () {
+        $users = User::select('id','name','email','role','role_description')->orderBy('name')->get();
+        return response()->json($users);
+    })->name('admin.users.all');
+
+    // Edit form (inertia) for a single user
+    Route::get('/admin/users/{user}/edit', function (User $user) {
+        return Inertia::render('Admin/Users/Edit', [
+            'user' => $user,
+        ]);
+    })->name('admin.users.edit');
+
+    // Update user
+    Route::patch('/admin/users/{user}', function (Request $request, User $user) {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'role' => 'nullable|string|max:50',
+            'role_description' => 'nullable|string|max:255',
+        ]);
+        $user->update($data);
+        return redirect()->route('admin.users');
+    })->name('admin.users.update');
+
+    // Archive (delete) user
+    Route::delete('/admin/users/{user}', function (User $user) {
+        $user->delete();
+        return redirect()->route('admin.users');
+    })->name('admin.users.destroy');
 });
 
 /*
