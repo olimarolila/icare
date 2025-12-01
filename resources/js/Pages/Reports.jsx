@@ -80,7 +80,11 @@ const ReportCard = ({ report, auth }) => {
                                         alert("Please log in to vote.");
                                         return;
                                     }
-                                    router.post(route("reports.vote", report.id), { direction: "up" }, { preserveScroll: true });
+                                    router.post(
+                                        route("reports.vote", report.id),
+                                        { direction: "up" },
+                                        { preserveScroll: true }
+                                    );
                                 }}
                             >
                                 <svg
@@ -102,7 +106,11 @@ const ReportCard = ({ report, auth }) => {
                                         alert("Please log in to vote.");
                                         return;
                                     }
-                                    router.post(route("reports.vote", report.id), { direction: "down" }, { preserveScroll: true });
+                                    router.post(
+                                        route("reports.vote", report.id),
+                                        { direction: "down" },
+                                        { preserveScroll: true }
+                                    );
                                 }}
                             >
                                 <svg
@@ -120,8 +128,10 @@ const ReportCard = ({ report, auth }) => {
                             className="flex items-center gap-2 bg-black/40 rounded-full px-4 py-2"
                             aria-label="comments"
                             onClick={() => {
-                                const el = document.getElementById(`comments-${report.id}`);
-                                if (el) el.classList.toggle('hidden');
+                                const el = document.getElementById(
+                                    `comments-${report.id}`
+                                );
+                                if (el) el.classList.toggle("hidden");
                             }}
                         >
                             <svg
@@ -132,7 +142,12 @@ const ReportCard = ({ report, auth }) => {
                             >
                                 <path d="M10 1a9 9 0 00-9 9c0 1.947.79 3.58 1.935 4.957L.231 17.661A.784.784 0 00.785 19H10a9 9 0 009-9 9 9 0 00-9-9zm0 16.2H6.162c-.994.004-1.907.053-3.045.144l-.076-.188a36.981 36.981 0 002.328-2.087l-1.05-1.263C3.297 12.576 2.8 11.331 2.8 10c0-3.97 3.23-7.2 7.2-7.2s7.2 3.23 7.2 7.2-3.23 7.2-7.2 7.2z" />
                             </svg>
-                            <span className="text-sm">{report.comments_count ?? (Array.isArray(report.comments) ? report.comments.length : 0)}</span>
+                            <span className="text-sm">
+                                {report.comments_count ??
+                                    (Array.isArray(report.comments)
+                                        ? report.comments.length
+                                        : 0)}
+                            </span>
                         </button>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center md:gap-8 text-sm text-gray-300">
@@ -151,19 +166,33 @@ const ReportCard = ({ report, auth }) => {
                 {/* Comments Section */}
                 <div id={`comments-${report.id}`} className="hidden mt-4">
                     <div className="space-y-3">
-                        {Array.isArray(report.comments) && report.comments.length > 0 ? (
+                        {Array.isArray(report.comments) &&
+                        report.comments.length > 0 ? (
                             report.comments.map((c) => (
-                                <div key={c.id} className="bg-black/30 border border-white/10 rounded-lg p-3">
+                                <div
+                                    key={c.id}
+                                    className="bg-black/30 border border-white/10 rounded-lg p-3"
+                                >
                                     <div className="text-xs text-gray-400 mb-1">
-                                        <span className="font-semibold">{c.user?.name ?? 'User'}</span>
+                                        <span className="font-semibold">
+                                            {c.user?.name ?? "User"}
+                                        </span>
                                         <span className="mx-2">•</span>
-                                        <span>{new Date(c.created_at).toLocaleString()}</span>
+                                        <span>
+                                            {new Date(
+                                                c.created_at
+                                            ).toLocaleString()}
+                                        </span>
                                     </div>
-                                    <div className="text-sm text-gray-100">{c.body}</div>
+                                    <div className="text-sm text-gray-100">
+                                        {c.body}
+                                    </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="text-sm text-gray-400 italic">No comments yet.</div>
+                            <div className="text-sm text-gray-400 italic">
+                                No comments yet.
+                            </div>
                         )}
                     </div>
                     <form
@@ -171,26 +200,35 @@ const ReportCard = ({ report, auth }) => {
                         onSubmit={(e) => {
                             e.preventDefault();
                             if (!auth?.user) {
-                                alert('Please log in to comment.');
+                                alert("Please log in to comment.");
                                 return;
                             }
                             const form = e.currentTarget;
-                            const input = form.querySelector('input[name="body"]');
+                            const input =
+                                form.querySelector('input[name="body"]');
                             const body = input?.value?.trim();
                             if (!body) return;
-                            router.post(route('reports.comment', report.id), { body }, {
-                                preserveScroll: true,
-                                onSuccess: () => {
-                                    if (input) input.value = '';
-                                },
-                            });
+                            router.post(
+                                route("reports.comment", report.id),
+                                { body },
+                                {
+                                    preserveScroll: true,
+                                    onSuccess: () => {
+                                        if (input) input.value = "";
+                                    },
+                                }
+                            );
                         }}
                     >
                         <input
                             type="text"
                             name="body"
                             className="flex-1 px-3 py-2 rounded-lg bg-white/90 text-black placeholder-gray-500"
-                            placeholder={auth?.user ? "Add a comment..." : "Log in to comment"}
+                            placeholder={
+                                auth?.user
+                                    ? "Add a comment..."
+                                    : "Log in to comment"
+                            }
                             disabled={!auth?.user}
                             maxLength={500}
                         />
