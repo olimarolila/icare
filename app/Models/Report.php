@@ -19,6 +19,7 @@ class Report extends Model
         'images',
         'user_id',
         'submitted_at',
+        'votes',
     ];
 
     protected $casts = [
@@ -29,5 +30,10 @@ class Report extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
     }
 }

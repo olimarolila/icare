@@ -1,6 +1,8 @@
 import Navbar from "@/Components/Navbar";
+import { router } from "@inertiajs/react";
+import { useState } from "react";
 
-const ReportCard = ({ report }) => {
+const ReportCard = ({ report, auth }) => {
     const submittedDate = report.submitted_at
         ? new Date(report.submitted_at)
         : null;
@@ -73,6 +75,13 @@ const ReportCard = ({ report }) => {
                                 type="button"
                                 className="flex items-center justify-center"
                                 aria-label="upvote"
+                                onClick={() => {
+                                    if (!auth?.user) {
+                                        alert("Please log in to vote.");
+                                        return;
+                                    }
+                                    router.post(route("reports.vote", report.id), { direction: "up" }, { preserveScroll: true });
+                                }}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -83,11 +92,18 @@ const ReportCard = ({ report }) => {
                                     <path d="M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10zM2.989 9.179H7.84v5.731c0 1.13.81 2.163 1.934 2.278a2.163 2.163 0 002.386-2.15V9.179h4.851L10 2.163 2.989 9.179z" />
                                 </svg>
                             </button>
-                            <span className="text-sm">0</span>
+                            <span className="text-sm">{report.votes ?? 0}</span>
                             <button
                                 type="button"
                                 className="flex items-center justify-center"
                                 aria-label="downvote"
+                                onClick={() => {
+                                    if (!auth?.user) {
+                                        alert("Please log in to vote.");
+                                        return;
+                                    }
+                                    router.post(route("reports.vote", report.id), { direction: "down" }, { preserveScroll: true });
+                                }}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -103,6 +119,10 @@ const ReportCard = ({ report }) => {
                             type="button"
                             className="flex items-center gap-2 bg-black/40 rounded-full px-4 py-2"
                             aria-label="comments"
+                            onClick={() => {
+                                const el = document.getElementById(`comments-${report.id}`);
+                                if (el) el.classList.toggle('hidden');
+                            }}
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -112,7 +132,7 @@ const ReportCard = ({ report }) => {
                             >
                                 <path d="M10 1a9 9 0 00-9 9c0 1.947.79 3.58 1.935 4.957L.231 17.661A.784.784 0 00.785 19H10a9 9 0 009-9 9 9 0 00-9-9zm0 16.2H6.162c-.994.004-1.907.053-3.045.144l-.076-.188a36.981 36.981 0 002.328-2.087l-1.05-1.263C3.297 12.576 2.8 11.331 2.8 10c0-3.97 3.23-7.2 7.2-7.2s7.2 3.23 7.2 7.2-3.23 7.2-7.2 7.2z" />
                             </svg>
-                            <span className="text-sm">0</span>
+                            <span className="text-sm">{report.comments_count ?? (Array.isArray(report.comments) ? report.comments.length : 0)}</span>
                         </button>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center md:gap-8 text-sm text-gray-300">
@@ -127,6 +147,61 @@ const ReportCard = ({ report }) => {
                             </span>
                         </span>
                     </div>
+                </div>
+                {/* Comments Section */}
+                <div id={`comments-${report.id}`} className="hidden mt-4">
+                    <div className="space-y-3">
+                        {Array.isArray(report.comments) && report.comments.length > 0 ? (
+                            report.comments.map((c) => (
+                                <div key={c.id} className="bg-black/30 border border-white/10 rounded-lg p-3">
+                                    <div className="text-xs text-gray-400 mb-1">
+                                        <span className="font-semibold">{c.user?.name ?? 'User'}</span>
+                                        <span className="mx-2">•</span>
+                                        <span>{new Date(c.created_at).toLocaleString()}</span>
+                                    </div>
+                                    <div className="text-sm text-gray-100">{c.body}</div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-sm text-gray-400 italic">No comments yet.</div>
+                        )}
+                    </div>
+                    <form
+                        className="mt-3 flex items-center gap-2"
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            if (!auth?.user) {
+                                alert('Please log in to comment.');
+                                return;
+                            }
+                            const form = e.currentTarget;
+                            const input = form.querySelector('input[name="body"]');
+                            const body = input?.value?.trim();
+                            if (!body) return;
+                            router.post(route('reports.comment', report.id), { body }, {
+                                preserveScroll: true,
+                                onSuccess: () => {
+                                    if (input) input.value = '';
+                                },
+                            });
+                        }}
+                    >
+                        <input
+                            type="text"
+                            name="body"
+                            className="flex-1 px-3 py-2 rounded-lg bg-white/90 text-black placeholder-gray-500"
+                            placeholder={auth?.user ? "Add a comment..." : "Log in to comment"}
+                            disabled={!auth?.user}
+                            maxLength={500}
+                        />
+                        <button
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg disabled:opacity-50"
+                            disabled={!auth?.user}
+                        >
+                            Post
+                        </button>
+                    </form>
                 </div>
             </div>
         </section>
@@ -147,7 +222,7 @@ export default function Reports({ auth, reports = [] }) {
                     </p>
                 )}
                 {reports.map((r) => (
-                    <ReportCard key={r.id} report={r} />
+                    <ReportCard key={r.id} report={r} auth={auth} />
                 ))}
             </main>
         </div>

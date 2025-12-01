@@ -80,19 +80,14 @@ export default function ReportForm({ auth }) {
                     className="w-full max-w-2xl text-black bg-white/10 backdrop-blur-md p-6 rounded-xl shadow-xl"
                     onSubmit={(e) => {
                         e.preventDefault();
-                        const data = {
+                        const payload = {
                             category: selected.name,
                             street: location,
                             subject,
                             description,
+                            images: images.map((img) => img.file),
                         };
-                        // Append images as files if present
-                        if (images.length) {
-                            images.forEach((imgObj, idx) => {
-                                data[`images[${idx}]`] = imgObj.file;
-                            });
-                        }
-                        router.post(route("reports.store"), data, {
+                        router.post(route("reports.store"), payload, {
                             forceFormData: true,
                             onSuccess: () => {
                                 setSubject("");

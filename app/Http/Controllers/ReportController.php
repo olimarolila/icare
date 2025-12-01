@@ -189,13 +189,58 @@ class ReportController extends Controller
      */
     public function publicIndex()
     {
-        $reports = Report::with('user:id,name')
+        $reports = Report::with([
+                'user:id,name',
+                'comments' => function ($q) {
+                    $q->with('user:id,name')->latest()->take(20);
+                },
+            ])
+            ->withCount('comments')
             ->latest('submitted_at')
-            ->get(['id','ticket_id','category','street','subject','status','submitted_at','description','images','user_id']);
+            ->get(['id','ticket_id','category','street','subject','status','submitted_at','description','images','user_id','votes']);
 
         return Inertia::render('Reports', [
             'reports' => $reports,
         ]);
+    }
+
+    /**
+     * Upvote or downvote a report (auth required)
+     */
+    public function vote(Request $request, Report $report)
+    {
+        $data = $request->validate([
+            'direction' => 'required|in:up,down',
+        ]);
+
+        $delta = $data['direction'] === 'up' ? 1 : -1;
+        // Simple add/subtract as requested
+        $report->increment('votes', $delta);
+
+        if ($request->wantsJson()) {
+            return response()->json(['votes' => $report->votes]);
+        }
+        return redirect()->back();
+    }
+
+    /**
+     * Add a comment to a report (auth required)
+     */
+    public function comment(Request $request, Report $report)
+    {
+        $validated = $request->validate([
+            'body' => 'required|string|max:500',
+        ]);
+
+        $report->comments()->create([
+            'user_id' => $request->user()->id,
+            'body' => $validated['body'],
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
+        return redirect()->back();
     }
 }
 
