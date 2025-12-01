@@ -26,7 +26,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </Link>
                             </div>
 
-                            {user?.role === 'admin' && (
+                            {user?.role === "admin" && (
                                 <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                     <NavLink
                                         href={route("dashboard")}
@@ -44,7 +44,9 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </NavLink>
                                     <NavLink
                                         href={route("admin.reports")}
-                                        active={route().current("admin.reports")}
+                                        active={route().current(
+                                            "admin.reports"
+                                        )}
                                         className="text-white hover:text-yellow-400"
                                     >
                                         Reports
@@ -150,7 +152,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     }
                 >
                     <div className="space-y-1 pb-3 pt-2">
-                        {user?.role === 'admin' && (
+                        {user?.role === "admin" && (
                             <>
                                 <ResponsiveNavLink
                                     href={route("dashboard")}
@@ -220,7 +222,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
                 }`}
             >
-                {user?.role === 'admin' && (
+                {user?.role === "admin" && (
                     <>
                         <Link
                             href={route("dashboard")}
@@ -252,7 +254,9 @@ export default function AuthenticatedLayout({ header, children }) {
 
                 {user ? (
                     <>
-                        <span className="block py-1 text-white/80">{user.email}</span>
+                        <span className="block py-1 text-white/80">
+                            {user.email}
+                        </span>
                         <Link
                             href={route("logout")}
                             method="post"

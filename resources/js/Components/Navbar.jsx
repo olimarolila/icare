@@ -59,7 +59,9 @@ export default function Navbar({ auth }) {
                                 aria-haspopup="true"
                                 aria-expanded={userMenuOpen}
                             >
-                                <span className="text-sm">{auth.user.name}</span>
+                                <span className="text-sm">
+                                    {auth.user.name}
+                                </span>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
@@ -75,20 +77,20 @@ export default function Navbar({ auth }) {
                                     <div className="py-1">
                                         {isAdmin && (
                                             <Link
-                                                href={route('dashboard')}
+                                                href={route("dashboard")}
                                                 className="block px-4 py-2 text-sm hover:bg-white/5"
                                             >
                                                 Dashboard
                                             </Link>
                                         )}
                                         <Link
-                                            href={route('profile.edit')}
+                                            href={route("profile.edit")}
                                             className="block px-4 py-2 text-sm hover:bg-white/5"
                                         >
                                             Profile
                                         </Link>
                                         <Link
-                                            href={route('logout')}
+                                            href={route("logout")}
                                             method="post"
                                             as="button"
                                             className="block w-full text-left px-4 py-2 text-sm hover:bg-red-600 hover:text-white"
@@ -141,76 +143,76 @@ export default function Navbar({ auth }) {
             </nav>
 
             {/* Mobile dropdown */}
-                <div
-                    className={`fixed top-[65px] left-0 w-full bg-black/80 backdrop-blur-md border-b border-[#7D7D7D] z-30 px-6 py-4 text-center font-medium text-[1rem] transition-all duration-500 ease-in-out transform ${
-                        menuOpen
-                            ? "opacity-100 translate-y-0 max-h-96"
-                            : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
-                    }`}
+            <div
+                className={`fixed top-[65px] left-0 w-full bg-black/80 backdrop-blur-md border-b border-[#7D7D7D] z-30 px-6 py-4 text-center font-medium text-[1rem] transition-all duration-500 ease-in-out transform ${
+                    menuOpen
+                        ? "opacity-100 translate-y-0 max-h-96"
+                        : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
+                }`}
+            >
+                <Link
+                    href={route("reports")}
+                    className="block py-1 hover:text-yellow-400 transition-colors"
                 >
-                    <Link
-                        href={route("reports")}
-                        className="block py-1 hover:text-yellow-400 transition-colors"
-                    >
-                        Reports
-                    </Link>
-                    <Link
-                        href={route("report.form")}
-                        className="block py-1 hover:text-yellow-400 transition-colors"
-                    >
-                        Report Form
-                    </Link>
-                    <Link
-                        href={route("about")}
-                        className="block py-1 hover:text-yellow-400 transition-colors"
-                    >
-                        About
-                    </Link>
-                    <div className="border-t border-gray-600 my-2" />
-                    {auth?.user ? (
-                        <>
-                            {isAdmin && (
-                                <Link
-                                    href={route("dashboard")}
-                                    className="block py-1 hover:text-yellow-400 transition-colors"
-                                >
-                                    Dashboard
-                                </Link>
-                            )}
-
+                    Reports
+                </Link>
+                <Link
+                    href={route("report.form")}
+                    className="block py-1 hover:text-yellow-400 transition-colors"
+                >
+                    Report Form
+                </Link>
+                <Link
+                    href={route("about")}
+                    className="block py-1 hover:text-yellow-400 transition-colors"
+                >
+                    About
+                </Link>
+                <div className="border-t border-gray-600 my-2" />
+                {auth?.user ? (
+                    <>
+                        {isAdmin && (
                             <Link
-                                href={route('profile.edit')}
+                                href={route("dashboard")}
                                 className="block py-1 hover:text-yellow-400 transition-colors"
                             >
-                                Profile
+                                Dashboard
                             </Link>
+                        )}
 
-                            <Link
-                                href={route('logout')}
-                                method="post"
-                                as="button"
-                                className="block py-1 hover:text-red-400 transition-colors"
-                            >
-                                Logout
-                            </Link>
-                        </>
-                    ) : (
-                        <>
-                            <Link
-                                href={route("login")}
-                                className="block py-1 hover:text-yellow-400 transition-colors"
-                            >
-                                Log In
-                            </Link>
-                            <Link
-                                href={route("register")}
-                                className="block py-1 text-yellow-400 hover:text-yellow-300 transition-colors"
-                            >
-                                Register
-                            </Link>
-                        </>
-                    )}
-                </div>
+                        <Link
+                            href={route("profile.edit")}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Profile
+                        </Link>
+
+                        <Link
+                            href={route("logout")}
+                            method="post"
+                            as="button"
+                            className="block py-1 hover:text-red-400 transition-colors"
+                        >
+                            Logout
+                        </Link>
+                    </>
+                ) : (
+                    <>
+                        <Link
+                            href={route("login")}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Log In
+                        </Link>
+                        <Link
+                            href={route("register")}
+                            className="block py-1 text-yellow-400 hover:text-yellow-300 transition-colors"
+                        >
+                            Register
+                        </Link>
+                    </>
+                )}
+            </div>
         </>
     );
 }

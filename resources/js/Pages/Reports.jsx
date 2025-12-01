@@ -141,7 +141,11 @@ const ReportCard = ({ report, auth }) => {
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 20 20"
-                                className={`w-4 h-4 ${commentsOpen ? 'text-green-400' : 'text-gray-300 hover:text-gray-100'}`}
+                                className={`w-4 h-4 ${
+                                    commentsOpen
+                                        ? "text-green-400"
+                                        : "text-gray-300 hover:text-gray-100"
+                                }`}
                                 fill="currentColor"
                             >
                                 <path d="M10 1a9 9 0 00-9 9c0 1.947.79 3.58 1.935 4.957L.231 17.661A.784.784 0 00.785 19H10a9 9 0 009-9 9 9 0 00-9-9zm0 16.2H6.162c-.994.004-1.907.053-3.045.144l-.076-.188a36.981 36.981 0 002.328-2.087l-1.05-1.263C3.297 12.576 2.8 11.331 2.8 10c0-3.97 3.23-7.2 7.2-7.2s7.2 3.23 7.2 7.2-3.23 7.2-7.2 7.2z" />
@@ -168,7 +172,10 @@ const ReportCard = ({ report, auth }) => {
                     </div>
                 </div>
                 {/* Comments Section */}
-                <div id={`comments-${report.id}`} className={`${commentsOpen ? '' : 'hidden'} mt-4`}>
+                <div
+                    id={`comments-${report.id}`}
+                    className={`${commentsOpen ? "" : "hidden"} mt-4`}
+                >
                     <div className="space-y-3">
                         {Array.isArray(report.comments) &&
                         report.comments.length > 0 ? (
