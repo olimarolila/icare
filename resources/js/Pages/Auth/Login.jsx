@@ -1,6 +1,7 @@
 import { Link, useForm } from "@inertiajs/react";
 import Navbar from "@/Components/Navbar";
 import { useState } from "react";
+import FlashMessages from "@/Components/FlashMessages";
 
 export default function Login({ auth, status, canResetPassword }) {
     const [showPwd, setShowPwd] = useState(false);
@@ -21,6 +22,7 @@ export default function Login({ auth, status, canResetPassword }) {
             className="relative h-screen overflow-hidden bg-cover bg-center text-white animate-fade-in"
             style={{ backgroundImage: "url('/images/bg (homepage).jpg')" }}
         >
+            <FlashMessages />
             <Navbar auth={auth} />
 
             {/* BLURRED WELCOME CONTENT */}
@@ -42,7 +44,7 @@ export default function Login({ auth, status, canResetPassword }) {
 
                         {/* FLOATING CAT */}
                         <img
-                            src="/images/logo_cat.png"
+                            src="/images/cat pc.png"
                             alt="Floating Cat"
                             className="floating-cat w-96 md:w-[28rem] lg:w-[32rem] object-contain mb-6 drop-shadow-lg translate-x-10 mt-40"
                         />

@@ -1,6 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
+import FlashMessages from "@/Components/FlashMessages";
+import ConfirmDialog from "@/Components/ConfirmDialog";
 
 export default function Archives() {
     const {
@@ -14,6 +16,8 @@ export default function Archives() {
     const [selectedReport, setSelectedReport] = useState(null);
     const [showReportModal, setShowReportModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [userToRestore, setUserToRestore] = useState(null);
+    const [reportToRestore, setReportToRestore] = useState(null);
 
     // User filters
     const [userSearch, setUserSearch] = useState(filters.userSearch || "");
@@ -133,13 +137,15 @@ export default function Archives() {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="font-semibold text-xl text-gray-800">
-                    Archives
-                </h2>
-            }
-        >
+        <>
+            <FlashMessages />
+            <AuthenticatedLayout
+                header={
+                    <h2 className="font-semibold text-xl text-gray-800">
+                        Archives
+                    </h2>
+                }
+            >
             <div className="py-6">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-6">
@@ -308,20 +314,7 @@ export default function Archives() {
                                                         </td>
                                                         <td className="px-4 py-2">
                                                             <button
-                                                                onClick={() => {
-                                                                    if (
-                                                                        confirm(
-                                                                            `Restore user ${u.name}?`
-                                                                        )
-                                                                    ) {
-                                                                        router.post(
-                                                                            route(
-                                                                                "admin.users.restore",
-                                                                                u.id
-                                                                            )
-                                                                        );
-                                                                    }
-                                                                }}
+                                                                onClick={() => setUserToRestore(u)}
                                                                 className="text-green-600 hover:underline"
                                                             >
                                                                 Restore
@@ -564,20 +557,7 @@ export default function Archives() {
                                                                     View
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => {
-                                                                        if (
-                                                                            confirm(
-                                                                                `Restore report ${r.ticket_id}?`
-                                                                            )
-                                                                        ) {
-                                                                            router.post(
-                                                                                route(
-                                                                                    "admin.reports.restore",
-                                                                                    r.id
-                                                                                )
-                                                                            );
-                                                                        }
-                                                                    }}
+                                                                    onClick={() => setReportToRestore(r)}
                                                                     className="text-green-600 hover:underline"
                                                                 >
                                                                     Restore
@@ -815,5 +795,34 @@ export default function Archives() {
                 </div>
             </div>
         </AuthenticatedLayout>
+
+        <ConfirmDialog
+            open={!!userToRestore}
+            onConfirm={() => {
+                router.post(route("admin.users.restore", userToRestore.id));
+                setUserToRestore(null);
+            }}
+            onCancel={() => setUserToRestore(null)}
+            title="Restore User"
+            message={`Are you sure you want to restore user ${userToRestore?.name}?`}
+            confirmText="Restore"
+            cancelText="Cancel"
+            variant="success"
+        />
+
+        <ConfirmDialog
+            open={!!reportToRestore}
+            onConfirm={() => {
+                router.post(route("admin.reports.restore", reportToRestore.id));
+                setReportToRestore(null);
+            }}
+            onCancel={() => setReportToRestore(null)}
+            title="Restore Report"
+            message={`Are you sure you want to restore report ${reportToRestore?.ticket_id}?`}
+            confirmText="Restore"
+            cancelText="Cancel"
+            variant="success"
+        />
+        </>
     );
 }

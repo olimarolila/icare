@@ -116,7 +116,7 @@ class ReportController extends Controller
             'submitted_at' => now(),
         ]);
 
-        return redirect()->route('reports')->with('success', 'Report submitted. Ticket: ' . $report->ticket_id);
+        return redirect()->route('reports')->with('success', 'Report submitted successfully! Ticket ID: ' . $report->ticket_id);
     }
 
     /**
@@ -128,7 +128,7 @@ class ReportController extends Controller
             'status' => 'required|in:Pending,In Progress,Resolved',
         ]);
         $report->update(['status' => $validated['status']]);
-        return redirect()->back()->with('success', 'Status updated');
+        return redirect()->back()->with('success', 'Report status updated successfully.');
     }
 
     /**
@@ -273,7 +273,7 @@ class ReportController extends Controller
                 'user_vote' => ReportVote::where('report_id', $report->id)->where('user_id', $userId)->value('value') ?? 0,
             ]);
         }
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Vote recorded successfully.');
     }
 
     /**
@@ -293,7 +293,7 @@ class ReportController extends Controller
         if ($request->wantsJson()) {
             return response()->json(['ok' => true]);
         }
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Comment added successfully.');
     }
 }
 

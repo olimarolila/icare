@@ -1,8 +1,11 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import FlashMessages from "@/Components/FlashMessages";
 
 export default function AdminDashboard() {
     return (
-        <AuthenticatedLayout
+        <>
+            <FlashMessages />
+            <AuthenticatedLayout
             header={
                 <h2 className="font-semibold text-xl text-gray-800">
                     Admin Dashboard
@@ -19,5 +22,6 @@ export default function AdminDashboard() {
                 </div>
             </div>
         </AuthenticatedLayout>
+        </>
     );
 }

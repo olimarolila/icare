@@ -1,11 +1,14 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, router } from "@inertiajs/react";
 import { useState, useEffect, useRef } from "react";
+import FlashMessages from "@/Components/FlashMessages";
+import ConfirmDialog from "@/Components/ConfirmDialog";
 
 export default function AdminUsers() {
     const { users = { data: [], links: [] }, filters = {} } = usePage().props;
     const [selected, setSelected] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [userToArchive, setUserToArchive] = useState(null);
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -218,8 +221,7 @@ export default function AdminUsers() {
     };
 
     const archiveUser = (u) => {
-        if (!confirm(`Archive user ${u.email}?`)) return;
-        router.post(route("admin.users.archive", u.id));
+        setUserToArchive(u);
     };
 
     const handleSort = (col) => {
@@ -234,12 +236,14 @@ export default function AdminUsers() {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-xl text-gray-800">
-                        Admin Users
-                    </h2>
+        <>
+            <FlashMessages />
+            <AuthenticatedLayout
+                header={
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-semibold text-xl text-gray-800">
+                            Admin Users
+                        </h2>
                     <button
                         onClick={() =>
                             router.visit(
@@ -535,5 +539,20 @@ export default function AdminUsers() {
                 </div>
             </div>
         </AuthenticatedLayout>
+
+        <ConfirmDialog
+            open={!!userToArchive}
+            onConfirm={() => {
+                router.post(route("admin.users.archive", userToArchive.id));
+                setUserToArchive(null);
+            }}
+            onCancel={() => setUserToArchive(null)}
+            title="Archive User"
+            message={`Are you sure you want to archive ${userToArchive?.email}? This action can be undone from the Archive List.`}
+            confirmText="Archive"
+            cancelText="Cancel"
+            variant="warning"
+        />
+        </>
     );
 }

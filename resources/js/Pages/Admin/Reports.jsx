@@ -1,6 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
+import FlashMessages from "@/Components/FlashMessages";
+import ConfirmDialog from "@/Components/ConfirmDialog";
 
 export default function AdminReports() {
     const { reports = { data: [], links: [] }, filters = {} } = usePage().props;
@@ -9,6 +11,7 @@ export default function AdminReports() {
     const [status, setStatus] = useState("");
     const [modalMode, setModalMode] = useState("view"); // 'view' or 'update'
     const [selectedImage, setSelectedImage] = useState(null);
+    const [reportToArchive, setReportToArchive] = useState(null);
     // Filter states
     const [search, setSearch] = useState(filters.search || "");
     const [ticketId, setTicketId] = useState(filters.ticket_id || "");
@@ -77,12 +80,14 @@ export default function AdminReports() {
     };
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-xl text-gray-800">
-                        Admin Reports
-                    </h2>
+        <>
+            <FlashMessages />
+            <AuthenticatedLayout
+                header={
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-semibold text-xl text-gray-800">
+                            Admin Reports
+                        </h2>
                     <button
                         onClick={() =>
                             router.visit(
@@ -266,20 +271,7 @@ export default function AdminReports() {
                                                             Update
                                                         </button>
                                                         <button
-                                                            onClick={() => {
-                                                                if (
-                                                                    confirm(
-                                                                        `Archive report ${r.ticket_id}?`
-                                                                    )
-                                                                ) {
-                                                                    router.post(
-                                                                        route(
-                                                                            "admin.reports.archive",
-                                                                            r.id
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }}
+                                                            onClick={() => setReportToArchive(r)}
                                                             className="text-red-600 hover:underline"
                                                         >
                                                             Archive
@@ -531,5 +523,20 @@ export default function AdminReports() {
                 </div>
             </div>
         </AuthenticatedLayout>
+
+        <ConfirmDialog
+            open={!!reportToArchive}
+            onConfirm={() => {
+                router.post(route("admin.reports.archive", reportToArchive.id));
+                setReportToArchive(null);
+            }}
+            onCancel={() => setReportToArchive(null)}
+            title="Archive Report"
+            message={`Are you sure you want to archive report ${reportToArchive?.ticket_id}? This action can be undone from the Archive List.`}
+            confirmText="Archive"
+            cancelText="Cancel"
+            variant="warning"
+        />
+        </>
     );
 }

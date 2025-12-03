@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
+import FlashMessages from "@/Components/FlashMessages";
 
 export default function Welcome({ auth, reports = [] }) {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -109,6 +110,7 @@ export default function Welcome({ auth, reports = [] }) {
 
     return (
         <>
+            <FlashMessages />
             {/* Hero */}
             <div
                 className="relative min-h-screen bg-cover bg-center text-white"
@@ -892,7 +894,7 @@ export default function Welcome({ auth, reports = [] }) {
 
             {/* Floating Cat */}
             <img
-                src="/images/logo_cat.png"
+                src="/images/logo_cat3.png"
                 alt="Floating Cat"
                 className="floating-cat w-32 md:w-48 lg:w-60 z-50 pointer-events-none"
             />
