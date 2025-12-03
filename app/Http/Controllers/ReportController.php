@@ -22,11 +22,12 @@ class ReportController extends Controller
             'ticket_id' => $request->input('ticket_id'),
             'category' => $request->input('category'),
             'street' => $request->input('street'),
+            'location_name' => $request->input('location_name'),
             'status' => $request->input('status'),
         ];
 
         // Sortable columns whitelist
-        $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'status', 'submitted_at'];
+        $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'location_name', 'status', 'submitted_at'];
         if (!in_array($sort, $allowedSorts)) {
             $sort = 'submitted_at';
         }
@@ -40,6 +41,7 @@ class ReportController extends Controller
                 $q->where('ticket_id', 'like', "%$search%")
                   ->orWhere('category', 'like', "%$search%")
                   ->orWhere('street', 'like', "%$search%")
+                  ->orWhere('location_name', 'like', "%$search%")
                   ->orWhere('subject', 'like', "%$search%")
                   ->orWhere('description', 'like', "%$search%")
                   ->orWhere('status', 'like', "%$search%");
@@ -54,7 +56,7 @@ class ReportController extends Controller
         }
 
         $reports = $query
-            ->select(['id', 'ticket_id', 'category', 'street', 'subject', 'status', 'submitted_at', 'description', 'images'])
+            ->select(['id', 'ticket_id', 'category', 'street', 'location_name', 'latitude', 'longitude', 'subject', 'status', 'submitted_at', 'description', 'images'])
             ->paginate($perPage)
             ->appends($request->query());
 
@@ -65,6 +67,7 @@ class ReportController extends Controller
                 'ticket_id' => $filters['ticket_id'],
                 'category' => $filters['category'],
                 'street' => $filters['street'],
+                'location_name' => $filters['location_name'],
                 'status' => $filters['status'],
                 'perPage' => $perPage,
                 'sort' => $sort,
@@ -81,6 +84,9 @@ class ReportController extends Controller
         $validated = $request->validate([
             'category' => 'required|string|max:255',
             'street' => 'nullable|string|max:255',
+            'location_name' => 'required|string|max:255',
+            'latitude' => 'required|numeric|min:-90|max:90',
+            'longitude' => 'required|numeric|min:-180|max:180',
             'subject' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png,gif,webp|max:2048',
@@ -98,7 +104,10 @@ class ReportController extends Controller
         $report = Report::create([
             'ticket_id' => $ticketId,
             'category' => $validated['category'],
-            'street' => $validated['street'] ?? null,
+            'street' => $validated['street'] ?? $validated['location_name'],
+            'location_name' => $validated['location_name'],
+            'latitude' => $validated['latitude'],
+            'longitude' => $validated['longitude'],
             'subject' => $validated['subject'],
             'status' => 'Pending',
             'description' => $validated['description'] ?? null,
@@ -155,7 +164,7 @@ class ReportController extends Controller
             }
         }
 
-        $reports = $query->get(['id', 'ticket_id', 'category', 'street', 'subject', 'status', 'submitted_at', 'description']);
+        $reports = $query->get(['id', 'ticket_id', 'category', 'street', 'location_name', 'latitude', 'longitude', 'subject', 'status', 'submitted_at', 'description']);
 
         $filename = 'reports_' . date('Y-m-d_His') . '.csv';
         $headers = [
@@ -165,7 +174,7 @@ class ReportController extends Controller
 
         $callback = function() use ($reports) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID', 'Ticket ID', 'Category', 'Street', 'Subject', 'Status', 'Date Submitted', 'Description']);
+            fputcsv($file, ['ID', 'Ticket ID', 'Category', 'Street', 'Location Name', 'Latitude', 'Longitude', 'Subject', 'Status', 'Date Submitted', 'Description']);
 
             foreach ($reports as $report) {
                 fputcsv($file, [
@@ -173,6 +182,9 @@ class ReportController extends Controller
                     $report->ticket_id,
                     $report->category,
                     $report->street,
+                    $report->location_name,
+                    $report->latitude,
+                    $report->longitude,
                     $report->subject,
                     $report->status,
                     $report->submitted_at ? $report->submitted_at->format('Y-m-d H:i:s') : '',
@@ -207,7 +219,7 @@ class ReportController extends Controller
                 ]);
             })
             ->latest('submitted_at')
-            ->get(['id','ticket_id','category','street','subject','status','submitted_at','description','images','user_id','votes']);
+            ->get(['id','ticket_id','category','street','location_name','latitude','longitude','subject','status','submitted_at','description','images','user_id','votes']);
 
         return Inertia::render('Reports', [
             'reports' => $reports,

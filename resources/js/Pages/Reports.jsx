@@ -1,9 +1,16 @@
 import Navbar from "@/Components/Navbar";
 import { router } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { loadLeaflet } from "@/utils/loadLeaflet";
 
 const ReportCard = ({ report, auth }) => {
+    const DEFAULT_ZOOM = 15;
     const [commentsOpen, setCommentsOpen] = useState(false);
+    const [isMapModalOpen, setMapModalOpen] = useState(false);
+    const [activeImage, setActiveImage] = useState(null);
+    const mapContainerRef = useRef(null);
+    const mapRef = useRef(null);
+    const bodyOverflowRef = useRef("");
     const submittedDate = report.submitted_at
         ? new Date(report.submitted_at)
         : null;
@@ -14,9 +21,73 @@ const ReportCard = ({ report, auth }) => {
               minute: "2-digit",
           })
         : "";
-    const images = Array.isArray(report.images)
-        ? report.images.slice(0, 3)
-        : [];
+    const images = Array.isArray(report.images) ? report.images : [];
+    const latitude =
+        report.latitude !== null && report.latitude !== undefined
+            ? Number(report.latitude)
+            : null;
+    const longitude =
+        report.longitude !== null && report.longitude !== undefined
+            ? Number(report.longitude)
+            : null;
+    const hasCoordinates =
+        Number.isFinite(latitude) && Number.isFinite(longitude);
+    const locationLabel =
+        report.location_name || report.street || "Location not specified";
+
+    useEffect(() => {
+        if (!isMapModalOpen) {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+            return;
+        }
+        if (!hasCoordinates || !mapContainerRef.current) {
+            return;
+        }
+        let cancelled = false;
+        loadLeaflet().then((L) => {
+            if (cancelled || !mapContainerRef.current) {
+                return;
+            }
+            if (mapRef.current) {
+                mapRef.current.remove();
+            }
+            const map = L.map(mapContainerRef.current, {
+                zoomControl: false,
+            }).setView([latitude, longitude], DEFAULT_ZOOM);
+            mapRef.current = map;
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap contributors",
+                maxZoom: 19,
+            }).addTo(map);
+            L.marker([latitude, longitude]).addTo(map);
+        });
+        return () => {
+            cancelled = true;
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
+    }, [hasCoordinates, isMapModalOpen, latitude, longitude]);
+
+    useEffect(() => {
+        if (typeof document === "undefined") {
+            return;
+        }
+        const modalActive = isMapModalOpen || Boolean(activeImage);
+        if (modalActive) {
+            bodyOverflowRef.current = document.body.style.overflow;
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = bodyOverflowRef.current || "";
+        }
+        return () => {
+            document.body.style.overflow = bodyOverflowRef.current || "";
+        };
+    }, [activeImage, isMapModalOpen]);
 
     return (
         <section className="w-full max-w-5xl mt-5" key={report.id}>
@@ -60,13 +131,155 @@ const ReportCard = ({ report, auth }) => {
                 {images.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                         {images.map((img, idx) => (
-                            <img
+                            <div
                                 key={idx}
-                                src={`/storage/${img}`}
-                                alt={`Report Image ${idx + 1}`}
-                                className="w-full h-32 object-cover rounded-lg border border-white/10"
-                            />
+                                className="relative group rounded-lg overflow-hidden border border-white/10"
+                            >
+                                <img
+                                    src={`/storage/${img}`}
+                                    alt={`Report Image ${idx + 1}`}
+                                    className="w-full h-32 object-cover"
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    aria-label="View full image"
+                                    onClick={() =>
+                                        setActiveImage({
+                                            src: `/storage/${img}`,
+                                            alt: `Report Image ${idx + 1}`,
+                                        })
+                                    }
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        fill="currentColor"
+                                        viewBox="0 0 16 16"
+                                    >
+                                        <path
+                                            fillRule="evenodd"
+                                            d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1 1 0v3.975a.5.5 0 0 1-.5.5H11.5a.5.5 0 0 1 0-1h2.768l-4.096-4.096a.5.5 0 0 1 0-.707m0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707m-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
                         ))}
+                    </div>
+                )}
+                {(hasCoordinates || locationLabel) && (
+                    <div className="bg-black/30 border border-white/10 rounded-xl p-4 text-sm text-gray-200 mb-6">
+                        <h3 className="text-base font-semibold text-white mb-2">
+                            Location Details
+                        </h3>
+                        <p className="mb-4 text-gray-100 leading-relaxed">
+                            {locationLabel}
+                        </p>
+                        <div className="space-y-1 text-gray-300">
+                            <div>
+                                <span className="font-semibold text-white/80">Latitude:</span> {hasCoordinates ? latitude?.toFixed(5) : "—"}
+                            </div>
+                            <div>
+                                <span className="font-semibold text-white/80">Longitude:</span> {hasCoordinates ? longitude?.toFixed(5) : "—"}
+                            </div>
+                        </div>
+                        {hasCoordinates && (
+                            <button
+                                type="button"
+                                className="mt-4 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                                onClick={() => setMapModalOpen(true)}
+                            >
+                                View Location on Map
+                            </button>
+                        )}
+                    </div>
+                )}
+                {isMapModalOpen && (
+                    <div className="fixed inset-0 z-[1100] flex items-center justify-center px-4">
+                        <div className="absolute inset-0 bg-black/70" aria-hidden="true"></div>
+                        <div
+                            className="relative z-[1200] bg-neutral-900 text-white w-full max-w-3xl rounded-2xl border border-white/10 shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={`Map for ${report.subject}`}
+                        >
+                            <div className="flex items-start justify-between mb-4">
+                                <div>
+                                    <h4 className="text-lg font-semibold">
+                                        View Location on Map
+                                    </h4>
+                                    <p className="text-sm text-gray-400">
+                                        {locationLabel}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="text-gray-400 hover:text-gray-200"
+                                    onClick={() => setMapModalOpen(false)}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                            {hasCoordinates ? (
+                                <div className="relative h-80 rounded-xl overflow-hidden border border-white/15">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!mapRef.current) return;
+                                            mapRef.current.setView(
+                                                [latitude, longitude],
+                                                DEFAULT_ZOOM
+                                            );
+                                        }}
+                                        className="absolute top-3 right-3 z-[1300] bg-black/70 text-xs font-semibold tracking-wide px-3 py-1 rounded-full border border-white/40 hover:bg-black/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                                    >
+                                        Reset View
+                                    </button>
+                                    <div ref={mapContainerRef} className="w-full h-full" />
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-300">
+                                    Coordinates unavailable.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {activeImage && (
+                    <div className="fixed inset-0 z-[1100] flex items-center justify-center px-4">
+                        <div
+                            className="absolute inset-0 bg-black/80"
+                            onClick={() => setActiveImage(null)}
+                        ></div>
+                        <div
+                            className="relative z-[1200] bg-neutral-900 text-white w-full max-w-4xl rounded-2xl border border-white/10 shadow-2xl p-4"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={activeImage.alt || "Report image"}
+                        >
+                            <button
+                                type="button"
+                                className="absolute top-4 right-4 text-gray-300 hover:text-white"
+                                onClick={() => setActiveImage(null)}
+                                aria-label="Close image modal"
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    fill="currentColor"
+                                    viewBox="0 0 16 16"
+                                >
+                                    <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5m5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5M0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5m10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0z" />
+                                </svg>
+                            </button>
+                            <img
+                                src={activeImage.src}
+                                alt={activeImage.alt || "Report image"}
+                                className="w-full h-auto rounded-xl object-contain max-h-[75vh]"
+                            />
+                        </div>
                     </div>
                 )}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
