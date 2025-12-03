@@ -3,7 +3,6 @@ import { router } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import { loadLeaflet } from "@/utils/loadLeaflet";
 import Footer from "@/Components/Footer";
-import { useState } from "react";
 
 const ReportCard = ({ report, auth }) => {
     const DEFAULT_ZOOM = 15;
