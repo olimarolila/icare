@@ -211,6 +211,7 @@ class ReportController extends Controller
                 },
             ])
             ->withCount('comments')
+            ->whereNull('archived_at')
             ->when($userId, function ($q) use ($userId) {
                 $q->addSelect(['user_vote' => ReportVote::select('value')
                     ->whereColumn('report_id', 'reports.id')

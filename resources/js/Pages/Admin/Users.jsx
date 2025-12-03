@@ -70,7 +70,9 @@ export default function AdminUsers() {
                                     u.id
                                 )}" class="text-blue-600 hover:underline">Edit</a> <button data-id="${
                                 u.id
-                            }" class="text-red-600 hover:underline archive-btn">Archive</button></div></td>
+                            }" data-email="${escapeHtml(
+                                u.email
+                            )}" class="text-red-600 hover:underline archive-btn">Archive</button></div></td>
                             `;
                             tbody.appendChild(tr);
                         });
@@ -90,39 +92,10 @@ export default function AdminUsers() {
                             .forEach((btn) => {
                                 btn.addEventListener("click", (e) => {
                                     const id = btn.getAttribute("data-id");
-                                    if (
-                                        !confirm(
-                                            "Archive user? This will delete the user."
-                                        )
-                                    )
-                                        return;
-                                    fetch(route("admin.users.destroy", id), {
-                                        method: "DELETE",
-                                        headers: {
-                                            "X-CSRF-TOKEN": document
-                                                .querySelector(
-                                                    'meta[name="csrf-token"]'
-                                                )
-                                                .getAttribute("content"),
-                                            Accept: "application/json",
-                                        },
-                                    }).then((r) => {
-                                        if (r.ok) {
-                                            // reload the table by removing row and refreshing DataTable
-                                            try {
-                                                dtRef.current.destroy();
-                                            } catch (e) {}
-                                            dtInitialized.current = false;
-                                            setDtActive(false);
-                                            // re-init after short delay
-                                            setTimeout(
-                                                () => initDataLoad(),
-                                                200
-                                            );
-                                        } else {
-                                            alert("Failed to archive user");
-                                        }
-                                    });
+                                    const email =
+                                        btn.getAttribute("data-email");
+                                    // Find user from data and trigger dialog
+                                    setUserToArchive({ id, email });
                                 });
                             });
                     }
@@ -292,7 +265,7 @@ export default function AdminUsers() {
                                                 setRoleFilter(e.target.value);
                                                 applyFilters(1);
                                             }}
-                                            className="border rounded px-2 py-2 text-sm"
+                                            className="border rounded px-5 py-2 text-sm"
                                         >
                                             <option value="">All Roles</option>
                                             <option value="admin">admin</option>
@@ -307,7 +280,7 @@ export default function AdminUsers() {
                                                 setPerPage(e.target.value);
                                                 applyFilters(1);
                                             }}
-                                            className="border rounded px-2 py-2 text-sm"
+                                            className="border rounded px-5 py-2 text-sm"
                                         >
                                             {[10, 25, 50, 100].map((n) => (
                                                 <option key={n} value={n}>
@@ -601,7 +574,128 @@ export default function AdminUsers() {
             <ConfirmDialog
                 open={!!userToArchive}
                 onConfirm={() => {
-                    router.post(route("admin.users.archive", userToArchive.id));
+                    const userId = userToArchive.id;
+
+                    // Check if this is from DataTables (when we only have id and email)
+                    if (dtActive && typeof userId === "string") {
+                        // Use fetch for DataTables integration
+                        fetch(route("admin.users.destroy", userId), {
+                            method: "DELETE",
+                            headers: {
+                                "X-CSRF-TOKEN": document
+                                    .querySelector('meta[name="csrf-token"]')
+                                    .getAttribute("content"),
+                                Accept: "application/json",
+                            },
+                        }).then((r) => {
+                            if (r.ok) {
+                                // Reload DataTable
+                                try {
+                                    dtRef.current.destroy();
+                                } catch (e) {}
+                                dtInitialized.current = false;
+                                setDtActive(false);
+                                setTimeout(() => {
+                                    fetch(route("admin.users.all"))
+                                        .then((r) => r.json())
+                                        .then((data) => {
+                                            if (window.DataTable) {
+                                                const initFromData = (data) => {
+                                                    const table =
+                                                        document.getElementById(
+                                                            "users-table"
+                                                        );
+                                                    if (table) {
+                                                        const tbody =
+                                                            table.querySelector(
+                                                                "tbody"
+                                                            );
+                                                        tbody.innerHTML = "";
+                                                        data.forEach((u) => {
+                                                            const tr =
+                                                                document.createElement(
+                                                                    "tr"
+                                                                );
+                                                            tr.className =
+                                                                "border-b";
+                                                            tr.innerHTML = `
+                                                                <td class="px-4 py-2">${escapeHtml(
+                                                                    u.name
+                                                                )}</td>
+                                                                <td class="px-4 py-2">${escapeHtml(
+                                                                    u.email
+                                                                )}</td>
+                                                                <td class="px-4 py-2">${escapeHtml(
+                                                                    u.role ||
+                                                                        "-"
+                                                                )}</td>
+                                                                <td class="px-4 py-2"><div class="flex gap-2"><a href="${route(
+                                                                    "admin.users.edit",
+                                                                    u.id
+                                                                )}" class="text-blue-600 hover:underline">Edit</a> <button data-id="${
+                                                                u.id
+                                                            }" data-email="${escapeHtml(
+                                                                u.email
+                                                            )}" class="text-red-600 hover:underline archive-btn">Archive</button></div></td>
+                                                            `;
+                                                            tbody.appendChild(
+                                                                tr
+                                                            );
+                                                        });
+                                                        dtRef.current =
+                                                            new window.DataTable(
+                                                                table,
+                                                                {
+                                                                    perPage:
+                                                                        Number(
+                                                                            perPage
+                                                                        ) || 25,
+                                                                    searchable: true,
+                                                                    sortable: true,
+                                                                }
+                                                            );
+                                                        dtInitialized.current = true;
+                                                        setDtActive(true);
+
+                                                        // Re-attach handlers
+                                                        table
+                                                            .querySelectorAll(
+                                                                ".archive-btn"
+                                                            )
+                                                            .forEach((btn) => {
+                                                                btn.addEventListener(
+                                                                    "click",
+                                                                    (e) => {
+                                                                        const id =
+                                                                            btn.getAttribute(
+                                                                                "data-id"
+                                                                            );
+                                                                        const email =
+                                                                            btn.getAttribute(
+                                                                                "data-email"
+                                                                            );
+                                                                        setUserToArchive(
+                                                                            {
+                                                                                id,
+                                                                                email,
+                                                                            }
+                                                                        );
+                                                                    }
+                                                                );
+                                                            });
+                                                    }
+                                                };
+                                                initFromData(data);
+                                            }
+                                        });
+                                }, 200);
+                            }
+                        });
+                    } else {
+                        // Regular Inertia route for pagination view
+                        router.post(route("admin.users.archive", userId));
+                    }
+
                     setUserToArchive(null);
                 }}
                 onCancel={() => setUserToArchive(null)}
