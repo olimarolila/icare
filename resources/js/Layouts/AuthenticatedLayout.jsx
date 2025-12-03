@@ -190,6 +190,15 @@ export default function AuthenticatedLayout({ header, children }) {
                                     >
                                         Users
                                     </NavLink>
+                                    <NavLink
+                                        href={route("admin.archives")}
+                                        active={route().current(
+                                            "admin.archives"
+                                        )}
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Archives
+                                    </NavLink>
                                 </div>
                             )}
                         </div>
@@ -314,6 +323,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Users
                                 </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("admin.archives")}
+                                    active={route().current("admin.archives")}
+                                    className="text-white hover:text-yellow-400"
+                                >
+                                    Archives
+                                </ResponsiveNavLink>
                             </>
                         )}
                     </div>
@@ -379,6 +395,12 @@ export default function AuthenticatedLayout({ header, children }) {
                             className="block py-1 hover:text-yellow-400 transition-colors"
                         >
                             Users
+                        </Link>
+                        <Link
+                            href={route("admin.archives")}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Archives
                         </Link>
                         <div className="border-t border-gray-600 my-2" />
                     </>

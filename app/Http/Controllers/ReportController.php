@@ -33,7 +33,7 @@ class ReportController extends Controller
         }
         $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
 
-        $query = Report::query()->orderBy($sort, $direction);
+        $query = Report::query()->whereNull('archived_at')->orderBy($sort, $direction); // Exclude archived reports
 
         // Global search across several columns
         if ($search) {

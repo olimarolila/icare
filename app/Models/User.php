@@ -23,6 +23,8 @@ class User extends Authenticatable
         'password',
         'role',
         'role_description',
+        'archived_at',
+        'archived_by',
     ];
 
     /**
@@ -45,6 +47,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'archived_at' => 'datetime',
         ];
+    }
+
+    public function archivedByUser()
+    {
+        return $this->belongsTo(User::class, 'archived_by');
     }
 }
