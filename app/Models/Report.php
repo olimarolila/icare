@@ -20,12 +20,15 @@ class Report extends Model
         'user_id',
         'submitted_at',
         'votes',
+        'archived_at',
+        'archived_by',
     ];
 
     protected $casts = [
         'images' => 'array',
         'submitted_at' => 'datetime',
         'user_vote' => 'integer',
+        'archived_at' => 'datetime',
     ];
 
     public function user()
@@ -41,5 +44,10 @@ class Report extends Model
     public function votes()
     {
         return $this->hasMany(ReportVote::class);
+    }
+
+    public function archivedByUser()
+    {
+        return $this->belongsTo(User::class, 'archived_by');
     }
 }

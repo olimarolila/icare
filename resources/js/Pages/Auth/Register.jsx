@@ -34,22 +34,59 @@ export default function Register({ auth }) {
             >
                 {/* Left-side main content */}
                 <main className="relative z-10 flex flex-col items-start justify-center min-h-[93vh] px-8 md:px-32 lg:px-40">
-                    <img
-                        src="/images/logo_text.png"
-                        alt="iCARE"
-                        className="h-28 md:h-40 lg:h-52 object-contain mb-6 drop-shadow-lg"
-                    />
+                    {/* CAT + BUBBLE WRAPPER */}
+                    <div className="relative pl-40">
+                        {/* SPEECH BUBBLE ABOVE CAT */}
+                        <div className="speech-bubble absolute -top-20 left-10 bg-white text-black p-4 rounded-xl shadow-xl max-w-xs mt-40">
+                            <p className="text-sm md:text-base font-small">
+                                Let’s keep the community safe together! Log in
+                                to report.
+                            </p>
+                        </div>
 
-                    {/* Tagline */}
-                    <p className="text-base md:text-lg lg:text-2xl leading-snug max-w-xl">
-                        Because caring for the community starts with you and
-                        together, we will make a difference.
-                    </p>
+                        {/* FLOATING CAT */}
+                        <img
+                            src="/images/logo_cat.png"
+                            alt="Floating Cat"
+                            className="floating-cat w-96 md:w-[28rem] lg:w-[32rem] object-contain mb-6 drop-shadow-lg translate-x-10 mt-40"
+                        />
+                    </div>
+
+                    <style>
+                        {`
+        .floating-cat {
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .speech-bubble {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* smoother tail */
+        .speech-bubble::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 160px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            transform: rotate(45deg);
+            border-radius: 3px;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        `}
+                    </style>
                 </main>
             </div>
 
             {/* REGISTER FORM */}
-            <div className="relative z-20 flex items-start justify-center h-screen pt-24 px-4">
+            <div className="relative z-20 flex items-start justify-end h-screen pt-40 mt-10 mr-80 px-4">
                 <div
                     className="w-full max-w-lg bg-black/70 backdrop-blur-xl border border-white/10
                     rounded-xl shadow-xl p-8 text-white animate-slide-up"

@@ -2,20 +2,18 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 
-export default function AdminReports() {
+export default function ArchivedReports() {
     const { reports = { data: [], links: [] }, filters = {} } = usePage().props;
     const [selected, setSelected] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [status, setStatus] = useState("");
-    const [modalMode, setModalMode] = useState("view"); // 'view' or 'update'
     const [selectedImage, setSelectedImage] = useState(null);
+
     // Filter states
     const [search, setSearch] = useState(filters.search || "");
-    const [ticketId, setTicketId] = useState(filters.ticket_id || "");
     const [category, setCategory] = useState(filters.category || "");
-    const [street, setStreet] = useState(filters.street || "");
-    const [statusFilter, setStatusFilter] = useState(filters.status || "");
     const [perPage, setPerPage] = useState(filters.perPage || 10);
+    const [sort, setSort] = useState(filters.sort || "archived_at");
+    const [direction, setDirection] = useState(filters.direction || "desc");
 
     // Debounce global search
     useEffect(() => {
@@ -27,15 +25,14 @@ export default function AdminReports() {
 
     const applyFilters = (page = reports.current_page || 1) => {
         router.get(
-            route("admin.reports"),
+            route("admin.reports.archived"),
             {
                 page,
                 perPage,
                 search,
-                ticket_id: ticketId,
                 category,
-                street,
-                status: statusFilter,
+                sort,
+                direction,
             },
             { preserveState: true, preserveScroll: true }
         );
@@ -43,17 +40,25 @@ export default function AdminReports() {
 
     const clearFilters = () => {
         setSearch("");
-        setTicketId("");
         setCategory("");
-        setStreet("");
-        setStatusFilter("");
+        setPerPage(10);
+        setSort("archived_at");
+        setDirection("desc");
         applyFilters(1);
     };
 
-    const openModal = (report, mode = "view") => {
+    const handleSort = (col) => {
+        if (sort === col) {
+            setDirection(direction === "asc" ? "desc" : "asc");
+        } else {
+            setSort(col);
+            setDirection("asc");
+        }
+        setTimeout(() => applyFilters(1), 0);
+    };
+
+    const openModal = (report) => {
         setSelected(report);
-        setStatus(report.status);
-        setModalMode(mode);
         setShowModal(true);
     };
 
@@ -62,38 +67,12 @@ export default function AdminReports() {
         setSelected(null);
     };
 
-    const updateStatus = (e) => {
-        e.preventDefault();
-        if (!selected) return;
-        router.patch(
-            route("admin.reports.update", selected.id),
-            { status },
-            {
-                onSuccess: () => {
-                    closeModal();
-                },
-            }
-        );
-    };
-
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-xl text-gray-800">
-                        Admin Reports
-                    </h2>
-                    <button
-                        onClick={() =>
-                            router.visit(
-                                route("admin.archives", { tab: "reports" })
-                            )
-                        }
-                        className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition text-sm font-medium"
-                    >
-                        Archive List
-                    </button>
-                </div>
+                <h2 className="font-semibold text-xl text-gray-800">
+                    Archived Reports
+                </h2>
             }
         >
             <div className="py-6">
@@ -109,6 +88,15 @@ export default function AdminReports() {
                                             setSearch(e.target.value)
                                         }
                                         placeholder="Global search..."
+                                        className="border rounded px-3 py-2 text-sm"
+                                    />
+                                    <input
+                                        value={category}
+                                        onChange={(e) =>
+                                            setCategory(e.target.value)
+                                        }
+                                        onBlur={() => applyFilters()}
+                                        placeholder="Filter by Category"
                                         className="border rounded px-3 py-2 text-sm"
                                     />
                                     <select
@@ -133,50 +121,6 @@ export default function AdminReports() {
                                     </button>
                                 </div>
                             </div>
-
-                            {/* Column Filters */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                <input
-                                    value={ticketId}
-                                    onChange={(e) =>
-                                        setTicketId(e.target.value)
-                                    }
-                                    onBlur={() => applyFilters()}
-                                    placeholder="Filter by Ticket ID"
-                                    className="border rounded px-3 py-2 text-sm"
-                                />
-                                <input
-                                    value={category}
-                                    onChange={(e) =>
-                                        setCategory(e.target.value)
-                                    }
-                                    onBlur={() => applyFilters()}
-                                    placeholder="Filter by Category"
-                                    className="border rounded px-3 py-2 text-sm"
-                                />
-                                <input
-                                    value={street}
-                                    onChange={(e) => setStreet(e.target.value)}
-                                    onBlur={() => applyFilters()}
-                                    placeholder="Filter by Street"
-                                    className="border rounded px-3 py-2 text-sm"
-                                />
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => {
-                                        setStatusFilter(e.target.value);
-                                        applyFilters();
-                                    }}
-                                    className="border rounded px-3 py-2 text-sm"
-                                >
-                                    <option value="">All Status</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="In Progress">
-                                        In Progress
-                                    </option>
-                                    <option value="Resolved">Resolved</option>
-                                </select>
-                            </div>
                         </div>
 
                         <div className="overflow-x-auto">
@@ -186,20 +130,61 @@ export default function AdminReports() {
                                         <th className="px-4 py-3 text-left">
                                             ID
                                         </th>
-                                        <th className="px-4 py-3 text-left">
-                                            Ticket ID
+                                        <th
+                                            className="px-4 py-3 text-left cursor-pointer"
+                                            onClick={() =>
+                                                handleSort("ticket_id")
+                                            }
+                                        >
+                                            Ticket ID{" "}
+                                            {sort === "ticket_id"
+                                                ? direction === "asc"
+                                                    ? "▲"
+                                                    : "▼"
+                                                : ""}
                                         </th>
-                                        <th className="px-4 py-3 text-left">
-                                            Category
+                                        <th
+                                            className="px-4 py-3 text-left cursor-pointer"
+                                            onClick={() =>
+                                                handleSort("category")
+                                            }
+                                        >
+                                            Category{" "}
+                                            {sort === "category"
+                                                ? direction === "asc"
+                                                    ? "▲"
+                                                    : "▼"
+                                                : ""}
                                         </th>
                                         <th className="px-4 py-3 text-left">
                                             Street
                                         </th>
-                                        <th className="px-4 py-3 text-left">
-                                            Status
+                                        <th
+                                            className="px-4 py-3 text-left cursor-pointer"
+                                            onClick={() => handleSort("status")}
+                                        >
+                                            Status{" "}
+                                            {sort === "status"
+                                                ? direction === "asc"
+                                                    ? "▲"
+                                                    : "▼"
+                                                : ""}
+                                        </th>
+                                        <th
+                                            className="px-4 py-3 text-left cursor-pointer"
+                                            onClick={() =>
+                                                handleSort("archived_at")
+                                            }
+                                        >
+                                            Archived At{" "}
+                                            {sort === "archived_at"
+                                                ? direction === "asc"
+                                                    ? "▲"
+                                                    : "▼"
+                                                : ""}
                                         </th>
                                         <th className="px-4 py-3 text-left">
-                                            Date Submitted
+                                            Archived By
                                         </th>
                                         <th className="px-4 py-3 text-left">
                                             Action
@@ -210,10 +195,10 @@ export default function AdminReports() {
                                     {reports.data.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan="7"
+                                                colSpan="8"
                                                 className="px-4 py-6 text-center text-gray-500"
                                             >
-                                                No reports yet.
+                                                No archived reports found.
                                             </td>
                                         </tr>
                                     ) : (
@@ -235,56 +220,25 @@ export default function AdminReports() {
                                                     {r.status}
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    {r.submitted_at
+                                                    {r.archived_at
                                                         ? new Date(
-                                                              r.submitted_at
+                                                              r.archived_at
                                                           ).toLocaleString()
                                                         : "-"}
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() =>
-                                                                openModal(
-                                                                    r,
-                                                                    "view"
-                                                                )
-                                                            }
-                                                            className="text-blue-600 hover:underline"
-                                                        >
-                                                            View
-                                                        </button>
-                                                        <button
-                                                            onClick={() =>
-                                                                openModal(
-                                                                    r,
-                                                                    "update"
-                                                                )
-                                                            }
-                                                            className="text-green-600 hover:underline"
-                                                        >
-                                                            Update
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                if (
-                                                                    confirm(
-                                                                        `Archive report ${r.ticket_id}?`
-                                                                    )
-                                                                ) {
-                                                                    router.post(
-                                                                        route(
-                                                                            "admin.reports.archive",
-                                                                            r.id
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }}
-                                                            className="text-red-600 hover:underline"
-                                                        >
-                                                            Archive
-                                                        </button>
-                                                    </div>
+                                                    {r.archived_by_user?.name ||
+                                                        "-"}
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    <button
+                                                        onClick={() =>
+                                                            openModal(r)
+                                                        }
+                                                        className="text-blue-600 hover:underline"
+                                                    >
+                                                        View
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))
@@ -375,6 +329,34 @@ export default function AdminReports() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">
+                                                Status:
+                                            </p>
+                                            <span
+                                                className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full
+                                                ${
+                                                    selected.status ===
+                                                    "Pending"
+                                                        ? "bg-yellow-100 text-yellow-700"
+                                                        : ""
+                                                }
+                                                ${
+                                                    selected.status ===
+                                                    "In Progress"
+                                                        ? "bg-blue-100 text-blue-700"
+                                                        : ""
+                                                }
+                                                ${
+                                                    selected.status ===
+                                                    "Resolved"
+                                                        ? "bg-green-100 text-green-700"
+                                                        : ""
+                                                }`}
+                                            >
+                                                {selected.status}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-600">
                                                 Submitted At:
                                             </p>
                                             <p className="font-medium">
@@ -383,6 +365,27 @@ export default function AdminReports() {
                                                           selected.submitted_at
                                                       ).toLocaleString()
                                                     : "—"}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Archived At:
+                                            </p>
+                                            <p className="font-medium">
+                                                {selected.archived_at
+                                                    ? new Date(
+                                                          selected.archived_at
+                                                      ).toLocaleString()
+                                                    : "—"}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-600">
+                                                Archived By:
+                                            </p>
+                                            <p className="font-medium">
+                                                {selected.archived_by_user
+                                                    ?.name || "—"}
                                             </p>
                                         </div>
                                         <div>
@@ -421,85 +424,15 @@ export default function AdminReports() {
                                                 </p>
                                             )}
                                         </div>
-                                        {modalMode === "update" ? (
-                                            <form
-                                                onSubmit={updateStatus}
-                                                className="pt-2 border-t"
+                                        <div className="flex justify-end pt-2 border-t">
+                                            <button
+                                                type="button"
+                                                onClick={closeModal}
+                                                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
                                             >
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Status
-                                                </label>
-                                                <select
-                                                    value={status}
-                                                    onChange={(e) =>
-                                                        setStatus(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    className="border rounded-md px-3 py-2 w-full"
-                                                >
-                                                    <option value="Pending">
-                                                        Pending
-                                                    </option>
-                                                    <option value="In Progress">
-                                                        In Progress
-                                                    </option>
-                                                    <option value="Resolved">
-                                                        Resolved
-                                                    </option>
-                                                </select>
-                                                <div className="flex justify-end gap-3 mt-4">
-                                                    <button
-                                                        type="button"
-                                                        onClick={closeModal}
-                                                        className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                    <button
-                                                        type="submit"
-                                                        className="px-4 py-2 rounded-md bg-black text-white hover:bg-yellow-500 hover:text-black transition"
-                                                    >
-                                                        Save
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        ) : (
-                                            <div className="pt-2 border-t">
-                                                <p className="text-sm text-gray-600">
-                                                    Status:
-                                                </p>
-                                                <span
-                                                    className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full
-                                                    ${
-                                                        status === "Pending"
-                                                            ? "bg-yellow-100 text-yellow-700"
-                                                            : ""
-                                                    }
-                                                    ${
-                                                        status === "In Progress"
-                                                            ? "bg-blue-100 text-blue-700"
-                                                            : ""
-                                                    }
-                                                    ${
-                                                        status === "Resolved"
-                                                            ? "bg-green-100 text-green-700"
-                                                            : ""
-                                                    }`}
-                                                >
-                                                    {status}
-                                                </span>
-                                                <div className="flex justify-end mt-4">
-                                                    <button
-                                                        type="button"
-                                                        onClick={closeModal}
-                                                        className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
-                                                    >
-                                                        Close
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
+                                                Close
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

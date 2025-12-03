@@ -218,9 +218,8 @@ export default function AdminUsers() {
     };
 
     const archiveUser = (u) => {
-        if (!confirm(`Archive user ${u.email}? This will delete the user.`))
-            return;
-        router.delete(route("admin.users.destroy", u.id));
+        if (!confirm(`Archive user ${u.email}?`)) return;
+        router.post(route("admin.users.archive", u.id));
     };
 
     const handleSort = (col) => {
@@ -237,9 +236,21 @@ export default function AdminUsers() {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="font-semibold text-xl text-gray-800">
-                    Admin Users
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-xl text-gray-800">
+                        Admin Users
+                    </h2>
+                    <button
+                        onClick={() =>
+                            router.visit(
+                                route("admin.archives", { tab: "users" })
+                            )
+                        }
+                        className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition text-sm font-medium"
+                    >
+                        Archive List
+                    </button>
+                </div>
             }
         >
             <div className="py-6">

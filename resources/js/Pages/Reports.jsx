@@ -1,5 +1,6 @@
 import Navbar from "@/Components/Navbar";
 import { router } from "@inertiajs/react";
+import Footer from "@/Components/Footer";
 import { useState } from "react";
 
 const ReportCard = ({ report, auth }) => {
@@ -274,6 +275,10 @@ export default function Reports({ auth, reports = [] }) {
                     <ReportCard key={r.id} report={r} auth={auth} />
                 ))}
             </main>
+            {/* Footer at the bottom */}
+            <footer className="relative z-10">
+                <Footer />
+            </footer>
         </div>
     );
 }
