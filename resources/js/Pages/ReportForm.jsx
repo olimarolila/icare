@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navbar from "@/Components/Navbar";
 import { router } from "@inertiajs/react";
+import { loadLeaflet } from "@/utils/loadLeaflet";
 
 export default function ReportForm({ auth }) {
     const categories = [
@@ -41,10 +42,164 @@ export default function ReportForm({ auth }) {
 
     const [selected, setSelected] = useState(categories[3]); // Default: Road Works
     const [subject, setSubject] = useState("");
-    const [location, setLocation] = useState("");
+    const DEFAULT_COORDS = { lat: 14.60852, lng: 120.99206 }; // Default: Frassati
+    const [locationName, setLocationName] = useState("");
+    const [locationQuery, setLocationQuery] = useState("");
+    const [latitude, setLatitude] = useState(DEFAULT_COORDS.lat);
+    const [longitude, setLongitude] = useState(DEFAULT_COORDS.lng);
+    const [searching, setSearching] = useState(false);
+    const [searchFeedback, setSearchFeedback] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
     const [description, setDescription] = useState("");
     const [images, setImages] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
+    const mapContainerRef = useRef(null);
+    const mapRef = useRef(null);
+    const markerRef = useRef(null);
+
+    const buildFallbackLabel = (lat, lng) =>
+        `Pinned at ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+
+    useEffect(() => {
+        let isMounted = true;
+        loadLeaflet().then((L) => {
+            if (!isMounted || !mapContainerRef.current) {
+                return;
+            }
+            const map = L.map(mapContainerRef.current).setView([
+                latitude,
+                longitude,
+            ], 13);
+            mapRef.current = map;
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap contributors",
+                maxZoom: 19,
+            }).addTo(map);
+            markerRef.current = L.marker([latitude, longitude]).addTo(map);
+            map.on("click", ({ latlng }) => {
+                setLatitude(latlng.lat);
+                setLongitude(latlng.lng);
+                reverseGeocode(latlng.lat, latlng.lng);
+            });
+        });
+        return () => {
+            isMounted = false;
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (!mapRef.current || !markerRef.current) {
+            return;
+        }
+        markerRef.current.setLatLng([latitude, longitude]);
+        mapRef.current.setView([latitude, longitude]);
+    }, [latitude, longitude]);
+
+    const reverseGeocode = async (lat, lng) => {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+            );
+            if (!response.ok) {
+                setLocationName(buildFallbackLabel(lat, lng));
+                setLocationQuery(buildFallbackLabel(lat, lng));
+                return;
+            }
+            const data = await response.json();
+            const label = data?.display_name ?? buildFallbackLabel(lat, lng);
+            setLocationName(label);
+            setLocationQuery(label);
+        } catch (error) {
+            console.error("Reverse geocode failed", error);
+            const label = buildFallbackLabel(lat, lng);
+            setLocationName(label);
+            setLocationQuery(label);
+        }
+    };
+
+    const handleSearch = async () => {
+        if (!locationQuery.trim()) {
+            setSearchFeedback("Enter a location to search.");
+            return;
+        }
+        setSearching(true);
+        setSearchFeedback("Searching...");
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(
+                    locationQuery
+                )}&addressdetails=1&limit=5`
+            );
+            if (!response.ok) {
+                throw new Error("Request failed");
+            }
+            const data = await response.json();
+            setSearchResults(data);
+            if (data.length === 0) {
+                setSearchFeedback("No matches found.");
+                return;
+            }
+            setSearchFeedback(`${data.length} result(s) found.`);
+            applySearchResult(data[0]);
+        } catch (error) {
+            console.error(error);
+            setSearchFeedback("Could not search location. Try again.");
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const applySearchResult = (result) => {
+        if (!result) {
+            return;
+        }
+        const lat = Number(result.lat);
+        const lng = Number(result.lon);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            setLatitude(lat);
+            setLongitude(lng);
+        }
+        if (result.display_name) {
+            setLocationName(result.display_name);
+            setLocationQuery(result.display_name);
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!locationName || !latitude || !longitude) {
+            alert("Please pick a location on the map or via search.");
+            return;
+        }
+        const payload = {
+            category: selected.name,
+            street: locationName,
+            location_name: locationName,
+            latitude,
+            longitude,
+            subject,
+            description,
+            images: images.map((img) => img.file),
+        };
+        router.post(route("reports.store"), payload, {
+            forceFormData: true,
+            onSuccess: () => {
+                setSubject("");
+                setDescription("");
+                setImages([]);
+                setLocationName("");
+                setLocationQuery("");
+                setLatitude(DEFAULT_COORDS.lat);
+                setLongitude(DEFAULT_COORDS.lng);
+                alert("Report submitted successfully");
+            },
+        });
+    };
 
     return (
         <div
@@ -78,26 +233,7 @@ export default function ReportForm({ auth }) {
                 {/* RIGHT SIDE FORM */}
                 <form
                     className="w-full max-w-2xl text-black bg-white/10 backdrop-blur-md p-6 rounded-xl shadow-xl"
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        const payload = {
-                            category: selected.name,
-                            street: location,
-                            subject,
-                            description,
-                            images: images.map((img) => img.file),
-                        };
-                        router.post(route("reports.store"), payload, {
-                            forceFormData: true,
-                            onSuccess: () => {
-                                setSubject("");
-                                setDescription("");
-                                setImages([]);
-                                setLocation("");
-                                alert("Report submitted successfully");
-                            },
-                        });
-                    }}
+                    onSubmit={handleSubmit}
                 >
                     {/* CATEGORY */}
                     <label className="block mb-1 font-semibold text-white">
@@ -125,19 +261,65 @@ export default function ReportForm({ auth }) {
                         ({selected.desc})
                     </p>
 
-                    {/* LOCATION */}
+                    {/* LOCATION SEARCH & MAP */}
                     <label className="block mb-1 font-semibold text-white">
-                        Location of Concern:
+                        Location of Concern (OpenStreetMap):
                     </label>
-                    <input
-                        type="text"
-                        className="w-full px-4 py-2 rounded-lg mb-4 bg-white text-black shadow focus:outline-none"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                    />
+                    <div className="flex flex-col gap-3 mb-4">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <input
+                                type="text"
+                                className="flex-1 px-4 py-2 rounded-lg bg-white text-black shadow focus:outline-none"
+                                placeholder="Search an address, barangay, or landmark"
+                                value={locationQuery}
+                                onChange={(e) => setLocationQuery(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleSearch();
+                                    }
+                                }}
+                            />
+                            <button
+                                type="button"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
+                                disabled={searching}
+                                onClick={handleSearch}
+                            >
+                                {searching ? "Searching..." : "Search"}
+                            </button>
+                        </div>
+                        {searchFeedback && (
+                            <p className="text-sm text-white/70">{searchFeedback}</p>
+                        )}
+                        {searchResults.length > 1 && (
+                            <div className="bg-white/20 rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto">
+                                {searchResults.map((result) => (
+                                    <button
+                                        type="button"
+                                        key={`${result.place_id}-${result.lon}`}
+                                        className="text-left text-sm w-full bg-white/10 hover:bg-white/20 rounded-md px-3 py-2"
+                                        onClick={() => applySearchResult(result)}
+                                    >
+                                        {result.display_name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    <div
+                        ref={mapContainerRef}
+                        className="w-full h-64 rounded-xl overflow-hidden border border-white/30"
+                    ></div>
+                    <p className="text-sm text-white/80 mt-2">
+                        Selected: {locationName || "Tap the map or search to set"}
+                    </p>
+                    <p className="text-xs text-white/60">
+                        Lat: {latitude?.toFixed(5)} | Lng: {longitude?.toFixed(5)}
+                    </p>
 
                     {/* MAIN SUBJECT */}
-                    <label className="block mb-1 font-semibold text-white">
+                    <label className="block mt-5 mb-1 font-semibold text-white">
                         Main Subject:
                     </label>
                     <input

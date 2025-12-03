@@ -13,6 +13,9 @@ class Report extends Model
         'ticket_id',
         'category',
         'street',
+        'location_name',
+        'latitude',
+        'longitude',
         'subject',
         'status',
         'description',
@@ -28,6 +31,8 @@ class Report extends Model
         'images' => 'array',
         'submitted_at' => 'datetime',
         'user_vote' => 'integer',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'archived_at' => 'datetime',
     ];
 
