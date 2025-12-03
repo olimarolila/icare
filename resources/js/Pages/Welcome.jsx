@@ -3,7 +3,11 @@ import { Link } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import FlashMessages from "@/Components/FlashMessages";
 
-export default function Welcome({ auth, reports = [], statusCounts = { resolved: 0, inProgress: 0, pending: 0 } }) {
+export default function Welcome({
+    auth,
+    reports = [],
+    statusCounts = { resolved: 0, inProgress: 0, pending: 0 },
+}) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
     const [showModal, setShowModal] = useState(false);
