@@ -1,9 +1,68 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+
+const InputError = ({ message, className = '', ...props }) => {
+    return message ? (
+        <p {...props} className={'text-sm text-red-600 ' + className}>
+            {message}
+        </p>
+    ) : null;
+};
+
+const InputLabel = ({ value, className = '', children, ...props }) => {
+    return (
+        <label
+            {...props}
+            className={`block font-medium text-sm text-gray-700 ${className}`}
+        >
+            {value ? value : children}
+        </label>
+    );
+};
+
+const PrimaryButton = ({ className = '', disabled, children, ...props }) => (
+    <button
+        {...props}
+        className={
+            `inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900 ${
+                disabled && 'opacity-25'
+            } ` + className
+        }
+        disabled={disabled}
+    >
+        {children}
+    </button>
+);
+
+const TextInput = forwardRef(function TextInput(
+    { type = 'text', className = '', isFocused = false, ...props },
+    ref,
+) {
+    const localRef = useRef(null);
+
+    useImperativeHandle(ref, () => ({
+        focus: () => localRef.current?.focus(),
+    }));
+
+    useEffect(() => {
+        if (isFocused) {
+            localRef.current?.focus();
+        }
+    }, [isFocused]);
+
+    return (
+        <input
+            {...props}
+            type={type}
+            className={
+                'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ' +
+                className
+            }
+            ref={localRef}
+        />
+    );
+});
 
 export default function UpdateProfileInformation({
     mustVerifyEmail,

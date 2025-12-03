@@ -1,9 +1,141 @@
-import ApplicationLogo from "@/Components/ApplicationLogo";
-import Dropdown from "@/Components/Dropdown";
-import NavLink from "@/Components/NavLink";
-import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
+import { Transition } from "@headlessui/react";
 import { Link, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
+
+const DropDownContext = createContext();
+
+const Dropdown = ({ children }) => {
+    const [open, setOpen] = useState(false);
+
+    const toggleOpen = () => {
+        setOpen((previousState) => !previousState);
+    };
+
+    return (
+        <DropDownContext.Provider value={{ open, setOpen, toggleOpen }}>
+            <div className="relative">{children}</div>
+        </DropDownContext.Provider>
+    );
+};
+
+Dropdown.Trigger = ({ children }) => {
+    const { open, setOpen, toggleOpen } = useContext(DropDownContext);
+
+    return (
+        <>
+            <div onClick={toggleOpen}>{children}</div>
+
+            {open && (
+                <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setOpen(false)}
+                ></div>
+            )}
+        </>
+    );
+};
+
+Dropdown.Content = ({
+    align = "right",
+    width = "48",
+    contentClasses = "py-1 bg-white",
+    children,
+}) => {
+    const { open, setOpen } = useContext(DropDownContext);
+
+    let alignmentClasses = "origin-top";
+
+    if (align === "left") {
+        alignmentClasses = "ltr:origin-top-left rtl:origin-top-right start-0";
+    } else if (align === "right") {
+        alignmentClasses = "ltr:origin-top-right rtl:origin-top-left end-0";
+    }
+
+    let widthClasses = "";
+
+    if (width === "48") {
+        widthClasses = "w-48";
+    }
+
+    return (
+        <>
+            <Transition
+                show={open}
+                enter="transition ease-out duration-200"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="transition ease-in duration-75"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+            >
+                <div
+                    className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
+                    onClick={() => setOpen(false)}
+                >
+                    <div
+                        className={
+                            `rounded-md ring-1 ring-black ring-opacity-5 ` +
+                            contentClasses
+                        }
+                    >
+                        {children}
+                    </div>
+                </div>
+            </Transition>
+        </>
+    );
+};
+
+Dropdown.Link = ({ className = '', children, ...props }) => (
+    <Link
+        {...props}
+        className={
+            'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ' +
+            className
+        }
+    >
+        {children}
+    </Link>
+);
+
+const NavLink = ({
+    active = false,
+    className = "",
+    children,
+    ...props
+}) => (
+    <Link
+        {...props}
+        className={
+            "inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none " +
+            (active
+                ? "border-yellow-400 text-yellow-400 focus:border-yellow-500"
+                : "border-transparent text-white/80 hover:border-yellow-300 hover:text-yellow-400 focus:border-yellow-300 focus:text-yellow-400") +
+            " " +
+            className
+        }
+    >
+        {children}
+    </Link>
+);
+
+const ResponsiveNavLink = ({
+    active = false,
+    className = "",
+    children,
+    ...props
+}) => (
+    <Link
+        {...props}
+        className={`flex w-full items-start border-l-4 py-2 pe-4 ps-3 ${
+            active
+                ? "border-yellow-400 bg-black/60 text-yellow-400 focus:border-yellow-500 focus:bg-black/70"
+                : "border-transparent text-white/80 hover:border-yellow-300 hover:bg-black/60 hover:text-yellow-400 focus:border-yellow-300 focus:bg-black/60 focus:text-yellow-400"
+        } text-base font-medium transition duration-150 ease-in-out focus:outline-none ${className}`}
+    >
+        {children}
+    </Link>
+);
 
 export default function AuthenticatedLayout({ header, children }) {
     const auth = usePage().props.auth;

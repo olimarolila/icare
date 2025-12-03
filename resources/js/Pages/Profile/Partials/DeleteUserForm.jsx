@@ -1,11 +1,152 @@
-import DangerButton from '@/Components/DangerButton';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import Modal from '@/Components/Modal';
-import SecondaryButton from '@/Components/SecondaryButton';
-import TextInput from '@/Components/TextInput';
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import {
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from 'react';
+
+const DangerButton = ({ className = '', disabled, children, ...props }) => (
+    <button
+        {...props}
+        className={
+            `inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 active:bg-red-700 ${
+                disabled && 'opacity-25'
+            } ` + className
+        }
+        disabled={disabled}
+    >
+        {children}
+    </button>
+);
+
+const InputError = ({ message, className = '', ...props }) => {
+    return message ? (
+        <p {...props} className={'text-sm text-red-600 ' + className}>
+            {message}
+        </p>
+    ) : null;
+};
+
+const InputLabel = ({ value, className = '', children, ...props }) => (
+    <label
+        {...props}
+        className={`block font-medium text-sm text-gray-700 ${className}`}
+    >
+        {value ? value : children}
+    </label>
+);
+
+const Modal = ({
+    children,
+    show = false,
+    maxWidth = '2xl',
+    closeable = true,
+    onClose = () => {},
+}) => {
+    const close = () => {
+        if (closeable) {
+            onClose();
+        }
+    };
+
+    const maxWidthClass = {
+        sm: 'sm:max-w-sm',
+        md: 'sm:max-w-md',
+        lg: 'sm:max-w-lg',
+        xl: 'sm:max-w-xl',
+        '2xl': 'sm:max-w-2xl',
+    }[maxWidth];
+
+    return (
+        <Transition show={show} leave="duration-200">
+            <Dialog
+                as="div"
+                id="modal"
+                className="fixed inset-0 z-50 flex transform items-center overflow-y-auto px-4 py-6 transition-all sm:px-0"
+                onClose={close}
+            >
+                <TransitionChild
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="absolute inset-0 bg-gray-500/75" />
+                </TransitionChild>
+
+                <TransitionChild
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    enterTo="opacity-100 translate-y-0 sm:scale-100"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                    <DialogPanel
+                        className={`mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full ${maxWidthClass}`}
+                    >
+                        {children}
+                    </DialogPanel>
+                </TransitionChild>
+            </Dialog>
+        </Transition>
+    );
+};
+
+const SecondaryButton = ({
+    type = 'button',
+    className = '',
+    disabled,
+    children,
+    ...props
+}) => (
+    <button
+        {...props}
+        type={type}
+        className={
+            `inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 ${
+                disabled && 'opacity-25'
+            } ` + className
+        }
+        disabled={disabled}
+    >
+        {children}
+    </button>
+);
+
+const TextInput = forwardRef(function TextInput(
+    { type = 'text', className = '', isFocused = false, ...props },
+    ref,
+) {
+    const localRef = useRef(null);
+
+    useImperativeHandle(ref, () => ({
+        focus: () => localRef.current?.focus(),
+    }));
+
+    useEffect(() => {
+        if (isFocused) {
+            localRef.current?.focus();
+        }
+    }, [isFocused]);
+
+    return (
+        <input
+            {...props}
+            type={type}
+            className={
+                'rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ' +
+                className
+            }
+            ref={localRef}
+        />
+    );
+});
 
 export default function DeleteUserForm({ className = '' }) {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
