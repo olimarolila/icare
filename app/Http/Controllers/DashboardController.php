@@ -9,8 +9,45 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function citizen(Request $request)
     {
+        $user = $request->user();
+
+        if (!$user || $user->role !== 'citizen') {
+            abort(403);
+        }
+
+        $reports = Report::where('user_id', $user->id)
+            ->whereNull('archived_at')
+            ->orderByDesc('submitted_at')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($report) {
+                return [
+                    'id' => $report->id,
+                    'ticket_id' => $report->ticket_id,
+                    'subject' => $report->subject,
+                    'status' => $report->status,
+                    'category' => $report->category,
+                    'street' => $report->street,
+                    'submitted_at' => optional($report->submitted_at)->toDateTimeString(),
+                    'created_at' => optional($report->created_at)->toDateTimeString(),
+                ];
+            });
+
+        return Inertia::render('Citizen/Dashboard', [
+            'reports' => $reports,
+        ]);
+    }
+
+    public function admin(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || $user->role !== 'admin') {
+            abort(403);
+        }
+
         $range = $request->input('range', 'week'); // week|month|year|all
 
         // Determine start and end dates based on range

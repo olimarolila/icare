@@ -166,7 +166,11 @@ export default function Welcome({
                     <div className="hidden md:flex items-center space-x-8 font-semibold text-[1.2rem]">
                         {auth.user ? (
                             <Link
-                                href={route("dashboard")}
+                                href={route(
+                                    auth.user.role === "admin"
+                                        ? "admin.dashboard"
+                                        : "citizen.dashboard"
+                                )}
                                 className="hover:text-yellow-400 transition-colors"
                             >
                                 Dashboard
@@ -243,7 +247,11 @@ export default function Welcome({
                     <div className="border-t border-gray-600 my-2" />
                     {auth.user ? (
                         <Link
-                            href={route("dashboard")}
+                            href={route(
+                                auth.user.role === "admin"
+                                    ? "admin.dashboard"
+                                    : "citizen.dashboard"
+                            )}
                             className="block py-1 hover:text-yellow-400 transition-colors"
                         >
                             Dashboard

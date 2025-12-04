@@ -12,8 +12,17 @@ export default function Navbar({ auth }) {
 
     // adjust this according to your actual user field
     const isAdmin = auth?.user && auth.user.role === "admin";
+    const isCitizen = auth?.user && auth.user.role === "citizen";
+    const dashboardRouteName = isAdmin
+        ? "admin.dashboard"
+        : isCitizen
+        ? "citizen.dashboard"
+        : null;
     const isActive = (names) => {
-        const list = Array.isArray(names) ? names : [names];
+        const list = (Array.isArray(names) ? names : [names]).filter(Boolean);
+        if (list.length === 0) {
+            return false;
+        }
         return list.some((name) => route().current(name));
     };
     const navLinkClass = (names) =>
@@ -100,9 +109,9 @@ export default function Navbar({ auth }) {
                             {userMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-40 bg-black/90 border border-white/10 rounded-md shadow-lg">
                                     <div className="py-1">
-                                        {isAdmin && (
+                                        {(isAdmin || isCitizen) && (
                                             <Link
-                                                href={route("dashboard")}
+                                                href={route(dashboardRouteName)}
                                                 className="block px-4 py-2 text-sm hover:bg-white/5"
                                             >
                                                 Dashboard
@@ -209,10 +218,10 @@ export default function Navbar({ auth }) {
                 <div className="border-t border-gray-600 my-2" />
                 {auth?.user ? (
                     <>
-                        {isAdmin && (
+                        {(isAdmin || isCitizen) && (
                             <Link
-                                href={route("dashboard")}
-                                className={`block py-1 ${navLinkClass("dashboard")}`}
+                                href={route(dashboardRouteName)}
+                                className={`block py-1 ${navLinkClass(dashboardRouteName)}`}
                             >
                                 Dashboard
                             </Link>

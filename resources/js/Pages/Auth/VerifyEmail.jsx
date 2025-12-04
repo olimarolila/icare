@@ -1,4 +1,4 @@
-import GuestLayout from '@/Layouts/GuestLayout';
+import CitizenLayout from '@/Layouts/CitizenLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 
 const PrimaryButton = ({ className = '', disabled, children, ...props }) => (
@@ -25,7 +25,7 @@ export default function VerifyEmail({ status }) {
     };
 
     return (
-        <GuestLayout>
+        <CitizenLayout>
             <Head title="Email Verification" />
 
             <div className="mb-4 text-sm text-gray-600">
@@ -58,6 +58,6 @@ export default function VerifyEmail({ status }) {
                     </Link>
                 </div>
             </form>
-        </GuestLayout>
+        </CitizenLayout>
     );
 }

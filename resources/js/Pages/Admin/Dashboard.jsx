@@ -14,7 +14,7 @@ export default function AdminDashboard() {
 
     const handleRangeChange = (newRange) => {
         setLoadingRange(newRange);
-        router.visit(route("dashboard", { range: newRange }), {
+        router.visit(route("admin.dashboard", { range: newRange }), {
             preserveState: true,
             onFinish: () => setLoadingRange(null),
         });

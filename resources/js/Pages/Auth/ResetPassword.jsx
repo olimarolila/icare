@@ -1,4 +1,4 @@
-import GuestLayout from '@/Layouts/GuestLayout';
+import CitizenLayout from '@/Layouts/CitizenLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
@@ -79,7 +79,7 @@ export default function ResetPassword({ token, email }) {
     };
 
     return (
-        <GuestLayout>
+        <CitizenLayout>
             <Head title="Reset Password" />
 
             <form onSubmit={submit}>
@@ -146,6 +146,6 @@ export default function ResetPassword({ token, email }) {
                     </PrimaryButton>
                 </div>
             </form>
-        </GuestLayout>
+        </CitizenLayout>
     );
 }

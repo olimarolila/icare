@@ -224,7 +224,7 @@ export default function ReportForm({ auth }) {
                     </p>
 
                     <img
-                        src="/images/logo_cat.PNG"
+                        src="/images/logo_cat3.png"
                         alt="Mascot"
                         className="w-44 mt-8 select-none pointer-events-none"
                     />

@@ -138,6 +138,14 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = auth?.user;
     const [menuOpen, setMenuOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const dashboardRouteName = user
+        ? user.role === "admin"
+            ? "admin.dashboard"
+            : "citizen.dashboard"
+        : null;
+    const dashboardIsActive = dashboardRouteName
+        ? route().current(dashboardRouteName)
+        : false;
 
     return (
         <div className="min-h-screen bg-black-100">
@@ -158,8 +166,8 @@ export default function AuthenticatedLayout({ header, children }) {
                             {user?.role === "admin" && (
                                 <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                     <NavLink
-                                        href={route("dashboard")}
-                                        active={route().current("dashboard")}
+                                        href={route(dashboardRouteName)}
+                                        active={dashboardIsActive}
                                         className="text-white hover:text-yellow-400"
                                     >
                                         Dashboard
@@ -294,8 +302,8 @@ export default function AuthenticatedLayout({ header, children }) {
                         {user?.role === "admin" && (
                             <>
                                 <ResponsiveNavLink
-                                    href={route("dashboard")}
-                                    active={route().current("dashboard")}
+                                    href={route(dashboardRouteName)}
+                                    active={dashboardIsActive}
                                     className="text-white hover:text-yellow-400"
                                 >
                                     Dashboard
@@ -370,7 +378,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 {user?.role === "admin" && (
                     <>
                         <Link
-                            href={route("dashboard")}
+                            href={route(dashboardRouteName)}
                             className="block py-1 hover:text-yellow-400 transition-colors"
                         >
                             Dashboard
