@@ -12,31 +12,59 @@ const ApplicationLogo = (props) => (
     </svg>
 );
 
+const NavLink = ({ active = false, className = "", children, ...props }) => (
+    <Link
+        {...props}
+        className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none ${
+            active
+                ? "border-yellow-400 text-yellow-400 focus:border-yellow-500"
+                : "border-transparent text-white/80 hover:border-yellow-300 hover:text-yellow-400 focus:border-yellow-300 focus:text-yellow-400"
+        } ${className}`}
+    >
+        {children}
+    </Link>
+);
+
 export default function CitizenLayout({ children }) {
     const { auth } = usePage().props;
     const user = auth?.user;
     const isCitizen = user?.role === "citizen";
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const dashboardRouteName = "citizen.dashboard";
+    const dashboardIsActive = isCitizen
+        ? route().current(dashboardRouteName)
+        : false;
+    const profileIsActive = isCitizen ? route().current("profile.edit") : false;
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {isCitizen && (
                 <nav className="sticky top-0 z-20 border-b border-[#7D7D7D] bg-black/90 backdrop-blur-md">
-                    <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-                        <Link href="/">
-                            <img
-                                src="/images/logo_text.png"
-                                alt="iCARE Logo"
-                                className="h-10 object-contain"
-                            />
-                        </Link>
-                        <div className="flex items-center gap-4 font-medium text-sm text-white">
-                            <Link
-                                href={route("profile.edit")}
-                                className="text-white/80 hover:text-yellow-400 transition"
-                            >
-                                Profile
-                            </Link>
+                    <div className="mx-auto h-16 w-full max-w-6xl px-6">
+                        <div className="flex h-full items-center justify-between">
+                            <div className="flex items-center space-x-8">
+                                <Link href="/">
+                                    <img
+                                        src="/images/logo_text.png"
+                                        alt="iCARE Logo"
+                                        className="h-10 object-contain"
+                                    />
+                                </Link>
+                                <div className="hidden sm:flex sm:space-x-8">
+                                    <NavLink
+                                        href={route(dashboardRouteName)}
+                                        active={dashboardIsActive}
+                                    >
+                                        Dashboard
+                                    </NavLink>
+                                    <NavLink
+                                        href={route("profile.edit")}
+                                        active={profileIsActive}
+                                    >
+                                        Profile
+                                    </NavLink>
+                                </div>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setShowLogoutConfirm(true)}
