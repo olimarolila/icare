@@ -9,6 +9,14 @@ export default function Navbar({ auth }) {
 
     // adjust this according to your actual user field
     const isAdmin = auth?.user && auth.user.role === "admin";
+    const isActive = (names) => {
+        const list = Array.isArray(names) ? names : [names];
+        return list.some((name) => route().current(name));
+    };
+    const navLinkClass = (names) =>
+        `hover:text-yellow-400 transition-colors ${
+            isActive(names) ? "text-yellow-400" : ""
+        }`;
 
     return (
         <>
@@ -28,7 +36,7 @@ export default function Navbar({ auth }) {
                     <li>
                         <Link
                             href={route("reports")}
-                            className="hover:text-yellow-400 transition-colors"
+                            className={navLinkClass("reports")}
                         >
                             Reports
                         </Link>
@@ -36,7 +44,7 @@ export default function Navbar({ auth }) {
                     <li>
                         <Link
                             href={route("report.form")}
-                            className="hover:text-yellow-400 transition-colors"
+                            className={navLinkClass("report.form")}
                         >
                             Report Form
                         </Link>
@@ -44,7 +52,7 @@ export default function Navbar({ auth }) {
                     <li>
                         <Link
                             href={route("about")}
-                            className="hover:text-yellow-400 transition-colors"
+                            className={navLinkClass("about")}
                         >
                             About
                         </Link>
@@ -108,13 +116,17 @@ export default function Navbar({ auth }) {
                         <>
                             <Link
                                 href={route("login")}
-                                className="hover:text-yellow-400 transition-colors"
+                                className={navLinkClass("login")}
                             >
                                 Log In
                             </Link>
                             <Link
                                 href={route("register")}
-                                className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                                className={`transition-colors ${
+                                    isActive("login")
+                                        ? "text-white hover:text-yellow-300"
+                                        : "text-yellow-400 hover:text-yellow-300"
+                                } ${isActive("register") ? "font-bold" : ""}`}
                             >
                                 Register
                             </Link>
@@ -155,19 +167,19 @@ export default function Navbar({ auth }) {
             >
                 <Link
                     href={route("reports")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
+                    className={`block py-1 ${navLinkClass("reports")}`}
                 >
                     Reports
                 </Link>
                 <Link
                     href={route("report.form")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
+                    className={`block py-1 ${navLinkClass("report.form")}`}
                 >
                     Report Form
                 </Link>
                 <Link
                     href={route("about")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
+                    className={`block py-1 ${navLinkClass("about")}`}
                 >
                     About
                 </Link>
@@ -177,7 +189,7 @@ export default function Navbar({ auth }) {
                         {isAdmin && (
                             <Link
                                 href={route("dashboard")}
-                                className="block py-1 hover:text-yellow-400 transition-colors"
+                                className={`block py-1 ${navLinkClass("dashboard")}`}
                             >
                                 Dashboard
                             </Link>
@@ -185,7 +197,9 @@ export default function Navbar({ auth }) {
 
                         <Link
                             href={route("profile.edit")}
-                            className="block py-1 hover:text-yellow-400 transition-colors"
+                            className={`block py-1 ${navLinkClass(
+                                "profile.edit"
+                            )}`}
                         >
                             Profile
                         </Link>
@@ -202,13 +216,17 @@ export default function Navbar({ auth }) {
                     <>
                         <Link
                             href={route("login")}
-                            className="block py-1 hover:text-yellow-400 transition-colors"
+                            className={`block py-1 ${navLinkClass("login")}`}
                         >
                             Log In
                         </Link>
                         <Link
                             href={route("register")}
-                            className="block py-1 text-yellow-400 hover:text-yellow-300 transition-colors"
+                            className={`block py-1 transition-colors ${
+                                isActive("login")
+                                    ? "text-white hover:text-yellow-300"
+                                    : "text-yellow-400 hover:text-yellow-300"
+                            } ${isActive("register") ? "font-bold" : ""}`}
                         >
                             Register
                         </Link>
