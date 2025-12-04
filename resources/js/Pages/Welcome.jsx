@@ -132,6 +132,14 @@ export default function Welcome({
                     <ul className="hidden md:flex items-center space-x-10 font-medium text-[1.2rem]">
                         <li>
                             <Link
+                                href="/"
+                                className="text-yellow-400 transition-colors"
+                            >
+                                Home
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
                                 href={route("reports")}
                                 className="hover:text-yellow-400 transition-colors"
                             >
@@ -208,6 +216,12 @@ export default function Welcome({
                             : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
                     }`}
                 >
+                    <Link
+                        href="/"
+                        className="block py-1 text-yellow-400 transition-colors"
+                    >
+                        Home
+                    </Link>
                     <Link
                         href={route("reports")}
                         className="block py-1 hover:text-yellow-400 transition-colors"
@@ -901,7 +915,7 @@ export default function Welcome({
             <img
                 src="/images/logo_cat3.png"
                 alt="Floating Cat"
-                className="floating-cat w-32 md:w-48 lg:w-60 z-50 pointer-events-none"
+                className="floating-cat w-40 md:w-48 lg:w-60 z-50 pointer-events-none"
             />
             <style>{`
                 .floating-cat { position: fixed; bottom: 20px; right: 20px; animation: float 4s ease-in-out infinite; }

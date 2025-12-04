@@ -1,4 +1,4 @@
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import ConfirmDialog from "@/Components/ConfirmDialog";
 
@@ -6,6 +6,9 @@ export default function Navbar({ auth }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+    const { url } = usePage();
+    const isHome = url === "/" || url === "";
 
     // adjust this according to your actual user field
     const isAdmin = auth?.user && auth.user.role === "admin";
@@ -33,6 +36,18 @@ export default function Navbar({ auth }) {
 
                 {/* Center menu */}
                 <ul className="hidden md:flex items-center space-x-10 font-medium text-[1.2rem]">
+                    <li>
+                        <Link
+                            href="/"
+                            className={`transition-colors ${
+                                isHome
+                                    ? "text-yellow-400"
+                                    : "hover:text-yellow-400"
+                            }`}
+                        >
+                            Home
+                        </Link>
+                    </li>
                     <li>
                         <Link
                             href={route("reports")}
@@ -165,6 +180,14 @@ export default function Navbar({ auth }) {
                         : "opacity-0 -translate-y-5 max-h-0 overflow-hidden"
                 }`}
             >
+                <Link
+                    href="/"
+                    className={`block py-1 transition-colors ${
+                        isHome ? "text-yellow-400" : "hover:text-yellow-400"
+                    }`}
+                >
+                    Home
+                </Link>
                 <Link
                     href={route("reports")}
                     className={`block py-1 ${navLinkClass("reports")}`}

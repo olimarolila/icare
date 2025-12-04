@@ -66,10 +66,10 @@ export default function ReportForm({ auth }) {
             if (!isMounted || !mapContainerRef.current) {
                 return;
             }
-            const map = L.map(mapContainerRef.current).setView([
-                latitude,
-                longitude,
-            ], 13);
+            const map = L.map(mapContainerRef.current).setView(
+                [latitude, longitude],
+                13
+            );
             mapRef.current = map;
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 attribution: "&copy; OpenStreetMap contributors",
@@ -272,7 +272,9 @@ export default function ReportForm({ auth }) {
                                 className="flex-1 px-4 py-2 rounded-lg bg-white text-black shadow focus:outline-none"
                                 placeholder="Search an address, barangay, or landmark"
                                 value={locationQuery}
-                                onChange={(e) => setLocationQuery(e.target.value)}
+                                onChange={(e) =>
+                                    setLocationQuery(e.target.value)
+                                }
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                         e.preventDefault();
@@ -290,7 +292,9 @@ export default function ReportForm({ auth }) {
                             </button>
                         </div>
                         {searchFeedback && (
-                            <p className="text-sm text-white/70">{searchFeedback}</p>
+                            <p className="text-sm text-white/70">
+                                {searchFeedback}
+                            </p>
                         )}
                         {searchResults.length > 1 && (
                             <div className="bg-white/20 rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto">
@@ -299,7 +303,9 @@ export default function ReportForm({ auth }) {
                                         type="button"
                                         key={`${result.place_id}-${result.lon}`}
                                         className="text-left text-sm w-full bg-white/10 hover:bg-white/20 rounded-md px-3 py-2"
-                                        onClick={() => applySearchResult(result)}
+                                        onClick={() =>
+                                            applySearchResult(result)
+                                        }
                                     >
                                         {result.display_name}
                                     </button>
@@ -312,10 +318,12 @@ export default function ReportForm({ auth }) {
                         className="w-full h-64 rounded-xl overflow-hidden border border-white/30"
                     ></div>
                     <p className="text-sm text-white/80 mt-2">
-                        Selected: {locationName || "Tap the map or search to set"}
+                        Selected:{" "}
+                        {locationName || "Tap the map or search to set"}
                     </p>
                     <p className="text-xs text-white/60">
-                        Lat: {latitude?.toFixed(5)} | Lng: {longitude?.toFixed(5)}
+                        Lat: {latitude?.toFixed(5)} | Lng:{" "}
+                        {longitude?.toFixed(5)}
                     </p>
 
                     {/* MAIN SUBJECT */}

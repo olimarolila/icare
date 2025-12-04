@@ -75,10 +75,7 @@ Route::middleware(['auth'])->group(function () {
 */
 
 Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function () {
-    Route::get('/dashboard', function () {
-        // You can use Admin/Dashboard here if you want
-        return Inertia::render('Admin/Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/admin/forum', function () {
         return Inertia::render('Admin/Forum');
