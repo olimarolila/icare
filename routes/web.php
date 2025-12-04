@@ -148,7 +148,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
             'role_description' => 'nullable|string|max:255',
         ]);
         $user->update($data);
-        return redirect()->route('admin.users');
+        return redirect()->route('admin.users')->with('success', 'User updated successfully.');
     })->name('admin.users.update');
 
     // Archive user
@@ -157,7 +157,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
             'archived_at' => now(),
             'archived_by' => auth()->id(),
         ]);
-        return redirect()->route('admin.users');
+        return redirect()->route('admin.users')->with('success', 'User archived successfully.');
     })->name('admin.users.archive');
 
     // Delete user (keep for backward compatibility with DataTables)
@@ -176,7 +176,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
             'archived_at' => now(),
             'archived_by' => auth()->id(),
         ]);
-        return redirect()->route('admin.reports');
+        return redirect()->route('admin.reports')->with('success', 'Report archived successfully.');
     })->name('admin.reports.archive');
 
     // Restore user
@@ -185,7 +185,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
             'archived_at' => null,
             'archived_by' => null,
         ]);
-        return redirect()->route('admin.archives', ['tab' => 'users']);
+        return redirect()->route('admin.archives', ['tab' => 'users'])->with('success', 'User restored successfully.');
     })->name('admin.users.restore');
 
     // Restore report
@@ -195,7 +195,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
             'archived_at' => null,
             'archived_by' => null,
         ]);
-        return redirect()->route('admin.archives', ['tab' => 'reports']);
+        return redirect()->route('admin.archives', ['tab' => 'reports'])->with('success', 'Report restored successfully.');
     })->name('admin.reports.restore');
 
     // Unified Archives Page with Tabs

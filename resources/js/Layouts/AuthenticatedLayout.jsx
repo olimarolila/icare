@@ -1,6 +1,7 @@
 import { Transition } from "@headlessui/react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, router } from "@inertiajs/react";
 import { createContext, useContext, useState } from "react";
+import ConfirmDialog from "@/Components/ConfirmDialog";
 
 const DropDownContext = createContext();
 
@@ -86,11 +87,11 @@ Dropdown.Content = ({
     );
 };
 
-Dropdown.Link = ({ className = '', children, ...props }) => (
+Dropdown.Link = ({ className = "", children, ...props }) => (
     <Link
         {...props}
         className={
-            'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ' +
+            "block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none " +
             className
         }
     >
@@ -98,12 +99,7 @@ Dropdown.Link = ({ className = '', children, ...props }) => (
     </Link>
 );
 
-const NavLink = ({
-    active = false,
-    className = "",
-    children,
-    ...props
-}) => (
+const NavLink = ({ active = false, className = "", children, ...props }) => (
     <Link
         {...props}
         className={
@@ -141,6 +137,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const auth = usePage().props.auth;
     const user = auth?.user;
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     return (
         <div className="min-h-screen bg-black-100">
@@ -237,14 +234,15 @@ export default function AuthenticatedLayout({ header, children }) {
                                         >
                                             Profile
                                         </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route("logout")}
-                                            method="post"
-                                            as="button"
-                                            className="hover:text-yellow-400"
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowLogoutConfirm(true)
+                                            }
+                                            className="block w-full px-4 py-2 text-start text-sm leading-5 transition duration-150 ease-in-out hover:text-yellow-400 focus:text-yellow-400 focus:outline-none"
                                         >
                                             Log Out
-                                        </Dropdown.Link>
+                                        </button>
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
@@ -351,14 +349,13 @@ export default function AuthenticatedLayout({ header, children }) {
                             >
                                 Profile
                             </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route("logout")}
-                                as="button"
-                                className="text-white hover:text-yellow-400"
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoutConfirm(true)}
+                                className="block w-full border-l-4 border-transparent py-2 pe-4 ps-3 text-start text-base font-medium text-white transition duration-150 ease-in-out hover:border-yellow-300 hover:text-yellow-400 focus:border-yellow-300 focus:text-yellow-400 focus:outline-none"
                             >
                                 Log Out
-                            </ResponsiveNavLink>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -411,14 +408,13 @@ export default function AuthenticatedLayout({ header, children }) {
                         <span className="block py-1 text-white/80">
                             {user.email}
                         </span>
-                        <Link
-                            href={route("logout")}
-                            method="post"
-                            as="button"
+                        <button
+                            type="button"
+                            onClick={() => setShowLogoutConfirm(true)}
                             className="block py-1 hover:text-yellow-400 transition-colors"
                         >
                             Log Out
-                        </Link>
+                        </button>
                     </>
                 ) : (
                     <>
@@ -447,6 +443,20 @@ export default function AuthenticatedLayout({ header, children }) {
             )}
 
             <main>{children}</main>
+
+            <ConfirmDialog
+                open={showLogoutConfirm}
+                onConfirm={() => {
+                    router.post(route("logout"));
+                    setShowLogoutConfirm(false);
+                }}
+                onCancel={() => setShowLogoutConfirm(false)}
+                title="Confirm Logout"
+                message="Are you sure you want to log out?"
+                confirmText="Logout"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </div>
     );
 }

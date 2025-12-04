@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
+import FlashMessages from "@/Components/FlashMessages";
 
-export default function Welcome({ auth, reports = [] }) {
+export default function Welcome({
+    auth,
+    reports = [],
+    statusCounts = { resolved: 0, inProgress: 0, pending: 0 },
+}) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -103,12 +108,14 @@ export default function Welcome({ auth, reports = [] }) {
     };
 
     const [counterRef, countersVisible] = useInView();
-    const resolved = useCountUp(123, countersVisible);
-    const pending = useCountUp(56, countersVisible);
-    const progress = useCountUp(34, countersVisible);
+    // Use statusCounts from props for accurate numbers
+    const resolved = useCountUp(statusCounts.resolved, countersVisible);
+    const progress = useCountUp(statusCounts.inProgress, countersVisible);
+    const pending = useCountUp(statusCounts.pending, countersVisible);
 
     return (
         <>
+            <FlashMessages />
             {/* Hero */}
             <div
                 className="relative min-h-screen bg-cover bg-center text-white"
@@ -274,17 +281,17 @@ export default function Welcome({ auth, reports = [] }) {
                             </p>
                         </div>
                         <div className="bg-white/10 rounded-2xl p-8 text-center border border-white/20">
-                            <h3 className="text-xl font-semibold">Pending</h3>
-                            <p className="text-5xl font-bold text-yellow-300 mt-3">
-                                {pending}
-                            </p>
-                        </div>
-                        <div className="bg-white/10 rounded-2xl p-8 text-center border border-white/20">
                             <h3 className="text-xl font-semibold">
                                 In Progress
                             </h3>
                             <p className="text-5xl font-bold text-blue-300 mt-3">
                                 {progress}
+                            </p>
+                        </div>
+                        <div className="bg-white/10 rounded-2xl p-8 text-center border border-white/20">
+                            <h3 className="text-xl font-semibold">Pending</h3>
+                            <p className="text-5xl font-bold text-yellow-300 mt-3">
+                                {pending}
                             </p>
                         </div>
                     </div>
@@ -892,7 +899,7 @@ export default function Welcome({ auth, reports = [] }) {
 
             {/* Floating Cat */}
             <img
-                src="/images/logo_cat.png"
+                src="/images/logo_cat3.png"
                 alt="Floating Cat"
                 className="floating-cat w-32 md:w-48 lg:w-60 z-50 pointer-events-none"
             />

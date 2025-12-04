@@ -1,9 +1,11 @@
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { useState } from "react";
+import ConfirmDialog from "@/Components/ConfirmDialog";
 
 export default function Navbar({ auth }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     // adjust this according to your actual user field
     const isAdmin = auth?.user && auth.user.role === "admin";
@@ -89,14 +91,15 @@ export default function Navbar({ auth }) {
                                         >
                                             Profile
                                         </Link>
-                                        <Link
-                                            href={route("logout")}
-                                            method="post"
-                                            as="button"
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowLogoutConfirm(true)
+                                            }
                                             className="block w-full text-left px-4 py-2 text-sm hover:bg-red-600 hover:text-white"
                                         >
                                             Logout
-                                        </Link>
+                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -187,14 +190,13 @@ export default function Navbar({ auth }) {
                             Profile
                         </Link>
 
-                        <Link
-                            href={route("logout")}
-                            method="post"
-                            as="button"
+                        <button
+                            type="button"
+                            onClick={() => setShowLogoutConfirm(true)}
                             className="block py-1 hover:text-red-400 transition-colors"
                         >
                             Logout
-                        </Link>
+                        </button>
                     </>
                 ) : (
                     <>
@@ -213,6 +215,20 @@ export default function Navbar({ auth }) {
                     </>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={showLogoutConfirm}
+                onConfirm={() => {
+                    router.post(route("logout"));
+                    setShowLogoutConfirm(false);
+                }}
+                onCancel={() => setShowLogoutConfirm(false)}
+                title="Confirm Logout"
+                message="Are you sure you want to log out?"
+                confirmText="Logout"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </>
     );
 }

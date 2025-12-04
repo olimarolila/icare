@@ -34,7 +34,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         // Redirect to the originally intended URL if available; otherwise, go back to the welcome page
-        return redirect()->intended('/');
+        return redirect()->intended('/')->with('success', 'Welcome back! You have successfully logged in.');
     }
 
     /**
@@ -48,6 +48,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('success', 'You have been logged out successfully.');
     }
 }

@@ -3,6 +3,7 @@ import { router } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import { loadLeaflet } from "@/utils/loadLeaflet";
 import Footer from "@/Components/Footer";
+import FlashMessages from "@/Components/FlashMessages";
 
 const ReportCard = ({ report, auth }) => {
     const DEFAULT_ZOOM = 15;
@@ -179,10 +180,16 @@ const ReportCard = ({ report, auth }) => {
                         </p>
                         <div className="space-y-1 text-gray-300">
                             <div>
-                                <span className="font-semibold text-white/80">Latitude:</span> {hasCoordinates ? latitude?.toFixed(5) : "—"}
+                                <span className="font-semibold text-white/80">
+                                    Latitude:
+                                </span>{" "}
+                                {hasCoordinates ? latitude?.toFixed(5) : "—"}
                             </div>
                             <div>
-                                <span className="font-semibold text-white/80">Longitude:</span> {hasCoordinates ? longitude?.toFixed(5) : "—"}
+                                <span className="font-semibold text-white/80">
+                                    Longitude:
+                                </span>{" "}
+                                {hasCoordinates ? longitude?.toFixed(5) : "—"}
                             </div>
                         </div>
                         {hasCoordinates && (
@@ -198,7 +205,10 @@ const ReportCard = ({ report, auth }) => {
                 )}
                 {isMapModalOpen && (
                     <div className="fixed inset-0 z-[1100] flex items-center justify-center px-4">
-                        <div className="absolute inset-0 bg-black/70" aria-hidden="true"></div>
+                        <div
+                            className="absolute inset-0 bg-black/70"
+                            aria-hidden="true"
+                        ></div>
                         <div
                             className="relative z-[1200] bg-neutral-900 text-white w-full max-w-3xl rounded-2xl border border-white/10 shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
                             role="dialog"
@@ -237,7 +247,10 @@ const ReportCard = ({ report, auth }) => {
                                     >
                                         Reset View
                                     </button>
-                                    <div ref={mapContainerRef} className="w-full h-full" />
+                                    <div
+                                        ref={mapContainerRef}
+                                        className="w-full h-full"
+                                    />
                                 </div>
                             ) : (
                                 <div className="text-sm text-gray-300">
@@ -292,7 +305,21 @@ const ReportCard = ({ report, auth }) => {
                                 aria-label="upvote"
                                 onClick={() => {
                                     if (!auth?.user) {
-                                        alert("Please log in to vote.");
+                                        router.reload({
+                                            only: ["flash"],
+                                            data: {
+                                                flash: {
+                                                    error: "Please log in to vote.",
+                                                },
+                                            },
+                                            preserveScroll: true,
+                                            preserveState: true,
+                                            onSuccess: (page) => {
+                                                page.props.flash = {
+                                                    error: "Please log in to vote.",
+                                                };
+                                            },
+                                        });
                                         return;
                                     }
                                     router.post(
@@ -322,7 +349,16 @@ const ReportCard = ({ report, auth }) => {
                                 aria-label="downvote"
                                 onClick={() => {
                                     if (!auth?.user) {
-                                        alert("Please log in to vote.");
+                                        router.reload({
+                                            only: ["flash"],
+                                            preserveScroll: true,
+                                            preserveState: true,
+                                            onSuccess: (page) => {
+                                                page.props.flash = {
+                                                    error: "Please log in to vote.",
+                                                };
+                                            },
+                                        });
                                         return;
                                     }
                                     router.post(
@@ -425,7 +461,16 @@ const ReportCard = ({ report, auth }) => {
                         onSubmit={(e) => {
                             e.preventDefault();
                             if (!auth?.user) {
-                                alert("Please log in to comment.");
+                                router.reload({
+                                    only: ["flash"],
+                                    preserveScroll: true,
+                                    preserveState: true,
+                                    onSuccess: (page) => {
+                                        page.props.flash = {
+                                            error: "Please log in to comment.",
+                                        };
+                                    },
+                                });
                                 return;
                             }
                             const form = e.currentTarget;
@@ -477,6 +522,7 @@ export default function Reports({ auth, reports = [] }) {
             className="relative min-h-screen bg-cover bg-center bg-fixed text-white"
             style={{ backgroundImage: "url('/images/bg (reports).jpg')" }}
         >
+            <FlashMessages />
             <Navbar auth={auth} />
             <main className="relative z-10 min-h-[80vh] px-6 md:px-16 lg:px-32 py-10 flex flex-col items-center">
                 {reports.length === 0 && (
