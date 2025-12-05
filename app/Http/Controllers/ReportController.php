@@ -6,6 +6,9 @@ use App\Models\Report;
 use App\Models\ReportVote;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Str;
 
 class ReportController extends Controller
 {
@@ -96,8 +99,50 @@ class ReportController extends Controller
 
         $paths = [];
         if ($request->hasFile('images')) {
+            // Initialize Intervention Image manager with GD driver
+            $manager = new ImageManager(new Driver());
+
+            // Watermark image path (public/images/logo_cat.png)
+            $watermarkPath = public_path('images/logo_cat.PNG');
+            $watermarkOriginal = null;
+            if (is_file($watermarkPath)) {
+                $watermarkOriginal = $manager->read($watermarkPath);
+            }
+
             foreach ($request->file('images') as $img) {
-                $paths[] = $img->store('reports', 'public');
+                // Read uploaded image
+                $image = $manager->read($img->getRealPath());
+
+                // Resize/scale: fit within 1280x960 preserving aspect ratio
+                $image = $image->scaleDown(1280, 960);
+
+                // Apply watermark (bottom-right) if available
+                if ($watermarkOriginal) {
+                    // Scale watermark relative to image width
+                    $wmWidth = (int) round($image->width() * 0.10);
+                    $wmHeight = (int) round($watermarkOriginal->height() * ($wmWidth / $watermarkOriginal->width()));
+                    $wm = $watermarkOriginal->resize($wmWidth, $wmHeight);
+                    // Place bottom-right with 12px margin and 70% opacity
+                    $image->place($wm, 'bottom-right', 12, 12, opacity:40);
+                }
+
+                // Ensure destination filename with original extension
+                $ext = strtolower($img->getClientOriginalExtension() ?: 'jpg');
+                if ($ext === 'jpeg') { $ext = 'jpg'; }
+                if (!in_array($ext, ['jpg','png','webp'], true)) { $ext = 'jpg'; }
+                $filename = Str::uuid()->toString() . '.' . $ext;
+                $relativePath = 'reports/' . $filename;
+                $absolutePath = storage_path('app/public/' . $relativePath);
+
+                // Create directory if needed
+                if (!is_dir(dirname($absolutePath))) {
+                    mkdir(dirname($absolutePath), 0755, true);
+                }
+
+                // Save with quality (applies to jpg/webp; png mapped appropriately by driver)
+                $image->save($absolutePath, quality: 85);
+
+                $paths[] = $relativePath;
             }
         }
 
