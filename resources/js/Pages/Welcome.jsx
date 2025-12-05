@@ -897,16 +897,6 @@ export default function Welcome({
                 </Link>
             </section>
 
-            {/* Floating Cat */}
-            <img
-                src="/images/logo_cat3.png"
-                alt="Floating Cat"
-                className="floating-cat w-32 md:w-48 lg:w-60 z-50 pointer-events-none"
-            />
-            <style>{`
-                .floating-cat { position: fixed; bottom: 20px; right: 20px; animation: float 4s ease-in-out infinite; }
-                @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-12px); } 100% { transform: translateY(0px); } }
-            `}</style>
             <Footer />
         </>
     );

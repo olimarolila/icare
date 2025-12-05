@@ -35,14 +35,6 @@ export default function Navbar({ auth }) {
                     </li>
                     <li>
                         <Link
-                            href={route("report.form")}
-                            className="hover:text-yellow-400 transition-colors"
-                        >
-                            Report Form
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
                             href={route("about")}
                             className="hover:text-yellow-400 transition-colors"
                         >
@@ -158,12 +150,6 @@ export default function Navbar({ auth }) {
                     className="block py-1 hover:text-yellow-400 transition-colors"
                 >
                     Reports
-                </Link>
-                <Link
-                    href={route("report.form")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
-                >
-                    Report Form
                 </Link>
                 <Link
                     href={route("about")}
