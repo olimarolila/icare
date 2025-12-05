@@ -124,7 +124,7 @@ export default function Welcome({
                 <nav className="relative z-20 flex items-center justify-between px-6 md:px-10 py-3 backdrop-blur-md bg-black/30 border-b border-[#7D7D7D]">
                     <div className="flex items-center space-x-4">
                         <img
-                            src="/images/logo_text.png"
+                            src="/images/icare.png"
                             alt="iCARE Logo"
                             className="h-10 md:h-10 object-contain"
                         />
@@ -275,7 +275,7 @@ export default function Welcome({
                 </div>
                 <main className="relative z-10 flex flex-col items-start justify-center min-h-[80vh] px-8 md:px-32 lg:px-40">
                     <img
-                        src="/images/logo_text.png"
+                        src="/images/icare.png"
                         alt="iCARE"
                         className="h-28 md:h-40 lg:h-52 object-contain mb-6 drop-shadow-lg"
                     />

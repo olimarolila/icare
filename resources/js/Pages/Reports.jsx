@@ -5,43 +5,45 @@ import { loadLeaflet } from "@/utils/loadLeaflet";
 import Footer from "@/Components/Footer";
 import FlashMessages from "@/Components/FlashMessages";
 
+const REPORT_CATEGORIES = [
+    {
+        name: "Building & Facilities",
+        desc: "e.g., damaged public buildings, waiting sheds",
+    },
+    {
+        name: "Flood Control Works",
+        desc: "e.g., drainage, clogged canals, dikes, flooding",
+    },
+    {
+        name: "Parks & Public Spaces",
+        desc: "e.g., playground equipment, benches, landscaping",
+    },
+    { name: "Road Works", desc: "e.g., potholes, damaged pavements" },
+    {
+        name: "Streetlights & Electrical",
+        desc: "e.g., broken or missing streetlights, exposed wiring",
+    },
+    {
+        name: "Traffic & Signage",
+        desc: "e.g., missing road signs, damaged traffic lights",
+    },
+    {
+        name: "Waste Management",
+        desc: "e.g., uncollected garbage, illegal dumping",
+    },
+    {
+        name: "Water Supply & Plumbing",
+        desc: "e.g., leaks, broken pipes, low water pressure",
+    },
+    {
+        name: "Others",
+        desc: "if the concern doesn't fit the categories above",
+    },
+];
+
 // Collapsible Report Form component embedded in Reports page
 const CollapsibleReportForm = ({ auth }) => {
-    const categories = [
-        {
-            name: "Building & Facilities",
-            desc: "e.g., damaged public buildings, waiting sheds",
-        },
-        {
-            name: "Flood Control Works",
-            desc: "e.g., drainage, clogged canals, dikes, flooding",
-        },
-        {
-            name: "Parks & Public Spaces",
-            desc: "e.g., playground equipment, benches, landscaping",
-        },
-        { name: "Road Works", desc: "e.g., potholes, damaged pavements" },
-        {
-            name: "Streetlights & Electrical",
-            desc: "e.g., broken or missing streetlights, exposed wiring",
-        },
-        {
-            name: "Traffic & Signage",
-            desc: "e.g., missing road signs, damaged traffic lights",
-        },
-        {
-            name: "Waste Management",
-            desc: "e.g., uncollected garbage, illegal dumping",
-        },
-        {
-            name: "Water Supply & Plumbing",
-            desc: "e.g., leaks, broken pipes, low water pressure",
-        },
-        {
-            name: "Others",
-            desc: "if the concern doesn't fit the categories above",
-        },
-    ];
+    const categories = REPORT_CATEGORIES;
 
     const [selected, setSelected] = useState(null);
     const [subject, setSubject] = useState("");
@@ -226,7 +228,6 @@ const CollapsibleReportForm = ({ auth }) => {
                 setLocationQuery("");
                 setLatitude(DEFAULT_COORDS.lat);
                 setLongitude(DEFAULT_COORDS.lng);
-                alert("Report submitted successfully");
             },
         });
     };
@@ -352,12 +353,12 @@ const CollapsibleReportForm = ({ auth }) => {
                                 </p>
                             )}
                             {searchResults.length > 1 && (
-                                <div className="bg-white/20 rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto">
+                                <div className="bg-white rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto shadow-lg border border-gray-300">
                                     {searchResults.map((result) => (
                                         <button
                                             type="button"
                                             key={`${result.place_id}-${result.lon}`}
-                                            className="text-left text-sm w-full bg-white/10 hover:bg-white/20 rounded-md px-3 py-2"
+                                            className="text-left text-sm w-full bg-gray-100 hover:bg-blue-100 rounded-md px-4 py-3 text-gray-800 font-medium transition"
                                             onClick={() =>
                                                 applySearchResult(result)
                                             }
@@ -1079,7 +1080,77 @@ const ReportCard = ({ report, auth }) => {
     );
 };
 
-export default function Reports({ auth, reports = [] }) {
+export default function Reports({
+    auth,
+    reports = { data: [], links: [] },
+    filters = {},
+}) {
+    const [sort, setSort] = useState(filters.sort || "votes");
+    const [direction, setDirection] = useState(filters.direction || "desc");
+    const [category, setCategory] = useState(filters.category || "");
+    const [status, setStatus] = useState(filters.status || "");
+    const [recentDays, setRecentDays] = useState(
+        Number(filters.recent_days) || 0
+    );
+    const [perPage, setPerPage] = useState(Number(filters.perPage) || 3);
+
+    const sortOptions = [
+        { value: "votes", label: "Top", direction: "desc" },
+        { value: "submitted_at", label: "Recent", direction: "desc" },
+    ];
+
+    const statusOptions = ["Pending", "In Progress", "Resolved"];
+    const reportsData = Array.isArray(reports?.data)
+        ? reports.data
+        : Array.isArray(reports)
+        ? reports
+        : [];
+    const links = reports?.links ?? [];
+
+    const refresh = (overrides = {}) => {
+        const params = {
+            sort,
+            direction,
+            category: category || undefined,
+            status: status || undefined,
+            recent_days: recentDays || undefined,
+            perPage,
+            page: overrides.page ?? 1,
+            ...overrides,
+        };
+        router.get(route("reports"), params, {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+        });
+    };
+
+    const resetFilters = () => {
+        setSort("votes");
+        setDirection("desc");
+        setCategory("");
+        setStatus("");
+        setRecentDays(0);
+        setPerPage(3);
+        refresh({
+            sort: "votes",
+            direction: "desc",
+            category: undefined,
+            status: undefined,
+            recent_days: undefined,
+            perPage: 3,
+            page: 1,
+        });
+    };
+
+    const handleSortChange = (nextSort) => {
+        const option = sortOptions.find((o) => o.value === nextSort);
+        const nextDirection = option?.direction || "desc";
+        setSort(nextSort);
+        setDirection(nextDirection);
+        refresh({ sort: nextSort, direction: nextDirection, page: 1 });
+    };
+
     return (
         <div
             className="relative min-h-screen bg-cover bg-center bg-fixed text-white"
@@ -1095,15 +1166,185 @@ export default function Reports({ auth, reports = [] }) {
                         <CollapsibleReportForm auth={auth} />
                     </div>
                     {/* Right: Reports list */}
-                    <div className="md:col-span-8 lg:col-span-7 xl:col-span-8 flex flex-col items-start space-y-6">
-                        {reports.length === 0 && (
-                            <p className="mt-10 text-white/80 italic">
+                    <div className="md:col-span-8 lg:col-span-7 xl:col-span-8 flex flex-col items-start space-y-6 w-full">
+                        <div className="w-full bg-neutral-900/80 border border-white/10 rounded-xl p-4 shadow-lg">
+                            <div className="flex flex-wrap items-end gap-3">
+                                <div className="flex flex-col gap-1 min-w-[160px]">
+                                    <label className="text-xs text-white/70 uppercase tracking-wide">
+                                        Sort
+                                    </label>
+                                    <select
+                                        value={sort}
+                                        onChange={(e) =>
+                                            handleSortChange(e.target.value)
+                                        }
+                                        className="px-3 py-2 rounded-lg bg-white text-black text-sm"
+                                    >
+                                        {sortOptions.map((opt) => (
+                                            <option
+                                                key={opt.value}
+                                                value={opt.value}
+                                            >
+                                                {opt.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex flex-col gap-1 min-w-[160px]">
+                                    <label className="text-xs text-white/70 uppercase tracking-wide">
+                                        Recent
+                                    </label>
+                                    <select
+                                        value={
+                                            recentDays ? String(recentDays) : ""
+                                        }
+                                        onChange={(e) => {
+                                            const val = Number(
+                                                e.target.value || 0
+                                            );
+                                            setRecentDays(val);
+                                            refresh({
+                                                recent_days: val || undefined,
+                                                page: 1,
+                                            });
+                                        }}
+                                        className="px-3 py-2 rounded-lg bg-white text-black text-sm"
+                                    >
+                                        <option value="">All time</option>
+                                        <option value="7">Last 7 days</option>
+                                        <option value="30">Last 30 days</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex flex-col gap-1 min-w-[180px]">
+                                    <label className="text-xs text-white/70 uppercase tracking-wide">
+                                        Category
+                                    </label>
+                                    <select
+                                        value={category}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setCategory(val);
+                                            refresh({
+                                                category: val || undefined,
+                                                page: 1,
+                                            });
+                                        }}
+                                        className="px-3 py-2 rounded-lg bg-white text-black text-sm"
+                                    >
+                                        <option value="">All categories</option>
+                                        {REPORT_CATEGORIES.map((cat) => (
+                                            <option
+                                                key={cat.name}
+                                                value={cat.name}
+                                            >
+                                                {cat.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex flex-col gap-1 min-w-[160px]">
+                                    <label className="text-xs text-white/70 uppercase tracking-wide">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={status}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setStatus(val);
+                                            refresh({
+                                                status: val || undefined,
+                                                page: 1,
+                                            });
+                                        }}
+                                        className="px-3 py-2 rounded-lg bg-white text-black text-sm"
+                                    >
+                                        <option value="">All status</option>
+                                        {statusOptions.map((s) => (
+                                            <option key={s} value={s}>
+                                                {s}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="flex flex-col gap-1 min-w-[140px]">
+                                    <label className="text-xs text-white/70 uppercase tracking-wide">
+                                        Per page
+                                    </label>
+                                    <select
+                                        value={String(perPage)}
+                                        onChange={(e) => {
+                                            const val = Number(e.target.value);
+                                            setPerPage(val);
+                                            refresh({ perPage: val, page: 1 });
+                                        }}
+                                        className="px-3 py-2 rounded-lg bg-white text-black text-sm"
+                                    >
+                                        {[3, 5, 10, 15, 20].map((n) => (
+                                            <option key={n} value={n}>
+                                                {n} per page
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="ml-auto">
+                                    <button
+                                        type="button"
+                                        onClick={resetFilters}
+                                        className="text-sm px-4 py-2 rounded-lg bg-white/10 border border-white/20 hover:bg-white/20"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {reportsData.length === 0 && (
+                            <p className="mt-4 text-white/80 italic">
                                 No reports submitted yet.
                             </p>
                         )}
-                        {reports.map((r) => (
+                        {reportsData.map((r) => (
                             <ReportCard key={r.id} report={r} auth={auth} />
                         ))}
+
+                        {links.length > 0 && (
+                            <div className="flex items-center justify-end w-full">
+                                <div className="flex gap-2 flex-wrap">
+                                    {links.map((l, idx) => (
+                                        <button
+                                            key={idx}
+                                            disabled={!l.url}
+                                            onClick={() => {
+                                                if (!l.url) return;
+                                                const match =
+                                                    l.url.match(/page=(\d+)/);
+                                                const pageNum = match
+                                                    ? Number(match[1])
+                                                    : 1;
+                                                refresh({ page: pageNum });
+                                            }}
+                                            className={`px-3 py-1 rounded text-sm border transition ${
+                                                l.active
+                                                    ? "bg-white text-black border-white"
+                                                    : "bg-transparent text-white border-white/40 hover:bg-white hover:text-black"
+                                            } ${
+                                                !l.url
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : ""
+                                            }`}
+                                            dangerouslySetInnerHTML={{
+                                                __html: l.label,
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>
