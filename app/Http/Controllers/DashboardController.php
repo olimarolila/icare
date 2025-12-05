@@ -48,7 +48,11 @@ class DashboardController extends Controller
             abort(403);
         }
 
-        $range = $request->input('range', 'week'); // week|month|year|all
+        $range = $request->input('range', 'week'); // week|month|year|all|custom
+        $customMonth = $request->input('customMonth'); // format: YYYY-MM
+        $customYear = $request->input('customYear'); // format: YYYY
+        $fromDate = $request->input('fromDate'); // format: YYYY-MM-DD
+        $toDate = $request->input('toDate'); // format: YYYY-MM-DD
 
         // Determine start and end dates based on range
         $start = null;
@@ -56,17 +60,36 @@ class DashboardController extends Controller
 
         if ($range === 'week') {
             $start = Carbon::now()->startOfWeek();
-        } elseif ($range === 'month') {
+        } elseif ($range === 'month' && !$customMonth) {
             $start = Carbon::now()->startOfMonth();
-        } elseif ($range === 'year') {
+        } elseif ($range === 'month' && $customMonth) {
+            // Handle custom month selection (YYYY-MM format)
+            $date = Carbon::createFromFormat('Y-m', $customMonth);
+            $start = $date->startOfMonth();
+            $end = $date->endOfMonth()->endOfDay();
+        } elseif ($range === 'year' && !$customYear) {
             $start = Carbon::now()->startOfYear();
+        } elseif ($range === 'year' && $customYear) {
+            // Handle custom year selection
+            $date = Carbon::createFromFormat('Y', $customYear);
+            $start = $date->startOfYear();
+            $end = $date->endOfYear()->endOfDay();
+        } elseif ($range === 'custom') {
+            // Handle custom date range
+            if ($fromDate) {
+                $start = Carbon::createFromFormat('Y-m-d', $fromDate)->startOfDay();
+            }
+            if ($toDate) {
+                $end = Carbon::createFromFormat('Y-m-d', $toDate)->endOfDay();
+            }
         }
         // For 'all', $start remains null, which means no date filter
 
         // Base query excludes archived
         $baseQuery = Report::whereNull('archived_at');
         if ($start) {
-            $baseQuery = $baseQuery->where('submitted_at', '>=', $start);
+            $baseQuery = $baseQuery->where('submitted_at', '>=', $start)
+                                    ->where('submitted_at', '<=', $end);
         }
 
         // Total counts
@@ -91,6 +114,10 @@ class DashboardController extends Controller
             ],
             'categoryBreakdown' => $categoryBreakdown,
             'range' => $range,
+            'customMonth' => $customMonth,
+            'customYear' => $customYear,
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
             'dateRange' => [
                 'start' => $start ? $start->format('M d, Y') : null,
                 'end' => $end->format('M d, Y'),

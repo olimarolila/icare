@@ -19,7 +19,7 @@ class ReportController extends Controller
     {
         $perPage = (int)$request->input('perPage', 10);
         $search = $request->input('search');
-        $sort = $request->input('sort', 'submitted_at');
+        $sort = $request->input('sort', 'votes');
         $direction = $request->input('direction', 'desc');
         $filters = [
             'ticket_id' => $request->input('ticket_id'),
@@ -32,7 +32,7 @@ class ReportController extends Controller
         // Sortable columns whitelist
         $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'location_name', 'status', 'submitted_at'];
         if (!in_array($sort, $allowedSorts)) {
-            $sort = 'submitted_at';
+            $sort = 'votes';
         }
         $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
 
@@ -245,9 +245,23 @@ class ReportController extends Controller
     /**
      * Public listing of reports (non-admin view)
      */
-    public function publicIndex()
+    public function publicIndex(Request $request)
     {
         $userId = auth()->id();
+        $perPage = (int) $request->input('perPage', 3);
+        $perPage = max(3, min($perPage, 50));
+
+        $sort = $request->input('sort', 'submitted_at');
+        $direction = $request->input('direction', 'desc');
+        $category = $request->input('category');
+        $status = $request->input('status');
+        $recentDays = (int) $request->input('recent_days', 0);
+
+        $allowedSorts = ['submitted_at', 'votes'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'submitted_at';
+        }
+        $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
 
         $reports = Report::with([
                 'user:id,name',
@@ -264,11 +278,40 @@ class ReportController extends Controller
                     ->limit(1)
                 ]);
             })
-            ->latest('submitted_at')
-            ->get(['id','ticket_id','category','street','location_name','latitude','longitude','subject','status','submitted_at','description','images','user_id','votes']);
+            ->when($category, fn ($q) => $q->where('category', $category))
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($recentDays > 0, function ($q) use ($recentDays) {
+                $q->where('submitted_at', '>=', now()->subDays($recentDays));
+            })
+            ->orderBy($sort === 'votes' ? 'votes' : 'submitted_at', $direction)
+            ->paginate($perPage, [
+                'id',
+                'ticket_id',
+                'category',
+                'street',
+                'location_name',
+                'latitude',
+                'longitude',
+                'subject',
+                'status',
+                'submitted_at',
+                'description',
+                'images',
+                'user_id',
+                'votes',
+            ])
+            ->appends($request->query());
 
         return Inertia::render('Reports', [
             'reports' => $reports,
+            'filters' => [
+                'sort' => $sort,
+                'direction' => $direction,
+                'category' => $category,
+                'status' => $status,
+                'recent_days' => $recentDays,
+                'perPage' => $perPage,
+            ],
         ]);
     }
 
