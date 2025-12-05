@@ -233,12 +233,6 @@ export default function Welcome({
                         Reports
                     </Link>
                     <Link
-                        href={route("report.form")}
-                        className="block py-1 hover:text-yellow-400 transition-colors"
-                    >
-                        Report Form
-                    </Link>
-                    <Link
                         href={route("about")}
                         className="block py-1 hover:text-yellow-400 transition-colors"
                     >

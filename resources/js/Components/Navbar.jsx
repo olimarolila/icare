@@ -67,14 +67,6 @@ export default function Navbar({ auth }) {
                     </li>
                     <li>
                         <Link
-                            href={route("report.form")}
-                            className={navLinkClass("report.form")}
-                        >
-                            Report Form
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
                             href={route("about")}
                             className={navLinkClass("about")}
                         >
@@ -202,12 +194,6 @@ export default function Navbar({ auth }) {
                     className={`block py-1 ${navLinkClass("reports")}`}
                 >
                     Reports
-                </Link>
-                <Link
-                    href={route("report.form")}
-                    className={`block py-1 ${navLinkClass("report.form")}`}
-                >
-                    Report Form
                 </Link>
                 <Link
                     href={route("about")}
