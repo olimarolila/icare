@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\WelcomeController;
@@ -52,6 +53,9 @@ Route::get('/about', function () {
 
 Route::middleware(['auth'])->group(function () {
 
+    Route::get('/citizen/dashboard', [DashboardController::class, 'citizen'])
+        ->name('citizen.dashboard');
+
     // Dashboard – protected, not accessible by general users
     // Route::get('/dashboard', function () {
     //     return Inertia::render('Dashboard');
@@ -75,10 +79,9 @@ Route::middleware(['auth'])->group(function () {
 */
 
 Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function () {
-    Route::get('/dashboard', function () {
-        // You can use Admin/Dashboard here if you want
-        return Inertia::render('Admin/Dashboard');
-    })->name('dashboard');
+
+    Route::get('/admin/dashboard', [DashboardController::class, 'admin'])
+        ->name('admin.dashboard');
 
     Route::get('/admin/forum', function () {
         return Inertia::render('Admin/Forum');

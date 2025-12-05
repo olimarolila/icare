@@ -258,7 +258,7 @@ export default function Login({ auth, status, canResetPassword }) {
 
             {/* FLOATING CAT
             <img
-                src="/images/logo_cat.png"
+                src="/images/logo_cat3.png"
                 alt="Floating Cat"
                 className="floating-cat w-32 md:w-48 lg:w-60 z-50 pointer-events-none"
             />

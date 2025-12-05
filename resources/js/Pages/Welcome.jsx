@@ -132,6 +132,14 @@ export default function Welcome({
                     <ul className="hidden md:flex items-center space-x-10 font-medium text-[1.2rem]">
                         <li>
                             <Link
+                                href="/"
+                                className="text-yellow-400 transition-colors"
+                            >
+                                Home
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
                                 href={route("reports")}
                                 className="hover:text-yellow-400 transition-colors"
                             >
@@ -158,7 +166,11 @@ export default function Welcome({
                     <div className="hidden md:flex items-center space-x-8 font-semibold text-[1.2rem]">
                         {auth.user ? (
                             <Link
-                                href={route("dashboard")}
+                                href={route(
+                                    auth.user.role === "admin"
+                                        ? "admin.dashboard"
+                                        : "citizen.dashboard"
+                                )}
                                 className="hover:text-yellow-400 transition-colors"
                             >
                                 Dashboard
@@ -209,6 +221,12 @@ export default function Welcome({
                     }`}
                 >
                     <Link
+                        href="/"
+                        className="block py-1 text-yellow-400 transition-colors"
+                    >
+                        Home
+                    </Link>
+                    <Link
                         href={route("reports")}
                         className="block py-1 hover:text-yellow-400 transition-colors"
                     >
@@ -229,7 +247,11 @@ export default function Welcome({
                     <div className="border-t border-gray-600 my-2" />
                     {auth.user ? (
                         <Link
-                            href={route("dashboard")}
+                            href={route(
+                                auth.user.role === "admin"
+                                    ? "admin.dashboard"
+                                    : "citizen.dashboard"
+                            )}
                             className="block py-1 hover:text-yellow-400 transition-colors"
                         >
                             Dashboard
@@ -897,6 +919,16 @@ export default function Welcome({
                 </Link>
             </section>
 
+            {/* Floating Cat */}
+            <img
+                src="/images/logo_cat3.png"
+                alt="Floating Cat"
+                className="floating-cat w-40 md:w-48 lg:w-60 z-50 pointer-events-none"
+            />
+            <style>{`
+                .floating-cat { position: fixed; bottom: 20px; right: 20px; animation: float 4s ease-in-out infinite; }
+                @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-12px); } 100% { transform: translateY(0px); } }
+            `}</style>
             <Footer />
         </>
     );

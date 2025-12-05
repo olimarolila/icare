@@ -1,4 +1,4 @@
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import ConfirmDialog from "@/Components/ConfirmDialog";
 
@@ -7,8 +7,28 @@ export default function Navbar({ auth }) {
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+    const { url } = usePage();
+    const isHome = url === "/" || url === "";
+
     // adjust this according to your actual user field
     const isAdmin = auth?.user && auth.user.role === "admin";
+    const isCitizen = auth?.user && auth.user.role === "citizen";
+    const dashboardRouteName = isAdmin
+        ? "admin.dashboard"
+        : isCitizen
+        ? "citizen.dashboard"
+        : null;
+    const isActive = (names) => {
+        const list = (Array.isArray(names) ? names : [names]).filter(Boolean);
+        if (list.length === 0) {
+            return false;
+        }
+        return list.some((name) => route().current(name));
+    };
+    const navLinkClass = (names) =>
+        `hover:text-yellow-400 transition-colors ${
+            isActive(names) ? "text-yellow-400" : ""
+        }`;
 
     return (
         <>
@@ -27,16 +47,36 @@ export default function Navbar({ auth }) {
                 <ul className="hidden md:flex items-center space-x-10 font-medium text-[1.2rem]">
                     <li>
                         <Link
+                            href="/"
+                            className={`transition-colors ${
+                                isHome
+                                    ? "text-yellow-400"
+                                    : "hover:text-yellow-400"
+                            }`}
+                        >
+                            Home
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
                             href={route("reports")}
-                            className="hover:text-yellow-400 transition-colors"
+                            className={navLinkClass("reports")}
                         >
                             Reports
                         </Link>
                     </li>
                     <li>
                         <Link
+                            href={route("report.form")}
+                            className={navLinkClass("report.form")}
+                        >
+                            Report Form
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
                             href={route("about")}
-                            className="hover:text-yellow-400 transition-colors"
+                            className={navLinkClass("about")}
                         >
                             About
                         </Link>
@@ -69,9 +109,9 @@ export default function Navbar({ auth }) {
                             {userMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-40 bg-black/90 border border-white/10 rounded-md shadow-lg">
                                     <div className="py-1">
-                                        {isAdmin && (
+                                        {(isAdmin || isCitizen) && (
                                             <Link
-                                                href={route("dashboard")}
+                                                href={route(dashboardRouteName)}
                                                 className="block px-4 py-2 text-sm hover:bg-white/5"
                                             >
                                                 Dashboard
@@ -100,13 +140,17 @@ export default function Navbar({ auth }) {
                         <>
                             <Link
                                 href={route("login")}
-                                className="hover:text-yellow-400 transition-colors"
+                                className={navLinkClass("login")}
                             >
                                 Log In
                             </Link>
                             <Link
                                 href={route("register")}
-                                className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                                className={`transition-colors ${
+                                    isActive("login")
+                                        ? "text-white hover:text-yellow-300"
+                                        : "text-yellow-400 hover:text-yellow-300"
+                                } ${isActive("register") ? "font-bold" : ""}`}
                             >
                                 Register
                             </Link>
@@ -146,24 +190,40 @@ export default function Navbar({ auth }) {
                 }`}
             >
                 <Link
+                    href="/"
+                    className={`block py-1 transition-colors ${
+                        isHome ? "text-yellow-400" : "hover:text-yellow-400"
+                    }`}
+                >
+                    Home
+                </Link>
+                <Link
                     href={route("reports")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
+                    className={`block py-1 ${navLinkClass("reports")}`}
                 >
                     Reports
                 </Link>
                 <Link
+                    href={route("report.form")}
+                    className={`block py-1 ${navLinkClass("report.form")}`}
+                >
+                    Report Form
+                </Link>
+                <Link
                     href={route("about")}
-                    className="block py-1 hover:text-yellow-400 transition-colors"
+                    className={`block py-1 ${navLinkClass("about")}`}
                 >
                     About
                 </Link>
                 <div className="border-t border-gray-600 my-2" />
                 {auth?.user ? (
                     <>
-                        {isAdmin && (
+                        {(isAdmin || isCitizen) && (
                             <Link
-                                href={route("dashboard")}
-                                className="block py-1 hover:text-yellow-400 transition-colors"
+                                href={route(dashboardRouteName)}
+                                className={`block py-1 ${navLinkClass(
+                                    dashboardRouteName
+                                )}`}
                             >
                                 Dashboard
                             </Link>
@@ -171,7 +231,9 @@ export default function Navbar({ auth }) {
 
                         <Link
                             href={route("profile.edit")}
-                            className="block py-1 hover:text-yellow-400 transition-colors"
+                            className={`block py-1 ${navLinkClass(
+                                "profile.edit"
+                            )}`}
                         >
                             Profile
                         </Link>
@@ -188,13 +250,17 @@ export default function Navbar({ auth }) {
                     <>
                         <Link
                             href={route("login")}
-                            className="block py-1 hover:text-yellow-400 transition-colors"
+                            className={`block py-1 ${navLinkClass("login")}`}
                         >
                             Log In
                         </Link>
                         <Link
                             href={route("register")}
-                            className="block py-1 text-yellow-400 hover:text-yellow-300 transition-colors"
+                            className={`block py-1 transition-colors ${
+                                isActive("login")
+                                    ? "text-white hover:text-yellow-300"
+                                    : "text-yellow-400 hover:text-yellow-300"
+                            } ${isActive("register") ? "font-bold" : ""}`}
                         >
                             Register
                         </Link>

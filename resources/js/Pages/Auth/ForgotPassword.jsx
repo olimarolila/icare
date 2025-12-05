@@ -1,4 +1,4 @@
-import GuestLayout from '@/Layouts/GuestLayout';
+import CitizenLayout from '@/Layouts/CitizenLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
@@ -65,7 +65,7 @@ export default function ForgotPassword({ status }) {
     };
 
     return (
-        <GuestLayout>
+        <CitizenLayout>
             <Head title="Forgot Password" />
 
             <div className="mb-4 text-sm text-gray-600">
@@ -99,6 +99,6 @@ export default function ForgotPassword({ status }) {
                     </PrimaryButton>
                 </div>
             </form>
-        </GuestLayout>
+        </CitizenLayout>
     );
 }
