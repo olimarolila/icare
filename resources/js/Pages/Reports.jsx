@@ -403,6 +403,7 @@ const CollapsibleReportForm = ({ auth }) => {
                                         subject: undefined,
                                     }));
                             }}
+                            maxLength={80}
                             disabled={!isLoggedIn}
                             aria-invalid={Boolean(errors.subject)}
                         />
