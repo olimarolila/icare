@@ -157,7 +157,7 @@ export default function AuthenticatedLayout({ header, children }) {
                             <div className="flex shrink-0 items-center">
                                 <Link href="/">
                                     <img
-                                        src="/images/logo_text.png"
+                                        src="/images/icare.png"
                                         alt="iCARE Logo"
                                         className="h-10 md:h-10 object-contain cursor-pointer"
                                     />

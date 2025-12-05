@@ -6,6 +6,9 @@ use App\Models\Report;
 use App\Models\ReportVote;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Str;
 
 class ReportController extends Controller
 {
@@ -16,7 +19,7 @@ class ReportController extends Controller
     {
         $perPage = (int)$request->input('perPage', 10);
         $search = $request->input('search');
-        $sort = $request->input('sort', 'submitted_at');
+        $sort = $request->input('sort', 'votes');
         $direction = $request->input('direction', 'desc');
         $filters = [
             'ticket_id' => $request->input('ticket_id'),
@@ -29,7 +32,7 @@ class ReportController extends Controller
         // Sortable columns whitelist
         $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'location_name', 'status', 'submitted_at'];
         if (!in_array($sort, $allowedSorts)) {
-            $sort = 'submitted_at';
+            $sort = 'votes';
         }
         $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
 
@@ -96,8 +99,50 @@ class ReportController extends Controller
 
         $paths = [];
         if ($request->hasFile('images')) {
+            // Initialize Intervention Image manager with GD driver
+            $manager = new ImageManager(new Driver());
+
+            // Watermark image path (public/images/logo_cat.png)
+            $watermarkPath = public_path('images/logo_cat.PNG');
+            $watermarkOriginal = null;
+            if (is_file($watermarkPath)) {
+                $watermarkOriginal = $manager->read($watermarkPath);
+            }
+
             foreach ($request->file('images') as $img) {
-                $paths[] = $img->store('reports', 'public');
+                // Read uploaded image
+                $image = $manager->read($img->getRealPath());
+
+                // Resize/scale: fit within 1280x960 preserving aspect ratio
+                $image = $image->scaleDown(1280, 960);
+
+                // Apply watermark (bottom-right) if available
+                if ($watermarkOriginal) {
+                    // Scale watermark relative to image width
+                    $wmWidth = (int) round($image->width() * 0.10);
+                    $wmHeight = (int) round($watermarkOriginal->height() * ($wmWidth / $watermarkOriginal->width()));
+                    $wm = $watermarkOriginal->resize($wmWidth, $wmHeight);
+                    // Place bottom-right with 12px margin and 70% opacity
+                    $image->place($wm, 'bottom-right', 12, 12, opacity:40);
+                }
+
+                // Ensure destination filename with original extension
+                $ext = strtolower($img->getClientOriginalExtension() ?: 'jpg');
+                if ($ext === 'jpeg') { $ext = 'jpg'; }
+                if (!in_array($ext, ['jpg','png','webp'], true)) { $ext = 'jpg'; }
+                $filename = Str::uuid()->toString() . '.' . $ext;
+                $relativePath = 'reports/' . $filename;
+                $absolutePath = storage_path('app/public/' . $relativePath);
+
+                // Create directory if needed
+                if (!is_dir(dirname($absolutePath))) {
+                    mkdir(dirname($absolutePath), 0755, true);
+                }
+
+                // Save with quality (applies to jpg/webp; png mapped appropriately by driver)
+                $image->save($absolutePath, quality: 85);
+
+                $paths[] = $relativePath;
             }
         }
 
@@ -200,9 +245,23 @@ class ReportController extends Controller
     /**
      * Public listing of reports (non-admin view)
      */
-    public function publicIndex()
+    public function publicIndex(Request $request)
     {
         $userId = auth()->id();
+        $perPage = (int) $request->input('perPage', 3);
+        $perPage = max(3, min($perPage, 50));
+
+        $sort = $request->input('sort', 'submitted_at');
+        $direction = $request->input('direction', 'desc');
+        $category = $request->input('category');
+        $status = $request->input('status');
+        $recentDays = (int) $request->input('recent_days', 0);
+
+        $allowedSorts = ['submitted_at', 'votes'];
+        if (!in_array($sort, $allowedSorts)) {
+            $sort = 'submitted_at';
+        }
+        $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
 
         $reports = Report::with([
                 'user:id,name',
@@ -219,11 +278,40 @@ class ReportController extends Controller
                     ->limit(1)
                 ]);
             })
-            ->latest('submitted_at')
-            ->get(['id','ticket_id','category','street','location_name','latitude','longitude','subject','status','submitted_at','description','images','user_id','votes']);
+            ->when($category, fn ($q) => $q->where('category', $category))
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->when($recentDays > 0, function ($q) use ($recentDays) {
+                $q->where('submitted_at', '>=', now()->subDays($recentDays));
+            })
+            ->orderBy($sort === 'votes' ? 'votes' : 'submitted_at', $direction)
+            ->paginate($perPage, [
+                'id',
+                'ticket_id',
+                'category',
+                'street',
+                'location_name',
+                'latitude',
+                'longitude',
+                'subject',
+                'status',
+                'submitted_at',
+                'description',
+                'images',
+                'user_id',
+                'votes',
+            ])
+            ->appends($request->query());
 
         return Inertia::render('Reports', [
             'reports' => $reports,
+            'filters' => [
+                'sort' => $sort,
+                'direction' => $direction,
+                'category' => $category,
+                'status' => $status,
+                'recent_days' => $recentDays,
+                'perPage' => $perPage,
+            ],
         ]);
     }
 

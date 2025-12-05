@@ -36,7 +36,7 @@ export default function Navbar({ auth }) {
                 <div className="flex items-center space-x-4">
                     <Link href="/">
                         <img
-                            src="/images/logo_text.png"
+                            src="/images/icare.png"
                             alt="iCARE Logo"
                             className="h-10 md:h-10 object-contain cursor-pointer"
                         />

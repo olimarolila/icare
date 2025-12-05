@@ -8,16 +8,123 @@ export default function AdminDashboard() {
         metrics = {},
         categoryBreakdown = [],
         range = "week",
+        customMonth = null,
+        customYear = null,
+        fromDate = null,
+        toDate = null,
         dateRange = {},
     } = usePage().props;
     const [loadingRange, setLoadingRange] = useState(null);
+    const [selectedMonth, setSelectedMonth] = useState(customMonth || "");
+    const [selectedYear, setSelectedYear] = useState(customYear || "");
+    const [fromDateInput, setFromDateInput] = useState(fromDate || "");
+    const [toDateInput, setToDateInput] = useState(toDate || "");
 
     const handleRangeChange = (newRange) => {
         setLoadingRange(newRange);
-        router.visit(route("admin.dashboard", { range: newRange }), {
+        const params = { range: newRange };
+        if (newRange === "month" && selectedMonth) {
+            params.customMonth = selectedMonth;
+        } else if (newRange === "year" && selectedYear) {
+            params.customYear = selectedYear;
+        } else if (newRange === "custom") {
+            if (fromDateInput) params.fromDate = fromDateInput;
+            if (toDateInput) params.toDate = toDateInput;
+        }
+        router.visit(route("admin.dashboard", params), {
             preserveState: true,
             onFinish: () => setLoadingRange(null),
         });
+    };
+
+    const handleMonthChange = (e) => {
+        const month = e.target.value;
+        setSelectedMonth(month);
+        if (month) {
+            setLoadingRange("month");
+            router.visit(
+                route("admin.dashboard", {
+                    range: "month",
+                    customMonth: month,
+                }),
+                {
+                    preserveState: true,
+                    onFinish: () => setLoadingRange(null),
+                }
+            );
+        }
+    };
+
+    const handleMonthKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleMonthChange(e);
+        }
+    };
+
+    const handleYearChange = (e) => {
+        const year = e.target.value;
+        setSelectedYear(year);
+    };
+
+    const handleYearInputBlur = () => {
+        if (selectedYear) {
+            setLoadingRange("year");
+            router.visit(
+                route("admin.dashboard", {
+                    range: "year",
+                    customYear: selectedYear,
+                }),
+                {
+                    preserveState: true,
+                    onFinish: () => setLoadingRange(null),
+                }
+            );
+        }
+    };
+
+    const handleYearKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleYearInputBlur();
+        }
+    };
+
+    const handleFromDateChange = (e) => {
+        setFromDateInput(e.target.value);
+    };
+
+    const handleToDateChange = (e) => {
+        setToDateInput(e.target.value);
+    };
+
+    const handleCustomRangeApply = () => {
+        setLoadingRange("custom");
+        const params = { range: "custom" };
+        if (fromDateInput) params.fromDate = fromDateInput;
+        if (toDateInput) params.toDate = toDateInput;
+        router.visit(route("admin.dashboard", params), {
+            preserveState: true,
+            onFinish: () => setLoadingRange(null),
+        });
+    };
+
+    const handleClearDateFilters = () => {
+        setFromDateInput("");
+        setToDateInput("");
+        setSelectedMonth("");
+        setLoadingRange("week");
+        router.visit(route("admin.dashboard", { range: "week" }), {
+            preserveState: true,
+            onFinish: () => setLoadingRange(null),
+        });
+    };
+
+    const handleDateKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleCustomRangeApply();
+        }
     };
 
     // Define colors for categories (consistent donut chart colors)
@@ -114,7 +221,7 @@ export default function AdminDashboard() {
                                             : `All time data`}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     <button
                                         onClick={() =>
                                             handleRangeChange("week")
@@ -189,6 +296,111 @@ export default function AdminDashboard() {
                                             ? "⟳ All"
                                             : "All"}
                                     </button>
+                                    <button
+                                        onClick={() =>
+                                            handleRangeChange("custom")
+                                        }
+                                        disabled={loadingRange !== null}
+                                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border-2 ${
+                                            range === "custom"
+                                                ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                                                : "bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:text-blue-600"
+                                        } ${
+                                            loadingRange === "custom"
+                                                ? "opacity-60"
+                                                : ""
+                                        }`}
+                                    >
+                                        {loadingRange === "custom"
+                                            ? "⟳ Custom"
+                                            : "Custom"}
+                                    </button>
+                                    <div className="border-l border-gray-300 h-6"></div>
+
+                                    {/* Month Picker - Only show when Month is selected */}
+                                    {range === "month" && (
+                                        <input
+                                            type="month"
+                                            value={selectedMonth}
+                                            onChange={handleMonthChange}
+                                            onKeyDown={handleMonthKeyDown}
+                                            disabled={loadingRange !== null}
+                                            className={`px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-600 transition-all ${
+                                                selectedMonth
+                                                    ? "border-blue-600 bg-blue-50"
+                                                    : "bg-white"
+                                            } ${
+                                                loadingRange === "month"
+                                                    ? "opacity-60"
+                                                    : ""
+                                            }`}
+                                        />
+                                    )}
+
+                                    {/* Year Picker - Only show when Year is selected */}
+                                    {range === "year" && (
+                                        <input
+                                            type="number"
+                                            min="2020"
+                                            max={new Date().getFullYear()}
+                                            value={selectedYear}
+                                            onChange={handleYearChange}
+                                            onBlur={handleYearInputBlur}
+                                            onKeyDown={handleYearKeyDown}
+                                            disabled={loadingRange !== null}
+                                            placeholder="Select year"
+                                            className={`px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-600 transition-all w-24 ${
+                                                selectedYear
+                                                    ? "border-blue-600 bg-blue-50"
+                                                    : "bg-white"
+                                            } ${
+                                                loadingRange === "year"
+                                                    ? "opacity-60"
+                                                    : ""
+                                            }`}
+                                        />
+                                    )}
+
+                                    {/* From/To Date Filters */}
+                                    {range === "custom" && (
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="date"
+                                                value={fromDateInput}
+                                                onChange={handleFromDateChange}
+                                                onKeyDown={handleDateKeyDown}
+                                                disabled={loadingRange !== null}
+                                                placeholder="From"
+                                                className="px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-600 transition-all bg-white"
+                                            />
+                                            <span className="text-gray-400">
+                                                to
+                                            </span>
+                                            <input
+                                                type="date"
+                                                value={toDateInput}
+                                                onChange={handleToDateChange}
+                                                onKeyDown={handleDateKeyDown}
+                                                disabled={loadingRange !== null}
+                                                placeholder="To"
+                                                className="px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-600 transition-all bg-white"
+                                            />
+                                            <button
+                                                onClick={handleCustomRangeApply}
+                                                disabled={loadingRange !== null}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all"
+                                            >
+                                                Apply
+                                            </button>
+                                            <button
+                                                onClick={handleClearDateFilters}
+                                                disabled={loadingRange !== null}
+                                                className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-all"
+                                            >
+                                                Clear
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
