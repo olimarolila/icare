@@ -103,7 +103,7 @@ const NavLink = ({ active = false, className = "", children, ...props }) => (
     <Link
         {...props}
         className={
-            "inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none " +
+            "inline-flex h-full items-center border-b-2 px-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none " +
             (active
                 ? "border-yellow-400 text-yellow-400 focus:border-yellow-500"
                 : "border-transparent text-white/80 hover:border-yellow-300 hover:text-yellow-400 focus:border-yellow-300 focus:text-yellow-400") +
@@ -146,6 +146,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const dashboardIsActive = dashboardRouteName
         ? route().current(dashboardRouteName)
         : false;
+    const profileIsActive = route().current("profile.edit");
 
     return (
         <div className="min-h-screen bg-black-100">
@@ -203,6 +204,34 @@ export default function AuthenticatedLayout({ header, children }) {
                                         className="text-white hover:text-yellow-400"
                                     >
                                         Archives
+                                    </NavLink>
+                                    {profileIsActive && (
+                                        <NavLink
+                                            href={route("profile.edit")}
+                                            active
+                                            className="text-white hover:text-yellow-400"
+                                        >
+                                            Profile
+                                        </NavLink>
+                                    )}
+                                </div>
+                            )}
+
+                            {user?.role === "citizen" && (
+                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                                    <NavLink
+                                        href={route(dashboardRouteName)}
+                                        active={dashboardIsActive}
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Dashboard
+                                    </NavLink>
+                                    <NavLink
+                                        href={route("profile.edit")}
+                                        active={profileIsActive}
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Profile
                                     </NavLink>
                                 </div>
                             )}
@@ -336,6 +365,34 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Archives
                                 </ResponsiveNavLink>
+                                {profileIsActive && (
+                                    <ResponsiveNavLink
+                                        href={route("profile.edit")}
+                                        active
+                                        className="text-white hover:text-yellow-400"
+                                    >
+                                        Profile
+                                    </ResponsiveNavLink>
+                                )}
+                            </>
+                        )}
+
+                        {user?.role === "citizen" && (
+                            <>
+                                <ResponsiveNavLink
+                                    href={route(dashboardRouteName)}
+                                    active={dashboardIsActive}
+                                    className="text-white hover:text-yellow-400"
+                                >
+                                    Dashboard
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route("profile.edit")}
+                                    active={profileIsActive}
+                                    className="text-white hover:text-yellow-400"
+                                >
+                                    Profile
+                                </ResponsiveNavLink>
                             </>
                         )}
                     </div>
@@ -353,6 +410,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         <div className="mt-3 space-y-1">
                             <ResponsiveNavLink
                                 href={route("profile.edit")}
+                                active={profileIsActive}
                                 className="text-white hover:text-yellow-400"
                             >
                                 Profile
@@ -406,6 +464,32 @@ export default function AuthenticatedLayout({ header, children }) {
                             className="block py-1 hover:text-yellow-400 transition-colors"
                         >
                             Archives
+                        </Link>
+                        {profileIsActive && (
+                            <Link
+                                href={route("profile.edit")}
+                                className="block py-1 text-yellow-400 transition-colors"
+                            >
+                                Profile
+                            </Link>
+                        )}
+                        <div className="border-t border-gray-600 my-2" />
+                    </>
+                )}
+
+                {user?.role === "citizen" && (
+                    <>
+                        <Link
+                            href={route(dashboardRouteName)}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Dashboard
+                        </Link>
+                        <Link
+                            href={route("profile.edit")}
+                            className="block py-1 hover:text-yellow-400 transition-colors"
+                        >
+                            Profile
                         </Link>
                         <div className="border-t border-gray-600 my-2" />
                     </>

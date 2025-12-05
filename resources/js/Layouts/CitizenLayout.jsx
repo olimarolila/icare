@@ -15,7 +15,7 @@ const ApplicationLogo = (props) => (
 const NavLink = ({ active = false, className = "", children, ...props }) => (
     <Link
         {...props}
-        className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none ${
+        className={`inline-flex h-full items-center border-b-2 px-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none ${
             active
                 ? "border-yellow-400 text-yellow-400 focus:border-yellow-500"
                 : "border-transparent text-white/80 hover:border-yellow-300 hover:text-yellow-400 focus:border-yellow-300 focus:text-yellow-400"
@@ -25,11 +25,31 @@ const NavLink = ({ active = false, className = "", children, ...props }) => (
     </Link>
 );
 
-export default function CitizenLayout({ children }) {
+const ResponsiveNavLink = ({
+    active = false,
+    className = "",
+    children,
+    ...props
+}) => (
+    <Link
+        {...props}
+        className={`flex w-full items-start border-l-4 py-2 pe-4 ps-3 text-base font-medium transition duration-150 ease-in-out focus:outline-none ${
+            active
+                ? "border-yellow-400 bg-black/60 text-yellow-400 focus:border-yellow-500 focus:bg-black/70"
+                : "border-transparent text-white/80 hover:border-yellow-300 hover:bg-black/60 hover:text-yellow-400 focus:border-yellow-300 focus:bg-black/60 focus:text-yellow-400"
+        } ${className}`}
+    >
+        {children}
+    </Link>
+);
+
+export default function CitizenLayout({ children, fullBleed = false }) {
     const { auth } = usePage().props;
     const user = auth?.user;
     const isCitizen = user?.role === "citizen";
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const dashboardRouteName = "citizen.dashboard";
     const dashboardIsActive = isCitizen
         ? route().current(dashboardRouteName)
@@ -37,41 +57,178 @@ export default function CitizenLayout({ children }) {
     const profileIsActive = isCitizen ? route().current("profile.edit") : false;
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
+        <div
+            className={`min-h-screen flex flex-col ${
+                fullBleed ? "bg-transparent" : "bg-gray-100"
+            }`}
+        >
             {isCitizen && (
-                <nav className="sticky top-0 z-20 border-b border-[#7D7D7D] bg-black/90 backdrop-blur-md">
-                    <div className="mx-auto h-16 w-full max-w-6xl px-6">
-                        <div className="flex h-full items-center justify-between">
-                            <div className="flex items-center space-x-8">
-                                <Link href="/">
-                                    <img
-                                        src="/images/logo_text.png"
-                                        alt="iCARE Logo"
-                                        className="h-10 object-contain"
-                                    />
-                                </Link>
-                                <div className="hidden sm:flex sm:space-x-8">
+                <nav className="sticky top-0 z-20 border-b border-[#7D7D7D] backdrop-blur-md bg-black">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div className="flex h-16 justify-between">
+                            <div className="flex">
+                                <div className="flex shrink-0 items-center">
+                                    <Link href="/">
+                                        <img
+                                            src="/images/logo_text.png"
+                                            alt="iCARE Logo"
+                                            className="h-10 object-contain"
+                                        />
+                                    </Link>
+                                </div>
+                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                     <NavLink
                                         href={route(dashboardRouteName)}
                                         active={dashboardIsActive}
                                     >
                                         Dashboard
                                     </NavLink>
-                                    <NavLink
-                                        href={route("profile.edit")}
-                                        active={profileIsActive}
-                                    >
-                                        Profile
-                                    </NavLink>
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowLogoutConfirm(true)}
-                                className="rounded-md border border-white/40 px-4 py-2 text-white/90 hover:border-yellow-400 hover:text-yellow-400 transition"
+
+                            <div className="hidden sm:ms-6 sm:flex sm:items-center">
+                                <div className="relative ms-3">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setUserMenuOpen((prev) => !prev)
+                                        }
+                                        className="inline-flex items-center rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-medium leading-4 text-white/80 transition duration-150 ease-in-out hover:text-yellow-400 focus:outline-none"
+                                    >
+                                        {user?.name}
+                                        <svg
+                                            className="-me-0.5 ms-2 h-4 w-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                    {userMenuOpen && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-40"
+                                                onClick={() =>
+                                                    setUserMenuOpen(false)
+                                                }
+                                            ></div>
+                                            <div className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md border border-[#7D7D7D] bg-black/70 shadow-lg">
+                                                <div className="py-1 text-white">
+                                                    <Link
+                                                        href={route(
+                                                            "profile.edit"
+                                                        )}
+                                                        className="block px-4 py-2 text-sm leading-5 hover:text-yellow-400"
+                                                        onClick={() =>
+                                                            setUserMenuOpen(
+                                                                false
+                                                            )
+                                                        }
+                                                    >
+                                                        Profile
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setUserMenuOpen(
+                                                                false
+                                                            );
+                                                            setShowLogoutConfirm(
+                                                                true
+                                                            );
+                                                        }}
+                                                        className="block w-full px-4 py-2 text-start text-sm leading-5 hover:text-yellow-400"
+                                                    >
+                                                        Log Out
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="-me-2 flex items-center sm:hidden">
+                                <button
+                                    onClick={() => setMenuOpen((prev) => !prev)}
+                                    className="inline-flex items-center justify-center rounded-md p-2 text-white transition duration-150 ease-in-out hover:bg-black/40 hover:text-yellow-400 focus:bg-black/40 focus:text-yellow-400 focus:outline-none"
+                                    aria-label="Toggle menu"
+                                >
+                                    <svg
+                                        className="h-6 w-6"
+                                        stroke="currentColor"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            className={!menuOpen ? "inline-flex" : "hidden"}
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M4 6h16M4 12h16M4 18h16"
+                                        />
+                                        <path
+                                            className={menuOpen ? "inline-flex" : "hidden"}
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M6 18L18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        className={`${
+                            menuOpen ? "block" : "hidden"
+                        } sm:hidden bg-black/80 backdrop-blur-md border-b border-[#7D7D7D]`}
+                    >
+                        <div className="space-y-1 pb-3 pt-2">
+                            <ResponsiveNavLink
+                                href={route(dashboardRouteName)}
+                                active={dashboardIsActive}
+                                onClick={() => setMenuOpen(false)}
                             >
-                                Logout
-                            </button>
+                                Dashboard
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                href={route("profile.edit")}
+                                active={profileIsActive}
+                                onClick={() => setMenuOpen(false)}
+                            >
+                                Profile
+                            </ResponsiveNavLink>
+                        </div>
+
+                        <div className="border-t border-gray-600 pb-1 pt-4">
+                            <div className="px-4">
+                                <div className="text-base font-medium text-white/90">
+                                    {user?.name}
+                                </div>
+                                <div className="text-sm font-medium text-white/70">
+                                    {user?.email}
+                                </div>
+                            </div>
+
+                            <div className="mt-3 space-y-1">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        setShowLogoutConfirm(true);
+                                    }}
+                                    className="block w-full border-l-4 border-transparent py-2 pe-4 ps-3 text-start text-base font-medium text-white transition duration-150 ease-in-out hover:border-yellow-300 hover:text-yellow-400 focus:border-yellow-300 focus:text-yellow-400 focus:outline-none"
+                                >
+                                    Log Out
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </nav>
@@ -80,12 +237,18 @@ export default function CitizenLayout({ children }) {
             <div
                 className={`${
                     isCitizen
-                        ? "flex-1 w-full px-6 py-10"
+                        ? fullBleed
+                            ? "flex-1 w-full pb-10"
+                            : "flex-1 w-full px-6 py-10"
                         : "flex flex-1 flex-col items-center pt-6 sm:justify-center sm:pt-0"
                 }`}
             >
                 {isCitizen ? (
-                    <div className="mx-auto w-full max-w-6xl">{children}</div>
+                    <div
+                        className={fullBleed ? "w-full" : "mx-auto w-full max-w-6xl"}
+                    >
+                        {children}
+                    </div>
                 ) : (
                     <div className="w-full max-w-md">
                         <div className="flex justify-center">
