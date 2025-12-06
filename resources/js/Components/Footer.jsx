@@ -38,12 +38,6 @@ export default function Footer() {
                         </h3>
                         <div className="flex flex-col gap-1.5 text-sm">
                             <Link
-                                href={route("report.form")}
-                                className="hover:text-yellow-400 transition"
-                            >
-                                Submit a report
-                            </Link>
-                            <Link
                                 href={route("reports")}
                                 className="hover:text-yellow-400 transition"
                             >

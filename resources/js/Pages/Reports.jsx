@@ -101,12 +101,6 @@ const CollapsibleReportForm = ({ auth }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    useEffect(() => {
-        if (!mapRef.current || !markerRef.current) return;
-        markerRef.current.setLatLng([latitude, longitude]);
-        mapRef.current.setView([latitude, longitude]);
-    }, [latitude, longitude]);
-
     const reverseGeocode = async (lat, lng) => {
         try {
             const response = await fetch(
@@ -529,7 +523,7 @@ const CollapsibleReportForm = ({ auth }) => {
                                     {images.map((img, index) => (
                                         <div
                                             key={index}
-                                            className="relative w-full h-24 rounded-lg overflow-hidden border border-white/30"
+                                            className="relative w-20 h-20 rounded-lg overflow-hidden border border-white/30"
                                         >
                                             <img
                                                 src={img.url}
@@ -601,6 +595,15 @@ const ReportCard = ({ report, auth }) => {
         Number.isFinite(latitude) && Number.isFinite(longitude);
     const locationLabel =
         report.location_name || report.street || "Location not specified";
+    const isUpvoted = report.user_vote === 1;
+    const isDownvoted = report.user_vote === -1;
+    const votePillClass = [
+        "flex items-center gap-3 rounded-full px-4 py-2",
+        isUpvoted ? "bg-[#d93900]" : isDownvoted ? "bg-[#6a5cff]" : "bg-black/40",
+    ].join(" ");
+    const voteCountClass = `text-sm ${
+        isUpvoted || isDownvoted ? "text-white" : ""
+    }`;
 
     useEffect(() => {
         if (!isMapModalOpen) {
@@ -705,7 +708,7 @@ const ReportCard = ({ report, auth }) => {
                                 <img
                                     src={`/storage/${img}`}
                                     alt={`Report Image ${idx + 1}`}
-                                    className="w-full h-32 object-cover"
+                                    className="w-full h-50 object-cover"
                                 />
                                 <button
                                     type="button"
@@ -740,23 +743,9 @@ const ReportCard = ({ report, auth }) => {
                         <h3 className="text-base font-semibold text-white mb-2">
                             Location Details
                         </h3>
-                        <p className="mb-4 text-gray-100 leading-relaxed">
+                        <p className="text-gray-100 leading-relaxed">
                             {locationLabel}
                         </p>
-                        <div className="space-y-1 text-gray-300">
-                            <div>
-                                <span className="font-semibold text-white/80">
-                                    Latitude:
-                                </span>{" "}
-                                {hasCoordinates ? latitude?.toFixed(5) : "—"}
-                            </div>
-                            <div>
-                                <span className="font-semibold text-white/80">
-                                    Longitude:
-                                </span>{" "}
-                                {hasCoordinates ? longitude?.toFixed(5) : "—"}
-                            </div>
-                        </div>
                         {hasCoordinates && (
                             <button
                                 type="button"
@@ -839,19 +828,11 @@ const ReportCard = ({ report, auth }) => {
                         >
                             <button
                                 type="button"
-                                className="absolute top-4 right-4 text-gray-300 hover:text-white"
+                                className="absolute top-4 right-4 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/80"
                                 onClick={() => setActiveImage(null)}
                                 aria-label="Close image modal"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="20"
-                                    height="20"
-                                    fill="currentColor"
-                                    viewBox="0 0 16 16"
-                                >
-                                    <path d="M5.5 0a.5.5 0 0 1 .5.5v4A1.5 1.5 0 0 1 4.5 6h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5m5 0a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 10 4.5v-4a.5.5 0 0 1 .5-.5M0 10.5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 6 11.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5m10 1a1.5 1.5 0 0 1 1.5-1.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0z" />
-                                </svg>
+                                ✕
                             </button>
                             <img
                                 src={activeImage.src}
@@ -863,7 +844,7 @@ const ReportCard = ({ report, auth }) => {
                 )}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-3 bg-black/40 rounded-full px-4 py-2">
+                        <div className={votePillClass}>
                             <button
                                 type="button"
                                 className="flex items-center justify-center"
@@ -898,16 +879,22 @@ const ReportCard = ({ report, auth }) => {
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
                                     className={`w-4 h-4 ${
-                                        report.user_vote === 1
-                                            ? "text-orange-400"
+                                        isUpvoted
+                                            ? "text-white"
                                             : "text-gray-300 hover:text-gray-100"
                                     }`}
                                     fill="currentColor"
                                 >
-                                    <path d="M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10zM2.989 9.179H7.84v5.731c0 1.13.81 2.163 1.934 2.278a2.163 2.163 0 002.386-2.15V9.179h4.851L10 2.163 2.989 9.179z" />
+                                    <path
+                                        d={
+                                            isUpvoted
+                                                ? "M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10z"
+                                                : "M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10zM2.989 9.179H7.84v5.731c0 1.13.81 2.163 1.934 2.278a2.163 2.163 0 002.386-2.15V9.179h4.851L10 2.163 2.989 9.179z"
+                                        }
+                                    />
                                 </svg>
                             </button>
-                            <span className="text-sm">{report.votes ?? 0}</span>
+                            <span className={voteCountClass}>{report.votes ?? 0}</span>
                             <button
                                 type="button"
                                 className="flex items-center justify-center"
@@ -937,13 +924,19 @@ const ReportCard = ({ report, auth }) => {
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
                                     className={`w-4 h-4 ${
-                                        report.user_vote === -1
-                                            ? "text-blue-400"
+                                        isDownvoted
+                                            ? "text-white"
                                             : "text-gray-300 hover:text-gray-100"
                                     }`}
                                     fill="currentColor"
                                 >
-                                    <path d="M10 1a3.966 3.966 0 013.96 3.962V9.02h3.202c.706 0 1.335.42 1.605 1.073.27.652.122 1.396-.377 1.895l-7.754 7.759a.925.925 0 01-1.272 0l-7.754-7.76a1.734 1.734 0 01-.376-1.894c.27-.652.9-1.073 1.605-1.073h3.202V4.962A3.965 3.965 0 0110 1zm7.01 9.82h-4.85V5.09c0-1.13-.81-2.163-1.934-2.278a2.163 2.163 0 00-2.386 2.15v5.859H2.989l7.01 7.016 7.012-7.016z" />
+                                    <path
+                                        d={
+                                            isDownvoted
+                                                ? "M10 1a3.966 3.966 0 013.96 3.962V9.02h3.202c.706 0 1.335.42 1.605 1.073.27.652.122 1.396-.377 1.895l-7.754 7.759a.925.925 0 01-1.272 0l-7.754-7.76a1.734 1.734 0 01-.376-1.894c.27-.652.9-1.073 1.605-1.073h3.202V4.962A3.965 3.965 0 0110 1z"
+                                                : "M10 1a3.966 3.966 0 013.96 3.962V9.02h3.202c.706 0 1.335.42 1.605 1.073.27.652.122 1.396-.377 1.895l-7.754 7.759a.925.925 0 01-1.272 0l-7.754-7.76a1.734 1.734 0 01-.376-1.894c.27-.652.9-1.073 1.605-1.073h3.202V4.962A3.965 3.965 0 0110 1zm7.01 9.82h-4.85V5.09c0-1.13-.81-2.163-1.934-2.278a2.163 2.163 0 00-2.386 2.15v5.859H2.989l7.01 7.016 7.012-7.016z"
+                                        }
+                                    />
                                 </svg>
                             </button>
                         </div>

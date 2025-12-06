@@ -190,14 +190,6 @@ export default function Welcome({
                         </li>
                         <li>
                             <Link
-                                href={route("report.form")}
-                                className="hover:text-yellow-400 transition-colors"
-                            >
-                                Report Form
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
                                 href={route("about")}
                                 className="hover:text-yellow-400 transition-colors"
                             >
@@ -441,12 +433,6 @@ export default function Welcome({
 
                         {/* Call to action */}
                         <div className="flex flex-wrap gap-3 pt-4">
-                            <Link
-                                href={route("report.form")}
-                                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-full bg-yellow-500 text-black hover:bg-yellow-400 transition"
-                            >
-                                Submit a report
-                            </Link>
                             <Link
                                 href={route("about")}
                                 className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-full border border-neutral-300 text-neutral-800 hover:bg-neutral-100 transition"
@@ -917,24 +903,6 @@ export default function Welcome({
                 <h2 className="text-3xl md:text-4xl font-semibold">
                     Explore iCARE
                 </h2>
-                <Link href={route("report.form")}>
-                    <div className="group relative w-full text-white h-56 md:h-72 rounded-2xl overflow-hidden cursor-pointer mt-6 md:mt-10">
-                        <img
-                            src="/images/9.png"
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
-                        />
-                        <div className="absolute inset-0 bg-black/35 group-hover:bg-black/25 transition" />
-                        <div className="absolute inset-0 flex flex-col justify-end px-8 pb-8">
-                            <h3 className="text-2xl md:text-3xl font-bold">
-                                Submit a Report
-                            </h3>
-                            <p className="max-w-lg text-sm md:text-base opacity-90">
-                                Quickly file concerns and help improve your
-                                community.
-                            </p>
-                        </div>
-                    </div>
-                </Link>
                 <Link href={route("about")}>
                     <div className="group relative w-full text-white h-56 md:h-72 rounded-2xl overflow-hidden cursor-pointer mt-6 md:mt-10">
                         <img

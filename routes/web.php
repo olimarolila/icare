@@ -35,11 +35,6 @@ Route::get('/storage/reports/{filename}', function ($filename) {
     return response()->file(storage_path('app/public/' . $path));
 })->where('filename', '.*');
 
-// Static pages (public)
-Route::get('/report-form', function () {
-    return Inertia::render('ReportForm');
-})->name('report.form');
-
 Route::get('/about', function () {
     return Inertia::render('About');
 })->name('about');
