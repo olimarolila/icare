@@ -4,6 +4,24 @@ import { useState, useEffect } from "react";
 import FlashMessages from "@/Components/FlashMessages";
 import ConfirmDialog from "@/Components/ConfirmDialog";
 
+const statusBadgeClass = (status) => {
+    switch (status) {
+        case "Resolved":
+            return "bg-green-600 text-white border border-green-400/60";
+        case "In Progress":
+            return "bg-yellow-500 text-black border border-yellow-300";
+        case "Pending":
+        default:
+            return "bg-gray-600 text-white border border-white/10";
+    }
+};
+
+const truncateText = (text = "", max = 120) => {
+    if (!text) return "-";
+    const str = text.toString();
+    return str.length > max ? `${str.slice(0, max)}…` : str;
+};
+
 export default function AdminReports() {
     const { reports = { data: [], links: [] }, filters = {} } = usePage().props;
     const [selected, setSelected] = useState(null);
@@ -102,8 +120,8 @@ export default function AdminReports() {
                 }
             >
                 <div className="py-6">
-                    <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                        <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-6">
+                    <div className="mx-auto max-w-7xl px-6">
+                        <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-3 sm:p-4 lg:p-5">
                             {/* Search and Controls */}
                             <div className="mb-4 space-y-3">
                                 <div className="flex flex-wrap gap-3 items-center justify-between">
@@ -188,29 +206,35 @@ export default function AdminReports() {
                                 </div>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full border-collapse rounded-xl overflow-hidden">
+                            <div className="overflow-x-auto -mx-3 sm:-mx-4 lg:-mx-5">
+                                <table className="w-full border-collapse rounded-xl overflow-hidden text-lg text-gray-900">
                                     <thead>
-                                        <tr className="bg-black text-white">
-                                            <th className="px-4 py-3 text-left">
+                                        <tr className="bg-black text-white text-sm">
+                                            <th className="px-5 py-3 text-left">
                                                 ID
                                             </th>
-                                            <th className="px-4 py-3 text-left">
+                                            <th className="px-5 py-3 text-left">
                                                 Ticket ID
                                             </th>
-                                            <th className="px-4 py-3 text-left">
+                                            <th className="px-5 py-3 text-left">
                                                 Category
                                             </th>
-                                            <th className="px-4 py-3 text-left">
+                                            <th className="px-5 py-3 text-left">
+                                                Subject
+                                            </th>
+                                            <th className="px-5 py-3 text-left">
+                                                Description
+                                            </th>
+                                            <th className="px-5 py-3 text-left">
                                                 Street
                                             </th>
-                                            <th className="px-4 py-3 text-left">
+                                            <th className="px-5 py-3 text-left">
                                                 Status
                                             </th>
-                                            <th className="px-4 py-3 text-left">
+                                            <th className="px-5 py-3 text-left">
                                                 Date Submitted
                                             </th>
-                                            <th className="px-4 py-3 text-left">
+                                            <th className="px-5 py-3 text-left">
                                                 Action
                                             </th>
                                         </tr>
@@ -229,31 +253,48 @@ export default function AdminReports() {
                                             reports.data.map((r) => (
                                                 <tr
                                                     key={r.id}
-                                                    className="border-b"
+                                                    className="border-b text-sm text-gray-800"
                                                 >
-                                                    <td className="px-4 py-2">
+                                                    <td className="px-5 py-3">
                                                         {r.id}
                                                     </td>
-                                                    <td className="px-4 py-2">
+                                                    <td className="px-5 py-3">
                                                         {r.ticket_id}
                                                     </td>
-                                                    <td className="px-4 py-2">
+                                                    <td className="px-5 py-3">
                                                         {r.category}
                                                     </td>
-                                                    <td className="px-4 py-2">
+                                                    <td className="px-5 py-3">
+                                                        {r.subject || "-"}
+                                                    </td>
+                                                    <td className="px-5 py-3 max-w-xs">
+                                                        <span className="block text-sm text-gray-700 leading-snug">
+                                                            {truncateText(
+                                                                r.description,
+                                                                140
+                                                            )}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-3">
                                                         {r.street || "-"}
                                                     </td>
-                                                    <td className="px-4 py-2">
-                                                        {r.status}
+                                                    <td className="px-5 py-3">
+                                                        <span
+                                                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeClass(
+                                                                r.status
+                                                            )}`}
+                                                        >
+                                                            {r.status}
+                                                        </span>
                                                     </td>
-                                                    <td className="px-4 py-2">
+                                                    <td className="px-5 py-3 whitespace-nowrap">
                                                         {r.submitted_at
                                                             ? new Date(
                                                                   r.submitted_at
                                                               ).toLocaleString()
                                                             : "-"}
                                                     </td>
-                                                    <td className="px-4 py-2">
+                                                    <td className="px-5 py-3">
                                                         <div className="flex gap-2">
                                                             <button
                                                                 onClick={() =>
@@ -514,22 +555,9 @@ export default function AdminReports() {
                                                         Status:
                                                     </p>
                                                     <span
-                                                        className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full
-                                                    ${
-                                                        status === "Pending"
-                                                            ? "bg-yellow-100 text-yellow-700"
-                                                            : ""
-                                                    }
-                                                    ${
-                                                        status === "In Progress"
-                                                            ? "bg-blue-100 text-blue-700"
-                                                            : ""
-                                                    }
-                                                    ${
-                                                        status === "Resolved"
-                                                            ? "bg-green-100 text-green-700"
-                                                            : ""
-                                                    }`}
+                                                        className={`inline-flex items-center mt-1 px-3 py-1 text-xs font-semibold rounded-full ${statusBadgeClass(
+                                                            status
+                                                        )}`}
                                                     >
                                                         {status}
                                                     </span>

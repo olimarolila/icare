@@ -5,6 +5,15 @@ import { loadLeaflet } from "@/utils/loadLeaflet";
 import Footer from "@/Components/Footer";
 import FlashMessages from "@/Components/FlashMessages";
 
+// Utility: normalize subject casing for consistent display
+const formatSubject = (text = "") => {
+    const trimmed = text?.toString().trim();
+    if (!trimmed) return "";
+    return trimmed
+        .toLowerCase()
+        .replace(/\b([a-z])/g, (match, chr) => chr.toUpperCase());
+};
+
 const REPORT_CATEGORIES = [
     {
         name: "Building & Facilities",
@@ -599,8 +608,19 @@ const ReportCard = ({ report, auth }) => {
     const isDownvoted = report.user_vote === -1;
     const votePillClass = [
         "flex items-center gap-3 rounded-full px-4 py-2",
-        isUpvoted ? "bg-[#d93900]" : isDownvoted ? "bg-[#6a5cff]" : "bg-black/40",
+        isUpvoted
+            ? "bg-[#d93900]"
+            : isDownvoted
+            ? "bg-[#6a5cff]"
+            : "bg-black/40",
     ].join(" ");
+
+    const statusBadgeClass =
+        {
+            Resolved: "bg-green-600 text-white border border-green-400/60",
+            Pending: "bg-gray-600 text-white border border-white/10",
+            "In Progress": "bg-yellow-500 text-black border border-yellow-300",
+        }[report.status] || "bg-gray-600 text-white border border-white/10";
     const voteCountClass = `text-sm ${
         isUpvoted || isDownvoted ? "text-white" : ""
     }`;
@@ -693,7 +713,7 @@ const ReportCard = ({ report, auth }) => {
                     </div>
                 </div>
                 <h2 className="text-xl md:text-2xl font-semibold mb-3">
-                    {report.subject}
+                    {formatSubject(report.subject)}
                 </h2>
                 <p className="text-sm md:text-base text-gray-200 leading-relaxed mb-6 text-justify">
                     {report.description || "No description provided."}
@@ -767,7 +787,9 @@ const ReportCard = ({ report, auth }) => {
                             className="relative z-[1200] bg-neutral-900 text-white w-full max-w-3xl rounded-2xl border border-white/10 shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
                             role="dialog"
                             aria-modal="true"
-                            aria-label={`Map for ${report.subject}`}
+                            aria-label={`Map for ${formatSubject(
+                                report.subject
+                            )}`}
                         >
                             <div className="flex items-start justify-between mb-4">
                                 <div>
@@ -821,7 +843,7 @@ const ReportCard = ({ report, auth }) => {
                             onClick={() => setActiveImage(null)}
                         ></div>
                         <div
-                            className="relative z-[1200] bg-neutral-900 text-white w-full max-w-4xl rounded-2xl border border-white/10 shadow-2xl p-4"
+                            className="relative z-[1200] bg-neutral-900 text-white w-full max-w-[90vw] md:max-w-[1200px] rounded-2xl border border-white/10 shadow-2xl p-4 md:p-5"
                             role="dialog"
                             aria-modal="true"
                             aria-label={activeImage.alt || "Report image"}
@@ -837,7 +859,7 @@ const ReportCard = ({ report, auth }) => {
                             <img
                                 src={activeImage.src}
                                 alt={activeImage.alt || "Report image"}
-                                className="w-full h-auto rounded-xl object-contain max-h-[75vh]"
+                                className="w-full h-auto rounded-xl object-contain max-h-[90vh]"
                             />
                         </div>
                     </div>
@@ -894,7 +916,9 @@ const ReportCard = ({ report, auth }) => {
                                     />
                                 </svg>
                             </button>
-                            <span className={voteCountClass}>{report.votes ?? 0}</span>
+                            <span className={voteCountClass}>
+                                {report.votes ?? 0}
+                            </span>
                             <button
                                 type="button"
                                 className="flex items-center justify-center"
@@ -967,9 +991,13 @@ const ReportCard = ({ report, auth }) => {
                         </button>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center md:gap-8 text-sm text-gray-300">
-                        <span className="font-medium">
-                            Status:{" "}
-                            <span className="font-normal">{report.status}</span>
+                        <span className="font-medium flex items-center gap-2">
+                            Status:
+                            <span
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeClass}`}
+                            >
+                                {report.status}
+                            </span>
                         </span>
                         <span className="font-medium">
                             Ticket I.D.:{" "}
