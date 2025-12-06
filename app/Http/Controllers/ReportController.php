@@ -97,54 +97,74 @@ class ReportController extends Controller
 
         $ticketId = 'TKT-' . strtoupper(uniqid());
 
-        $paths = [];
-        if ($request->hasFile('images')) {
-            // Initialize Intervention Image manager with GD driver
-            $manager = new ImageManager(new Driver());
+    $paths = [];
 
-            // Watermark image path (public/images/logo_cat.png)
-            $watermarkPath = public_path('images/logo_cat.PNG');
-            $watermarkOriginal = null;
-            if (is_file($watermarkPath)) {
-                $watermarkOriginal = $manager->read($watermarkPath);
-            }
+    if ($request->hasFile('images')) {
+        // Initialize Intervention Image manager with GD driver
+        $manager = new ImageManager(new Driver());
 
-            foreach ($request->file('images') as $img) {
-                // Read uploaded image
-                $image = $manager->read($img->getRealPath());
+        // Watermark image path (public/images/logo_cat.png)
+        $watermarkPath = public_path('images/logo_cat.PNG');
+        $watermarkOriginal = null;
 
-                // Resize/scale: fit within 1280x960 preserving aspect ratio
-                $image = $image->scaleDown(1280, 960);
-
-                // Apply watermark (bottom-right) if available
-                if ($watermarkOriginal) {
-                    // Scale watermark relative to image width
-                    $wmWidth = (int) round($image->width() * 0.10);
-                    $wmHeight = (int) round($watermarkOriginal->height() * ($wmWidth / $watermarkOriginal->width()));
-                    $wm = $watermarkOriginal->resize($wmWidth, $wmHeight);
-                    // Place bottom-right with 12px margin and 70% opacity
-                    $image->place($wm, 'bottom-right', 12, 12, opacity:40);
-                }
-
-                // Ensure destination filename with original extension
-                $ext = strtolower($img->getClientOriginalExtension() ?: 'jpg');
-                if ($ext === 'jpeg') { $ext = 'jpg'; }
-                if (!in_array($ext, ['jpg','png','webp'], true)) { $ext = 'jpg'; }
-                $filename = Str::uuid()->toString() . '.' . $ext;
-                $relativePath = 'reports/' . $filename;
-                $absolutePath = storage_path('app/public/' . $relativePath);
-
-                // Create directory if needed
-                if (!is_dir(dirname($absolutePath))) {
-                    mkdir(dirname($absolutePath), 0755, true);
-                }
-
-                // Save with quality (applies to jpg/webp; png mapped appropriately by driver)
-                $image->save($absolutePath, quality: 85);
-
-                $paths[] = $relativePath;
-            }
+        if (is_file($watermarkPath)) {
+            $watermarkOriginal = $manager->read($watermarkPath);
         }
+
+        foreach ($request->file('images') as $img) {
+            // Read uploaded image and auto-rotate based on EXIF
+            $image = $manager->read($img->getRealPath())->orientate();
+
+            // Resize/scale only if larger than 1280x960 (preserve smaller images)
+            $maxWidth = 1280;
+            $maxHeight = 960;
+
+            if ($image->width() > $maxWidth || $image->height() > $maxHeight) {
+                $image = $image->scaleDown($maxWidth, $maxHeight);
+            }
+
+            // Apply watermark (bottom-right) if available
+            if ($watermarkOriginal) {
+                // Scale watermark relative to image width (about 10% width)
+                $wmWidth = (int) round($image->width() * 0.10);
+                $wmHeight = (int) round(
+                    $watermarkOriginal->height() * ($wmWidth / $watermarkOriginal->width())
+                );
+
+                // Use a cloned copy so original watermark is not permanently resized
+                $wm = $watermarkOriginal->clone()->resize($wmWidth, $wmHeight);
+
+                // Place bottom-right with 12px margin and 40% opacity
+                $image->place($wm, 'bottom-right', 12, 12, opacity: 40);
+            }
+
+            // Ensure destination filename with original extension
+            $ext = strtolower($img->getClientOriginalExtension() ?: 'jpg');
+
+            if ($ext === 'jpeg') {
+                $ext = 'jpg';
+            }
+
+            if (!in_array($ext, ['jpg', 'png', 'webp'], true)) {
+                $ext = 'jpg';
+            }
+
+            $filename = Str::uuid()->toString() . '.' . $ext;
+            $relativePath = 'reports/' . $filename;
+            $absolutePath = storage_path('app/public/' . $relativePath);
+
+            // Create directory if needed
+            if (!is_dir(dirname($absolutePath))) {
+                mkdir(dirname($absolutePath), 0755, true);
+            }
+
+            // Save with quality (applies to jpg/webp; png mapped appropriately by driver)
+            $image->save($absolutePath, quality: 85);
+
+            $paths[] = $relativePath;
+        }
+    }
+
 
         $report = Report::create([
             'ticket_id' => $ticketId,
