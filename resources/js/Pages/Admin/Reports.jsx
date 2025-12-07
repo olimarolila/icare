@@ -4,24 +4,6 @@ import { useState, useEffect } from "react";
 import FlashMessages from "@/Components/FlashMessages";
 import ConfirmDialog from "@/Components/ConfirmDialog";
 
-const statusBadgeClass = (status) => {
-    switch (status) {
-        case "Resolved":
-            return "bg-green-600 text-white border border-green-400/60";
-        case "In Progress":
-            return "bg-yellow-500 text-black border border-yellow-300";
-        case "Pending":
-        default:
-            return "bg-gray-600 text-white border border-white/10";
-    }
-};
-
-const truncateText = (text = "", max = 120) => {
-    if (!text) return "-";
-    const str = text.toString();
-    return str.length > max ? `${str.slice(0, max)}…` : str;
-};
-
 export default function AdminReports() {
     const { reports = { data: [], links: [] }, filters = {} } = usePage().props;
     const [selected, setSelected] = useState(null);
@@ -132,9 +114,7 @@ export default function AdminReports() {
                 }
             >
                 <div className="py-6">
-                    <div className="mx-auto max-w-7xl px-6">
-                        <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-3 sm:p-4 lg:p-5">
-                    <div className="mx-auto max-w-[90rem] sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-[90rem] px-6">
                         <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-6">
                             {/* Search and Controls */}
                             <div className="mb-4">
@@ -188,8 +168,6 @@ export default function AdminReports() {
                                 </div>
                             </div>
 
-                            <div className="overflow-x-auto -mx-3 sm:-mx-4 lg:-mx-5">
-                                <table className="w-full border-collapse rounded-xl overflow-hidden text-lg text-gray-900">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full border-collapse rounded-xl overflow-hidden w-full">
                                     <thead>
@@ -226,8 +204,6 @@ export default function AdminReports() {
                                                         : "▼"
                                                     : ""}
                                             </th>
-                                            <th className="px-5 py-3 text-left">
-                                                Ticket ID
                                             <th
                                                 className="px-4 py-3 text-left cursor-pointer"
                                                 onClick={() =>
@@ -241,8 +217,6 @@ export default function AdminReports() {
                                                         : "▼"
                                                     : ""}
                                             </th>
-                                            <th className="px-5 py-3 text-left">
-                                                Category
                                             <th
                                                 className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
                                                 onClick={() =>
@@ -396,7 +370,7 @@ export default function AdminReports() {
                                                               ).toLocaleString()
                                                             : "-"}
                                                     </td>
-                                                    <td className="px-5 py-3">
+                                                    <td className="px-4 py-2">
                                                         <div className="flex gap-2">
                                                             <button
                                                                 onClick={() =>
@@ -657,9 +631,22 @@ export default function AdminReports() {
                                                         Status:
                                                     </p>
                                                     <span
-                                                        className={`inline-flex items-center mt-1 px-3 py-1 text-xs font-semibold rounded-full ${statusBadgeClass(
-                                                            status
-                                                        )}`}
+                                                        className={`inline-block mt-1 px-3 py-1 text-xs font-semibold rounded-full
+                                                    ${
+                                                        status === "Pending"
+                                                            ? "bg-yellow-100 text-yellow-700"
+                                                            : ""
+                                                    }
+                                                    ${
+                                                        status === "In Progress"
+                                                            ? "bg-blue-100 text-blue-700"
+                                                            : ""
+                                                    }
+                                                    ${
+                                                        status === "Resolved"
+                                                            ? "bg-green-100 text-green-700"
+                                                            : ""
+                                                    }`}
                                                     >
                                                         {status}
                                                     </span>
