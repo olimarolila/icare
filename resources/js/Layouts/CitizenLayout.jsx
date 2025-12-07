@@ -162,14 +162,22 @@ export default function CitizenLayout({ children, fullBleed = false }) {
                                         viewBox="0 0 24 24"
                                     >
                                         <path
-                                            className={!menuOpen ? "inline-flex" : "hidden"}
+                                            className={
+                                                !menuOpen
+                                                    ? "inline-flex"
+                                                    : "hidden"
+                                            }
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth="2"
                                             d="M4 6h16M4 12h16M4 18h16"
                                         />
                                         <path
-                                            className={menuOpen ? "inline-flex" : "hidden"}
+                                            className={
+                                                menuOpen
+                                                    ? "inline-flex"
+                                                    : "hidden"
+                                            }
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
                                             strokeWidth="2"
@@ -241,7 +249,9 @@ export default function CitizenLayout({ children, fullBleed = false }) {
             >
                 {isCitizen ? (
                     <div
-                        className={fullBleed ? "w-full" : "mx-auto w-full max-w-6xl"}
+                        className={
+                            fullBleed ? "w-full" : "mx-auto w-full max-w-6xl"
+                        }
                     >
                         {children}
                     </div>

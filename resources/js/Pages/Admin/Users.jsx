@@ -248,53 +248,51 @@ export default function AdminUsers() {
                 <div className="py-6">
                     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                         <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-6">
-                            <div className="mb-4 space-y-3">
-                                <div className="flex flex-wrap gap-3 items-center justify-between">
-                                    <div className="flex gap-2 items-center flex-wrap">
-                                        <input
-                                            value={search}
-                                            onChange={(e) =>
-                                                setSearch(e.target.value)
-                                            }
-                                            placeholder="Search name or email..."
-                                            className="border rounded px-3 py-2 text-sm"
-                                        />
-                                        <select
-                                            value={roleFilter}
-                                            onChange={(e) => {
-                                                setRoleFilter(e.target.value);
-                                                applyFilters(1);
-                                            }}
-                                            className="border rounded px-5 py-2 text-sm"
-                                        >
-                                            <option value="">All Roles</option>
-                                            <option value="admin">admin</option>
-                                            <option value="supervisor">
-                                                supervisor
+                            <div className="mb-4">
+                                <div className="flex flex-wrap gap-3 items-center">
+                                    <input
+                                        value={search}
+                                        onChange={(e) =>
+                                            setSearch(e.target.value)
+                                        }
+                                        placeholder="Search name or email..."
+                                        className="border rounded px-3 py-2 text-sm flex-1 min-w-[200px]"
+                                    />
+                                    <select
+                                        value={roleFilter}
+                                        onChange={(e) => {
+                                            setRoleFilter(e.target.value);
+                                            applyFilters(1);
+                                        }}
+                                        className="border rounded px-3 py-2 text-sm"
+                                    >
+                                        <option value="">All Roles</option>
+                                        <option value="admin">admin</option>
+                                        <option value="supervisor">
+                                            supervisor
+                                        </option>
+                                        <option value="">(none)</option>
+                                    </select>
+                                    <select
+                                        value={perPage}
+                                        onChange={(e) => {
+                                            setPerPage(e.target.value);
+                                            applyFilters(1);
+                                        }}
+                                        className="border rounded px-3 py-2 text-sm"
+                                    >
+                                        {[10, 25, 50, 100].map((n) => (
+                                            <option key={n} value={n}>
+                                                {n} / page
                                             </option>
-                                            <option value="">(none)</option>
-                                        </select>
-                                        <select
-                                            value={perPage}
-                                            onChange={(e) => {
-                                                setPerPage(e.target.value);
-                                                applyFilters(1);
-                                            }}
-                                            className="border rounded px-5 py-2 text-sm"
-                                        >
-                                            {[10, 25, 50, 100].map((n) => (
-                                                <option key={n} value={n}>
-                                                    {n} / page
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <button
-                                            onClick={clearFilters}
-                                            className="text-xs px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                                        >
-                                            Clear Filters
-                                        </button>
-                                    </div>
+                                        ))}
+                                    </select>
+                                    <button
+                                        onClick={clearFilters}
+                                        className="text-sm px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                                    >
+                                        Reset Filters
+                                    </button>
                                 </div>
                             </div>
 

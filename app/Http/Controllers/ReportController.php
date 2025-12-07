@@ -30,7 +30,7 @@ class ReportController extends Controller
         ];
 
         // Sortable columns whitelist
-        $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'location_name', 'status', 'submitted_at'];
+        $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'location_name', 'status', 'submitted_at', 'subject', 'votes'];
         if (!in_array($sort, $allowedSorts)) {
             $sort = 'votes';
         }
@@ -59,7 +59,8 @@ class ReportController extends Controller
         }
 
         $reports = $query
-            ->select(['id', 'ticket_id', 'category', 'street', 'location_name', 'latitude', 'longitude', 'subject', 'status', 'submitted_at', 'description', 'images'])
+            ->with('user:id,name,email')
+            ->select(['id', 'ticket_id', 'category', 'street', 'location_name', 'latitude', 'longitude', 'subject', 'status', 'submitted_at', 'description', 'images', 'votes', 'user_id'])
             ->paginate($perPage)
             ->appends($request->query());
 
@@ -383,6 +384,33 @@ class ReportController extends Controller
             return response()->json(['ok' => true]);
         }
         return redirect()->back()->with('success', 'Comment added successfully.');
+    }
+
+    /**
+     * Archive the specified report.
+     */
+    public function archive(Request $request, Report $report)
+    {
+        $report->update([
+            'archived_at' => now(),
+            'archived_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.reports')->with('success', 'Report archived successfully.');
+    }
+
+    /**
+     * Restore the specified archived report.
+     */
+    public function restore(Request $request, Report $report)
+    {
+        $report->update([
+            'archived_at' => null,
+            'archived_by' => null,
+        ]);
+
+        return redirect()->route('admin.archives', ['tab' => 'reports'])
+            ->with('success', 'Report restored successfully.');
     }
 }
 

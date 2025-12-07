@@ -14,11 +14,10 @@ export default function AdminReports() {
     const [reportToArchive, setReportToArchive] = useState(null);
     // Filter states
     const [search, setSearch] = useState(filters.search || "");
-    const [ticketId, setTicketId] = useState(filters.ticket_id || "");
-    const [category, setCategory] = useState(filters.category || "");
-    const [street, setStreet] = useState(filters.street || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
     const [perPage, setPerPage] = useState(filters.perPage || 10);
+    const [sort, setSort] = useState(filters.sort || "submitted_at");
+    const [direction, setDirection] = useState(filters.direction || "desc");
 
     // Debounce global search
     useEffect(() => {
@@ -28,17 +27,19 @@ export default function AdminReports() {
         return () => clearTimeout(handle);
     }, [search]);
 
-    const applyFilters = (page = reports.current_page || 1) => {
+    const applyFilters = (
+        page = reports.current_page || 1,
+        customStatus = null
+    ) => {
         router.get(
             route("admin.reports"),
             {
                 page,
                 perPage,
                 search,
-                ticket_id: ticketId,
-                category,
-                street,
-                status: statusFilter,
+                status: customStatus !== null ? customStatus : statusFilter,
+                sort,
+                direction,
             },
             { preserveState: true, preserveScroll: true }
         );
@@ -46,11 +47,12 @@ export default function AdminReports() {
 
     const clearFilters = () => {
         setSearch("");
-        setTicketId("");
-        setCategory("");
-        setStreet("");
         setStatusFilter("");
-        applyFilters(1);
+        router.get(
+            route("admin.reports"),
+            { page: 1, perPage },
+            { preserveState: true, preserveScroll: true }
+        );
     };
 
     const openModal = (report, mode = "view") => {
@@ -79,6 +81,16 @@ export default function AdminReports() {
         );
     };
 
+    const handleSort = (col) => {
+        if (sort === col) {
+            setDirection(direction === "asc" ? "desc" : "asc");
+        } else {
+            setSort(col);
+            setDirection("asc");
+        }
+        setTimeout(() => applyFilters(1), 0);
+    };
+
     return (
         <>
             <FlashMessages />
@@ -102,79 +114,41 @@ export default function AdminReports() {
                 }
             >
                 <div className="py-6">
-                    <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-[90rem] sm:px-6 lg:px-8">
                         <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-6">
                             {/* Search and Controls */}
-                            <div className="mb-4 space-y-3">
-                                <div className="flex flex-wrap gap-3 items-center justify-between">
-                                    <div className="flex gap-2 items-center flex-wrap">
-                                        <input
-                                            value={search}
-                                            onChange={(e) =>
-                                                setSearch(e.target.value)
-                                            }
-                                            placeholder="Global search..."
-                                            className="border rounded px-3 py-2 text-sm"
-                                        />
-                                        <select
-                                            value={perPage}
-                                            onChange={(e) => {
-                                                setPerPage(e.target.value);
-                                                applyFilters(1);
-                                            }}
-                                            className="border rounded px-5 py-2 text-sm"
-                                        >
-                                            {[10, 25, 50, 100].map((n) => (
-                                                <option key={n} value={n}>
-                                                    {n} / page
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <button
-                                            onClick={clearFilters}
-                                            className="text-xs px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                                        >
-                                            Clear Filters
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Column Filters */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div className="mb-4">
+                                <div className="flex flex-wrap gap-3 items-center">
                                     <input
-                                        value={ticketId}
+                                        value={search}
                                         onChange={(e) =>
-                                            setTicketId(e.target.value)
+                                            setSearch(e.target.value)
                                         }
-                                        onBlur={() => applyFilters()}
-                                        placeholder="Filter by Ticket ID"
-                                        className="border rounded px-3 py-2 text-sm"
+                                        placeholder="Search..."
+                                        className="border rounded px-3 py-2 text-sm flex-1 min-w-[100px]"
                                     />
-                                    <input
-                                        value={category}
-                                        onChange={(e) =>
-                                            setCategory(e.target.value)
-                                        }
-                                        onBlur={() => applyFilters()}
-                                        placeholder="Filter by Category"
-                                        className="border rounded px-3 py-2 text-sm"
-                                    />
-                                    <input
-                                        value={street}
-                                        onChange={(e) =>
-                                            setStreet(e.target.value)
-                                        }
-                                        onBlur={() => applyFilters()}
-                                        placeholder="Filter by Street"
-                                        className="border rounded px-3 py-2 text-sm"
-                                    />
+                                    <select
+                                        value={perPage}
+                                        onChange={(e) => {
+                                            setPerPage(e.target.value);
+                                            applyFilters(1);
+                                        }}
+                                        className="border rounded px-6 py-2 text-sm"
+                                    >
+                                        {[10, 25, 50, 100].map((n) => (
+                                            <option key={n} value={n}>
+                                                {n} / page
+                                            </option>
+                                        ))}
+                                    </select>
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => {
-                                            setStatusFilter(e.target.value);
-                                            applyFilters();
+                                            const newStatus = e.target.value;
+                                            setStatusFilter(newStatus);
+                                            applyFilters(1, newStatus);
                                         }}
-                                        className="border rounded px-3 py-2 text-sm"
+                                        className="border rounded px-7 py-2 text-sm"
                                     >
                                         <option value="">All Status</option>
                                         <option value="Pending">Pending</option>
@@ -185,32 +159,117 @@ export default function AdminReports() {
                                             Resolved
                                         </option>
                                     </select>
+                                    <button
+                                        onClick={clearFilters}
+                                        className="text-sm px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                                    >
+                                        Reset Filters
+                                    </button>
                                 </div>
                             </div>
 
                             <div className="overflow-x-auto">
-                                <table className="min-w-full border-collapse rounded-xl overflow-hidden">
+                                <table className="min-w-full border-collapse rounded-xl overflow-hidden w-full">
                                     <thead>
                                         <tr className="bg-black text-white">
-                                            <th className="px-4 py-3 text-left">
+                                            {/* <th className="px-4 py-3 text-left">
                                                 ID
+                                            </th> */}
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                                                onClick={() =>
+                                                    handleSort("ticket_id")
+                                                }
+                                            >
+                                                Ticket ID{" "}
+                                                {sort === "ticket_id"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
                                             </th>
-                                            <th className="px-4 py-3 text-left">
-                                                Ticket ID
+                                            <th className="px-4 py-3 text-left whitespace-nowrap">
+                                                Posted By
                                             </th>
-                                            <th className="px-4 py-3 text-left">
-                                                Category
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                                                onClick={() =>
+                                                    handleSort("category")
+                                                }
+                                            >
+                                                Category{" "}
+                                                {sort === "category"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
                                             </th>
-                                            <th className="px-4 py-3 text-left">
-                                                Street
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer"
+                                                onClick={() =>
+                                                    handleSort("subject")
+                                                }
+                                            >
+                                                Subject{" "}
+                                                {sort === "subject"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
                                             </th>
-                                            <th className="px-4 py-3 text-left">
-                                                Status
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                                                onClick={() =>
+                                                    handleSort("street")
+                                                }
+                                            >
+                                                Street{" "}
+                                                {sort === "street"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
                                             </th>
-                                            <th className="px-4 py-3 text-left">
-                                                Date Submitted
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                                                onClick={() =>
+                                                    handleSort("status")
+                                                }
+                                            >
+                                                Status{" "}
+                                                {sort === "status"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
                                             </th>
-                                            <th className="px-4 py-3 text-left">
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                                                onClick={() =>
+                                                    handleSort("votes")
+                                                }
+                                            >
+                                                Votes{" "}
+                                                {sort === "votes"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
+                                            </th>
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                                                onClick={() =>
+                                                    handleSort("submitted_at")
+                                                }
+                                            >
+                                                Date Submitted{" "}
+                                                {sort === "submitted_at"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
+                                            </th>
+                                            <th className="px-4 py-3 text-left whitespace-nowrap">
                                                 Action
                                             </th>
                                         </tr>
@@ -219,7 +278,7 @@ export default function AdminReports() {
                                         {reports.data.length === 0 ? (
                                             <tr>
                                                 <td
-                                                    colSpan="7"
+                                                    colSpan="10"
                                                     className="px-4 py-6 text-center text-gray-500"
                                                 >
                                                     No reports yet.
@@ -231,20 +290,78 @@ export default function AdminReports() {
                                                     key={r.id}
                                                     className="border-b"
                                                 >
-                                                    <td className="px-4 py-2">
+                                                    {/* <td className="px-4 py-2">
                                                         {r.id}
-                                                    </td>
+                                                    </td> */}
                                                     <td className="px-4 py-2">
                                                         {r.ticket_id}
+                                                    </td>
+                                                    <td className="px-4 py-2 max-w-[150px] group relative">
+                                                        {r.user ? (
+                                                            <div className="text-sm truncate">
+                                                                <div className="font-medium truncate">
+                                                                    {
+                                                                        r.user
+                                                                            .name
+                                                                    }
+                                                                </div>
+                                                                <div className="text-gray-500 text-xs truncate">
+                                                                    {
+                                                                        r.user
+                                                                            .email
+                                                                    }
+                                                                </div>
+                                                                <div className="hidden group-hover:block absolute left-0 top-0 bg-white border border-gray-300 shadow-lg p-2 z-10 w-max max-w-sm">
+                                                                    <div className="font-medium">
+                                                                        {
+                                                                            r
+                                                                                .user
+                                                                                .name
+                                                                        }
+                                                                    </div>
+                                                                    <div className="text-gray-500 text-xs">
+                                                                        {
+                                                                            r
+                                                                                .user
+                                                                                .email
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400">
+                                                                Guest
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td className="px-4 py-2">
                                                         {r.category}
                                                     </td>
-                                                    <td className="px-4 py-2">
-                                                        {r.street || "-"}
+                                                    <td className="px-4 py-2 max-w-[200px] group relative">
+                                                        <div className="truncate">
+                                                            {r.subject || "-"}
+                                                        </div>
+                                                        {r.subject && (
+                                                            <div className="hidden group-hover:block absolute left-0 top-0 bg-white border border-gray-300 shadow-lg p-2 z-10 w-max max-w-sm">
+                                                                {r.subject}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-2 max-w-[200px] group relative">
+                                                        <div className="truncate">
+                                                            {r.street || "-"}
+                                                        </div>
+                                                        {r.street && (
+                                                            <div className="hidden group-hover:block absolute left-0 top-0 bg-white border border-gray-300 shadow-lg p-2 z-10 w-max max-w-sm">
+                                                                {r.street}
+                                                            </div>
+                                                        )}
                                                     </td>
                                                     <td className="px-4 py-2">
                                                         {r.status}
+                                                    </td>
+                                                    <td className="px-4 py-2">
+                                                        {r.votes || 0}
                                                     </td>
                                                     <td className="px-4 py-2">
                                                         {r.submitted_at
@@ -268,13 +385,13 @@ export default function AdminReports() {
                                                                     xmlns="http://www.w3.org/2000/svg"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
-                                                                    stroke-width="1.5"
+                                                                    strokeWidth="1.5"
                                                                     stroke="currentColor"
-                                                                    class="size-6"
+                                                                    className="size-6"
                                                                 >
                                                                     <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
                                                                         d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
                                                                     />
                                                                 </svg>
@@ -292,13 +409,13 @@ export default function AdminReports() {
                                                                     xmlns="http://www.w3.org/2000/svg"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
-                                                                    stroke-width="1.5"
+                                                                    strokeWidth="1.5"
                                                                     stroke="currentColor"
-                                                                    class="size-6"
+                                                                    className="size-6"
                                                                 >
                                                                     <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
                                                                         d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
                                                                     />
                                                                 </svg>
@@ -315,13 +432,13 @@ export default function AdminReports() {
                                                                     xmlns="http://www.w3.org/2000/svg"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
-                                                                    stroke-width="1.5"
+                                                                    strokeWidth="1.5"
                                                                     stroke="currentColor"
-                                                                    class="size-6"
+                                                                    className="size-6"
                                                                 >
                                                                     <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
                                                                         d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
                                                                     />
                                                                 </svg>

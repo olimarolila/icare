@@ -31,8 +31,8 @@ export default function Archives() {
     const [reportSearch, setReportSearch] = useState(
         filters.reportSearch || ""
     );
-    const [reportCategory, setReportCategory] = useState(
-        filters.reportCategory || ""
+    const [reportStatus, setReportStatus] = useState(
+        filters.reportStatus || ""
     );
     const [reportPerPage, setReportPerPage] = useState(
         filters.reportPerPage || 10
@@ -49,7 +49,7 @@ export default function Archives() {
         return () => clearTimeout(handle);
     }, [userSearch, reportSearch]);
 
-    const applyFilters = (page = 1) => {
+    const applyFilters = (page = 1, customReportStatus = null) => {
         router.get(
             route("admin.archives"),
             {
@@ -60,7 +60,10 @@ export default function Archives() {
                 userSort,
                 userDirection,
                 reportSearch,
-                reportCategory,
+                reportStatus:
+                    customReportStatus !== null
+                        ? customReportStatus
+                        : reportStatus,
                 reportPerPage,
                 reportSort,
                 reportDirection,
@@ -79,11 +82,12 @@ export default function Archives() {
 
     const clearReportFilters = () => {
         setReportSearch("");
-        setReportCategory("");
-        setReportPerPage(10);
-        setReportSort("archived_at");
-        setReportDirection("desc");
-        setTimeout(() => applyFilters(1), 0);
+        setReportStatus("");
+        router.get(
+            route("admin.archives"),
+            { page: 1, tab: activeTab, reportPerPage },
+            { preserveState: true, preserveScroll: true }
+        );
     };
 
     const handleUserSort = (col) => {
@@ -117,7 +121,7 @@ export default function Archives() {
                 userSort,
                 userDirection,
                 reportSearch,
-                reportCategory,
+                reportStatus,
                 reportPerPage,
                 reportSort,
                 reportDirection,
@@ -199,7 +203,7 @@ export default function Archives() {
                                                         );
                                                         applyFilters(1);
                                                     }}
-                                                    className="border rounded px-5 py-2 text-sm"
+                                                    className="border rounded px-6 py-2 text-sm"
                                                 >
                                                     {[10, 25, 50, 100].map(
                                                         (n) => (
@@ -398,60 +402,63 @@ export default function Archives() {
                             {/* Reports Tab Content */}
                             {activeTab === "reports" && (
                                 <div>
-                                    <div className="mb-4 space-y-3">
-                                        <div className="flex flex-wrap gap-3 items-center justify-between">
-                                            <div className="flex gap-2 items-center flex-wrap">
-                                                <input
-                                                    value={reportSearch}
-                                                    onChange={(e) =>
-                                                        setReportSearch(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    placeholder="Global search..."
-                                                    className="border rounded px-3 py-2 text-sm"
-                                                />
-                                                <input
-                                                    value={reportCategory}
-                                                    onChange={(e) =>
-                                                        setReportCategory(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    onBlur={() =>
-                                                        applyFilters()
-                                                    }
-                                                    placeholder="Filter by Category"
-                                                    className="border rounded px-3 py-2 text-sm"
-                                                />
-                                                <select
-                                                    value={reportPerPage}
-                                                    onChange={(e) => {
-                                                        setReportPerPage(
-                                                            e.target.value
-                                                        );
-                                                        applyFilters(1);
-                                                    }}
-                                                    className="border rounded px-2 py-2 text-sm"
-                                                >
-                                                    {[10, 25, 50, 100].map(
-                                                        (n) => (
-                                                            <option
-                                                                key={n}
-                                                                value={n}
-                                                            >
-                                                                {n} / page
-                                                            </option>
-                                                        )
-                                                    )}
-                                                </select>
-                                                <button
-                                                    onClick={clearReportFilters}
-                                                    className="text-xs px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                                                >
-                                                    Clear Filters
-                                                </button>
-                                            </div>
+                                    <div className="mb-4">
+                                        <div className="flex flex-wrap gap-3 items-center">
+                                            <input
+                                                value={reportSearch}
+                                                onChange={(e) =>
+                                                    setReportSearch(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                placeholder="Search..."
+                                                className="border rounded px-3 py-2 text-sm flex-1 min-w-[200px]"
+                                            />
+                                            <select
+                                                value={reportPerPage}
+                                                onChange={(e) => {
+                                                    setReportPerPage(
+                                                        e.target.value
+                                                    );
+                                                    applyFilters(1);
+                                                }}
+                                                className="border rounded px-3 py-2 text-sm"
+                                            >
+                                                {[10, 25, 50, 100].map((n) => (
+                                                    <option key={n} value={n}>
+                                                        {n} / page
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <select
+                                                value={reportStatus}
+                                                onChange={(e) => {
+                                                    const newStatus =
+                                                        e.target.value;
+                                                    setReportStatus(newStatus);
+                                                    applyFilters(1, newStatus);
+                                                }}
+                                                className="border rounded px-3 py-2 text-sm"
+                                            >
+                                                <option value="">
+                                                    All Status
+                                                </option>
+                                                <option value="Pending">
+                                                    Pending
+                                                </option>
+                                                <option value="In Progress">
+                                                    In Progress
+                                                </option>
+                                                <option value="Resolved">
+                                                    Resolved
+                                                </option>
+                                            </select>
+                                            <button
+                                                onClick={clearReportFilters}
+                                                className="text-sm px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                                            >
+                                                Reset Filters
+                                            </button>
                                         </div>
                                     </div>
 
@@ -459,9 +466,9 @@ export default function Archives() {
                                         <table className="min-w-full border-collapse rounded-xl overflow-hidden">
                                             <thead>
                                                 <tr className="bg-black text-white">
-                                                    <th className="px-4 py-3 text-left whitespace-nowrap">
+                                                    {/* <th className="px-4 py-3 text-left whitespace-nowrap">
                                                         ID
-                                                    </th>
+                                                    </th> */}
 
                                                     <th
                                                         className="px-4 py-3 text-left whitespace-nowrap cursor-pointer"
@@ -497,6 +504,10 @@ export default function Archives() {
                                                                 ? "▲"
                                                                 : "▼"
                                                             : ""}
+                                                    </th>
+
+                                                    <th className="px-4 py-3 text-left whitespace-nowrap">
+                                                        Subject
                                                     </th>
 
                                                     <th className="px-4 py-3 text-left whitespace-nowrap">
@@ -552,7 +563,7 @@ export default function Archives() {
                                                 {reports.data.length === 0 ? (
                                                     <tr>
                                                         <td
-                                                            colSpan="8"
+                                                            colSpan="9"
                                                             className="px-4 py-6 text-center text-gray-500"
                                                         >
                                                             No archived reports
@@ -565,14 +576,18 @@ export default function Archives() {
                                                             key={r.id}
                                                             className="border-b"
                                                         >
-                                                            <td className="px-4 py-2">
+                                                            {/* <td className="px-4 py-2">
                                                                 {r.id}
-                                                            </td>
+                                                            </td> */}
                                                             <td className="px-4 py-2">
                                                                 {r.ticket_id}
                                                             </td>
                                                             <td className="px-4 py-2">
                                                                 {r.category}
+                                                            </td>
+                                                            <td className="px-4 py-2">
+                                                                {r.subject ||
+                                                                    "-"}
                                                             </td>
                                                             <td className="px-4 py-2">
                                                                 {r.street ||
@@ -608,14 +623,14 @@ export default function Archives() {
                                                                             xmlns="http://www.w3.org/2000/svg"
                                                                             fill="none"
                                                                             viewBox="0 0 24 24"
-                                                                            stroke-width="1.5"
+                                                                            strokeWidth="1.5"
                                                                             stroke="currentColor"
-                                                                            class="size-6"
+                                                                            className="size-6"
                                                                         >
                                                                             <path
-                                                                                stroke-linecap="round"
-                                                                                stroke-linejoin="round"
-                                                                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                                                                                strokeLinecap="round"
+                                                                                strokeLinejoin="round"
+                                                                                d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
                                                                             />
                                                                         </svg>
                                                                     </button>

@@ -105,7 +105,7 @@ export default function ArchivedReports() {
                                             setPerPage(e.target.value);
                                             applyFilters(1);
                                         }}
-                                        className="border rounded px-2 py-2 text-sm"
+                                        className="border rounded px-8 py-2 text-sm"
                                     >
                                         {[10, 25, 50, 100].map((n) => (
                                             <option key={n} value={n}>
@@ -157,6 +157,9 @@ export default function ArchivedReports() {
                                                 : ""}
                                         </th>
                                         <th className="px-4 py-3 text-left">
+                                            Subject
+                                        </th>
+                                        <th className="px-4 py-3 text-left">
                                             Street
                                         </th>
                                         <th
@@ -195,7 +198,7 @@ export default function ArchivedReports() {
                                     {reports.data.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan="8"
+                                                colSpan="9"
                                                 className="px-4 py-6 text-center text-gray-500"
                                             >
                                                 No archived reports found.
@@ -212,6 +215,9 @@ export default function ArchivedReports() {
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     {r.category}
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    {r.subject || "-"}
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     {r.street || "-"}
