@@ -14,6 +14,9 @@ export default function Welcome({
     const [selectedImage, setSelectedImage] = useState(null);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [activeStep, setActiveStep] = useState("submit");
+    const [showQuote, setShowQuote] = useState(false);
+    const [quote, setQuote] = useState(null);
+    const [loadingQuote, setLoadingQuote] = useState(false);
 
     const steps = {
         submit: {
@@ -62,7 +65,46 @@ export default function Welcome({
     };
 
     const goToNext = () => {
-        setCurrentIndex((prev) => (prev + 2 < reports.length ? prev + 2 : 0));
+        setCurrentIndex((prev) => (prev + 1) % reports.length);
+    };
+
+    const fetchQuote = async () => {
+        setLoadingQuote(true);
+        try {
+            const response = await fetch(
+                "https://api.api-ninjas.com/v2/randomquotes",
+                {
+                    headers: {
+                        "X-Api-Key": "KkvMqe5Wuu+EKuuaCzFK5w==Z5LYVswitw5RWktW",
+                    },
+                }
+            );
+            if (response.ok) {
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    setQuote(data[0]);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch quote:", error);
+        } finally {
+            setLoadingQuote(false);
+        }
+    };
+
+    const handleCatClick = () => {
+        if (showQuote) {
+            fetchQuote();
+        } else {
+            setShowQuote(true);
+            if (!quote) {
+                fetchQuote();
+            }
+        }
+    };
+
+    const handleCloseQuote = () => {
+        setShowQuote(false);
     };
 
     // Hook: detect when element is in view once
@@ -744,11 +786,59 @@ export default function Welcome({
                 </Link>
             </section>
 
-            {/* Floating Cat */}
+            {/* Floating Cat with Quote */}
+            {showQuote && (
+                <div className="fixed bottom-[200px] right-6 z-50 max-w-sm">
+                    <div
+                        className="relative bg-white rounded-2xl shadow-2xl p-5 mb-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={handleCloseQuote}
+                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                                stroke="currentColor"
+                                className="w-4 h-4"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                />
+                            </svg>
+                        </button>
+                        {loadingQuote ? (
+                            <div className="text-center py-6">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+                            </div>
+                        ) : quote ? (
+                            <>
+                                <p className="text-gray-700 text-sm leading-relaxed mb-3 italic">
+                                    "{quote.quote}"
+                                </p>
+                                <p className="text-xs text-gray-500 text-right">
+                                    - {quote.author}
+                                </p>
+                            </>
+                        ) : (
+                            <p className="text-gray-500 text-center text-sm py-4">
+                                Failed to load quote. Please try again.
+                            </p>
+                        )}
+                        <div className="absolute -bottom-3 right-12 w-6 h-6 bg-white transform rotate-45"></div>
+                    </div>
+                </div>
+            )}
             <img
                 src="/images/logo_cat3.png"
                 alt="Floating Cat"
-                className="floating-cat w-40 md:w-48 lg:w-60 z-50 pointer-events-none"
+                className="floating-cat w-40 md:w-48 lg:w-60 z-50 cursor-pointer hover:scale-110 transition-transform"
+                onClick={handleCatClick}
             />
             <style>{`
                 .floating-cat { position: fixed; bottom: 20px; right: 20px; animation: float 4s ease-in-out infinite; }
