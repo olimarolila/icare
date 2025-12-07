@@ -7,7 +7,7 @@ export default function Footer() {
         <footer className="w-full bg-black text-neutral-300 border-t border-white/10">
             {/* made it full-width + smaller vertical padding */}
             <div className="w-full mx-auto px-6 md:px-12 lg:px-20 py-6">
-                <div className="grid gap-6 lg:gap-8 md:grid-cols-3 items-start">
+                <div className="grid gap-6 lg:gap-8 md:grid-cols-3 items-start lg:pr-28 xl:pr-44">
                     {/* Brand + blurb */}
                     <div className="space-y-3">
                         <div className="flex items-center gap-3">

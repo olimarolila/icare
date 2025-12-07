@@ -179,19 +179,41 @@ export default function Login({ auth, status, canResetPassword }) {
                         </div>
 
                         {/* Remember me */}
-                        <label className="flex items-center space-x-2">
+                        <label className="flex items-center text-sm text-gray-300 cursor-pointer select-none">
                             <input
                                 type="checkbox"
                                 checked={data.remember}
                                 onChange={(e) =>
                                     setData("remember", e.target.checked)
                                 }
-                                className="accent-yellow-400"
+                                className="sr-only"
                             />
-
-                            <span className="text-sm text-gray-300">
-                                Remember me
+                            <span
+                                className={`flex h-5 w-5 items-center justify-center rounded border transition ${
+                                    data.remember
+                                        ? 'bg-yellow-400 border-yellow-400'
+                                        : 'bg-white/10 border-white/40'
+                                }`}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    strokeWidth={3}
+                                    stroke="currentColor"
+                                    className={`size-5 text-black transition ${
+                                        data.remember ? 'opacity-100' : 'opacity-0'
+                                    }`}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="m4.5 12.75 6 6 9-13.5"
+                                    />
+                                </svg>
                             </span>
+
+                            <span className="ml-2">Remember me</span>
                         </label>
 
                         {/* Footer */}
