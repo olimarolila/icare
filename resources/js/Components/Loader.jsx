@@ -7,18 +7,13 @@ const Loader = ({ visible = true }) => {
     return (
         <StyledWrapper>
             <div className="overlay" role="status" aria-live="polite">
-                <div className="loader">
-                    <div className="loader-inner">
-                        <div className="loader-block" />
-                        <div className="loader-block" />
-                        <div className="loader-block" />
-                        <div className="loader-block" />
-                        <div className="loader-block" />
-                        <div className="loader-block" />
-                        <div className="loader-block" />
-                        <div className="loader-block" />
+                <div className="box">
+                    <div className="cat" aria-hidden="true">
+                        <div className="cat__body" />
+                        <div className="cat__body" />
+                        <div className="cat__tail" />
+                        <div className="cat__head" />
                     </div>
-                    <div className="loading-text">loading...</div>
                 </div>
             </div>
         </StyledWrapper>
@@ -39,78 +34,107 @@ const StyledWrapper = styled.div`
         pointer-events: all;
     }
 
-    .loader {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        padding: 16px 20px;
-        border-radius: 8px;
+    .cat {
+        position: relative;
+        width: min(16rem, 70vw);
+        max-width: 20rem;
+
+        overflow: hidden;
+        border-radius: 1rem;
     }
 
-    .loader-inner {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    .cat::before {
+        content: "";
+        display: block;
+        padding-bottom: 100%;
     }
 
-    .loader-block {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        margin: 2px;
-        background-color: #fff;
-        box-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
-        animation: loader_562 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-        border-radius: 2px;
+    .cat > * {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        animation: cat-rotate 2.79s cubic-bezier(0.65, 0.54, 0.12, 0.93) infinite;
     }
 
-    .loader-block:nth-child(1) {
-        animation-delay: 0.1s;
+    .cat:active > * {
+        animation-play-state: running;
     }
-    .loader-block:nth-child(2) {
+
+    .cat > *::before {
+        content: "";
+        position: absolute;
+        width: 50%;
+        height: 50%;
+        background-size: 200%;
+        background-repeat: no-repeat;
+        background-image: url("/images/loading 1.png");
+    }
+
+    .cat__head {
+        animation-delay: 0s;
+    }
+
+    .cat__head::before {
+        top: 0;
+        right: 0;
+        background-position: 100% 0%;
+        transform-origin: 0% 100%;
+        transform: rotate(90deg);
+    }
+
+    .cat__tail {
         animation-delay: 0.2s;
     }
-    .loader-block:nth-child(3) {
-        animation-delay: 0.3s;
-    }
-    .loader-block:nth-child(4) {
-        animation-delay: 0.4s;
-    }
-    .loader-block:nth-child(5) {
-        animation-delay: 0.5s;
-    }
-    .loader-block:nth-child(6) {
-        animation-delay: 0.6s;
-    }
-    .loader-block:nth-child(7) {
-        animation-delay: 0.7s;
-    }
-    .loader-block:nth-child(8) {
-        animation-delay: 0.8s;
+
+    .cat__tail::before {
+        left: 0;
+        bottom: 0;
+        background-position: 0% 100%;
+        transform-origin: 100% 0%;
+        transform: rotate(-30deg);
     }
 
-    .loading-text {
-        color: #fff;
-        font-size: 13px;
-        text-transform: lowercase;
-        opacity: 0.95;
+    .cat__body {
+        animation-delay: 0.1s;
     }
 
-    @keyframes loader_562 {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    .cat__body:nth-of-type(2) {
+        animation-delay: 0.2s;
+    }
+
+    .cat__body::before {
+        right: 0;
+        bottom: 0;
+        background-position: 100% 100%;
+        transform-origin: 0% 0%;
+    }
+
+    .loading-label {
+        font-size: 0.9rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #3f1c1c;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+    }
+
+    @keyframes cat-rotate {
+        from {
+            transform: rotate(720deg);
         }
-
-        20% {
-            transform: scale(1, 2.2);
-            box-shadow: 0 0 40px rgba(255, 255, 255, 0.7);
-        }
-
-        40% {
-            transform: scale(1);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        to {
+            transform: rotate(0deg);
         }
     }
 `;

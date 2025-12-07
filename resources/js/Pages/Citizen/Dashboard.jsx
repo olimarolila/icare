@@ -36,21 +36,9 @@ export default function CitizenDashboard({ reports = [] }) {
     ];
 
     return (
-        <CitizenLayout fullBleed>
+        <CitizenLayout>
             <Head title="My Reports" />
-            <div className="relative min-h-screen text-white">
-                <div
-                    aria-hidden
-                    className="pointer-events-none fixed inset-0 -z-10"
-                >
-                    <div
-                        className="absolute inset-0 bg-cover bg-center bg-fixed"
-                        style={{ backgroundImage: "url('/images/bg (reports).jpg')" }}
-                    />
-                </div>
-
-                <div className="relative z-10 min-h-[80vh] px-6 md:px-12 lg:px-20 xl:px-24 py-10">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                         <div className="md:col-span-4 lg:col-span-4 xl:col-span-3">
                             <aside className="bg-neutral-900/90 border border-white/10 rounded-2xl shadow-2xl p-6 space-y-6">
                                 <div>
@@ -162,8 +150,6 @@ export default function CitizenDashboard({ reports = [] }) {
                                 )}
                             </section>
                         </div>
-                    </div>
-                </div>
             </div>
         </CitizenLayout>
     );

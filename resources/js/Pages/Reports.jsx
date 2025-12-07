@@ -5,40 +5,25 @@ import { loadLeaflet } from "@/utils/loadLeaflet";
 import Footer from "@/Components/Footer";
 import FlashMessages from "@/Components/FlashMessages";
 
+// Utility: normalize subject casing for consistent display
+const formatSubject = (text = "") => {
+    const trimmed = text?.toString().trim();
+    if (!trimmed) return "";
+    return trimmed
+        .toLowerCase()
+        .replace(/\b([a-z])/g, (match, chr) => chr.toUpperCase());
+};
+
 const REPORT_CATEGORIES = [
-    {
-        name: "Building & Facilities",
-        desc: "e.g., damaged public buildings, waiting sheds",
-    },
-    {
-        name: "Flood Control Works",
-        desc: "e.g., drainage, clogged canals, dikes, flooding",
-    },
-    {
-        name: "Parks & Public Spaces",
-        desc: "e.g., playground equipment, benches, landscaping",
-    },
-    { name: "Road Works", desc: "e.g., potholes, damaged pavements" },
-    {
-        name: "Streetlights & Electrical",
-        desc: "e.g., broken or missing streetlights, exposed wiring",
-    },
-    {
-        name: "Traffic & Signage",
-        desc: "e.g., missing road signs, damaged traffic lights",
-    },
-    {
-        name: "Waste Management",
-        desc: "e.g., uncollected garbage, illegal dumping",
-    },
-    {
-        name: "Water Supply & Plumbing",
-        desc: "e.g., leaks, broken pipes, low water pressure",
-    },
-    {
-        name: "Others",
-        desc: "if the concern doesn't fit the categories above",
-    },
+    {name: "Building & Facilities", desc: "e.g., damaged public buildings, waiting sheds",},
+    {name: "Flood Control Works",desc: "e.g., drainage, clogged canals, dikes, flooding",},
+    {name: "Parks & Public Spaces",desc: "e.g., playground equipment, benches, landscaping",},
+    {name: "Road Works", desc: "e.g., potholes, damaged pavements" },
+    {name: "Streetlights & Electrical", desc: "e.g., broken or missing streetlights, exposed wiring",},
+    {name: "Traffic & Signage",desc: "e.g., missing road signs, damaged traffic lights",},
+    {name: "Waste Management",desc: "e.g., uncollected garbage, illegal dumping",},
+    {name: "Water Supply & Plumbing",desc: "e.g., leaks, broken pipes, low water pressure",},
+    {name: "Others",desc: "if the concern doesn't fit the categories above",},
 ];
 
 // Collapsible Report Form component embedded in Reports page
@@ -100,6 +85,18 @@ const CollapsibleReportForm = ({ auth }) => {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (!mapRef.current || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            return;
+        }
+        if (markerRef.current) {
+            markerRef.current.setLatLng([latitude, longitude]);
+        }
+        mapRef.current.setView([latitude, longitude], mapRef.current.getZoom() || 13, {
+            animate: true,
+        });
+    }, [latitude, longitude]);
 
     const reverseGeocode = async (lat, lng) => {
         try {
@@ -311,7 +308,7 @@ const CollapsibleReportForm = ({ auth }) => {
                         <div className="mb-3" />
 
                         <label className="block mb-1 font-semibold text-white">
-                            Location of Concern (OpenStreetMap){" "}
+                            Location of Concern{" "}
                             <span className="text-red-500">*</span>
                         </label>
                         <div className="flex flex-col gap-3 mb-4">
@@ -564,7 +561,7 @@ const CollapsibleReportForm = ({ auth }) => {
     );
 };
 
-const ReportCard = ({ report, auth }) => {
+export const ReportCard = ({ report, auth }) => {
     const DEFAULT_ZOOM = 15;
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [isMapModalOpen, setMapModalOpen] = useState(false);
@@ -572,6 +569,8 @@ const ReportCard = ({ report, auth }) => {
     const mapContainerRef = useRef(null);
     const mapRef = useRef(null);
     const bodyOverflowRef = useRef("");
+    const reportActionRef = useRef(null);
+    const [reportPopupOpen, setReportPopupOpen] = useState(false);
     const submittedDate = report.submitted_at
         ? new Date(report.submitted_at)
         : null;
@@ -599,8 +598,19 @@ const ReportCard = ({ report, auth }) => {
     const isDownvoted = report.user_vote === -1;
     const votePillClass = [
         "flex items-center gap-3 rounded-full px-4 py-2",
-        isUpvoted ? "bg-[#d93900]" : isDownvoted ? "bg-[#6a5cff]" : "bg-black/40",
+        isUpvoted
+            ? "bg-[#d93900]"
+            : isDownvoted
+            ? "bg-[#6a5cff]"
+            : "bg-black/40",
     ].join(" ");
+
+    const statusBadgeClass =
+        {
+            Resolved: "bg-green-600 text-white border border-green-400/60",
+            Pending: "bg-gray-600 text-white border border-white/10",
+            "In Progress": "bg-yellow-500 text-black border border-yellow-300",
+        }[report.status] || "bg-gray-600 text-white border border-white/10";
     const voteCountClass = `text-sm ${
         isUpvoted || isDownvoted ? "text-white" : ""
     }`;
@@ -659,169 +669,248 @@ const ReportCard = ({ report, auth }) => {
         };
     }, [activeImage, isMapModalOpen]);
 
+    useEffect(() => {
+        if (!reportPopupOpen) {
+            return undefined;
+        }
+        const handleClick = (event) => {
+            if (
+                reportActionRef.current &&
+                !reportActionRef.current.contains(event.target)
+            ) {
+                setReportPopupOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClick);
+        return () => {
+            document.removeEventListener("mousedown", handleClick);
+        };
+    }, [reportPopupOpen]);
+
     return (
         <section className="w-full" key={report.id}>
-            <div className="bg-neutral-900/95 text-gray-100 rounded-xl border border-white/10 shadow-xl p-6 md:p-8">
-                <div className="grid grid-cols-1 md:flex md:items-center md:justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-sm font-semibold">
-                            {(report.user?.name || "Guest")
-                                .charAt(0)
-                                .toUpperCase()}
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-950/95 via-neutral-900/90 to-neutral-800/80 text-gray-100 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+                <div className="pointer-events-none absolute inset-0 opacity-40 blur-[120px]" aria-hidden="true" />
+                <div className="relative p-6 md:p-8 space-y-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400 to-pink-500 font-semibold text-base flex items-center justify-center text-white shadow-lg">
+                                {(report.user?.name || "Guest")
+                                    .charAt(0)
+                                    .toUpperCase()}
+                            </div>
+                            <div>
+                                <p className="text-lg font-semibold">
+                                    {report.user?.name || "Guest"}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-300">
+                                    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 px-3 py-1 bg-white/5">
+                                        <span className="size-2 rounded-full bg-emerald-400"></span>
+                                        {report.category || "Uncategorized"}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
-                            <span className="font-semibold">
-                                {report.user?.name || "Guest"}
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-300 font-mono">
+                            <span className="rounded-full border border-white/15 px-3 py-1 bg-white/5">
+                                {dateStr}
+                                {timeStr && (
+                                    <span className="ml-1">| {timeStr}</span>
+                                )}
                             </span>
-                            <span className="text-gray-500">|</span>
-                            <span className="text-gray-300">
-                                {report.category}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="flex items-center justify-end md:justify-end gap-4 text-xs md:text-sm text-gray-300">
-                        <div className="text-sm md:text-base text-gray-300 whitespace-nowrap font-mono">
-                            {dateStr} {timeStr && `| ${timeStr}`}
-                        </div>
-                        <button
-                            type="button"
-                            className="text-gray-400 hover:text-gray-200 px-1"
-                            aria-label="menu"
-                        >
-                            •••
-                        </button>
-                    </div>
-                </div>
-                <h2 className="text-xl md:text-2xl font-semibold mb-3">
-                    {report.subject}
-                </h2>
-                <p className="text-sm md:text-base text-gray-200 leading-relaxed mb-6 text-justify">
-                    {report.description || "No description provided."}
-                </p>
-                {images.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        {images.map((img, idx) => (
                             <div
-                                key={idx}
-                                className="relative group rounded-lg overflow-hidden border border-white/10"
+                                className="relative flex items-center"
+                                ref={reportActionRef}
                             >
-                                <img
-                                    src={`/storage/${img}`}
-                                    alt={`Report Image ${idx + 1}`}
-                                    className="w-full h-50 object-cover"
-                                />
                                 <button
                                     type="button"
-                                    className="absolute top-2 right-2 bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                    aria-label="View full image"
+                                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white transition hover:border-yellow-400 hover:text-yellow-400"
+                                    aria-label="Report post"
+                                    aria-haspopup="true"
+                                    aria-expanded={reportPopupOpen}
                                     onClick={() =>
-                                        setActiveImage({
-                                            src: `/storage/${img}`,
-                                            alt: `Report Image ${idx + 1}`,
-                                        })
+                                        setReportPopupOpen((prev) => !prev)
                                     }
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        fill="currentColor"
-                                        viewBox="0 0 16 16"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="size-6"
+                                        aria-hidden="true"
                                     >
                                         <path
-                                            fillRule="evenodd"
-                                            d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1 1 0v3.975a.5.5 0 0 1-.5.5H11.5a.5.5 0 0 1 0-1h2.768l-4.096-4.096a.5.5 0 0 1 0-.707m0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707m-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
                                         />
                                     </svg>
                                 </button>
+                                {reportPopupOpen && (
+                                    <div className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-black/80 px-3 py-1 text-[11px] font-semibold tracking-wide text-white shadow-lg">
+                                        Report Post
+                                    </div>
+                                )}
                             </div>
-                        ))}
+                        </div>
                     </div>
-                )}
-                {(hasCoordinates || locationLabel) && (
-                    <div className="bg-black/30 border border-white/10 rounded-xl p-4 text-sm text-gray-200 mb-6">
-                        <h3 className="text-base font-semibold text-white mb-2">
-                            Location Details
-                        </h3>
-                        <p className="text-gray-100 leading-relaxed">
-                            {locationLabel}
+
+                    <div className="rounded-2xl border border-white/10 bg-black/30 backdrop-blur-sm p-5 space-y-3">
+                        <h2 className="text-2xl md:text-3xl font-semibold text-white">
+                            {formatSubject(report.subject)}
+                        </h2>
+                        <div className="h-px w-full bg-white/10" aria-hidden="true"></div>
+                        <p className="text-sm md:text-base text-gray-200 leading-relaxed">
+                            {report.description || "No description provided."}
                         </p>
-                        {hasCoordinates && (
-                            <button
-                                type="button"
-                                className="mt-4 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                                onClick={() => setMapModalOpen(true)}
-                            >
-                                View Location on Map
-                            </button>
-                        )}
                     </div>
-                )}
+
+                    {images.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {images.map((img, idx) => (
+                                <div
+                                    key={idx}
+                                    className="relative group rounded-2xl overflow-hidden border border-white/10 bg-black/40 aspect-[4/3]"
+                                >
+                                    <img
+                                        src={`/storage/${img}`}
+                                        alt={`Report Image ${idx + 1}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity flex justify-end">
+                                        <button
+                                            type="button"
+                                            className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur"
+                                            aria-label="View full image"
+                                            onClick={() =>
+                                                setActiveImage({
+                                                    src: `/storage/${img}`,
+                                                    alt: `Report Image ${idx + 1}`,
+                                                })
+                                            }
+                                        >
+                                            Expand
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {(hasCoordinates || locationLabel) && (
+                        <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-blue-900/40 via-blue-800/30 to-transparent p-4">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="shrink-0 rounded-full bg-blue-500/20 text-blue-200 p-2.5">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.6"
+                                            className="w-6 h-6"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M12 21c-4.5-4.2-6-7.5-6-10.2C6 7 8.5 4.5 12 4.5s6 2.5 6 6.3c0 2.7-1.5 6-6 10.2z"
+                                            />
+                                            <circle cx="12" cy="10.5" r="2.2" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-semibold text-white">
+                                            Location Details
+                                        </h3>
+                                    </div>
+                                </div>
+                                {hasCoordinates && (
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center gap-2 rounded-full bg-blue-500/90 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                                        onClick={() => setMapModalOpen(true)}
+                                    >
+                                        View on Map
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                            className="w-4 h-4"
+                                        >
+                                            <path d="M10.75 4a.75.75 0 0 0-1.5 0v6.638L6.832 8.22a.75.75 0 0 0-1.06 1.06l4.243 4.243a.75.75 0 0 0 1.06 0l4.243-4.243a.75.75 0 0 0-1.06-1.06l-2.418 2.418z" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 {isMapModalOpen && (
-                    <div className="fixed inset-0 z-[1100] flex items-center justify-center px-4">
+                    <div className="fixed inset-0 z-[4000] flex items-start justify-center px-4 pt-24 pb-6">
+                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" aria-hidden="true"></div>
                         <div
-                            className="absolute inset-0 bg-black/70"
-                            aria-hidden="true"
-                        ></div>
-                        <div
-                            className="relative z-[1200] bg-neutral-900 text-white w-full max-w-3xl rounded-2xl border border-white/10 shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+                            className="relative z-[4100] w-full max-w-3xl rounded-3xl bg-gradient-to-b from-neutral-900 via-neutral-900/95 to-neutral-950 text-white border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.7)]"
                             role="dialog"
                             aria-modal="true"
-                            aria-label={`Map for ${report.subject}`}
+                            aria-label={`Map for ${formatSubject(report.subject)}`}
                         >
-                            <div className="flex items-start justify-between mb-4">
-                                <div>
-                                    <h4 className="text-lg font-semibold">
-                                        View Location on Map
-                                    </h4>
-                                    <p className="text-sm text-gray-400">
+                            <div className="flex items-start justify-between gap-4 p-6 border-b border-white/10">
+                                <div className="space-y-1">
+                                    <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-gray-300">
+                                        <span className="size-2 rounded-full bg-emerald-400"></span>
+                                        Map Preview
+                                    </div>
+                                    <h4 className="text-2xl font-semibold">{formatSubject(report.subject)}</h4>
+                                    <p className="text-sm text-gray-300 text-justify">
                                         {locationLabel}
                                     </p>
+                                    {hasCoordinates && (
+                                        <div className="text-xs text-gray-400 font-mono">
+                                            Lat {latitude?.toFixed(5)} · Lng {longitude?.toFixed(5)}
+                                        </div>
+                                    )}
                                 </div>
                                 <button
                                     type="button"
-                                    className="text-gray-400 hover:text-gray-200"
+                                    className="rounded-full border border-white/20 px-3 py-1 text-sm text-gray-300 hover:bg-white/10"
                                     onClick={() => setMapModalOpen(false)}
                                 >
                                     Close
                                 </button>
                             </div>
-                            {hasCoordinates ? (
-                                <div className="relative h-80 rounded-xl overflow-hidden border border-white/15">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (!mapRef.current) return;
-                                            mapRef.current.setView(
-                                                [latitude, longitude],
-                                                DEFAULT_ZOOM
-                                            );
-                                        }}
-                                        className="absolute top-3 right-3 z-[1300] bg-black/70 text-xs font-semibold tracking-wide px-3 py-1 rounded-full border border-white/40 hover:bg-black/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-                                    >
-                                        Reset View
-                                    </button>
-                                    <div
-                                        ref={mapContainerRef}
-                                        className="w-full h-full"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="text-sm text-gray-300">
-                                    Coordinates unavailable.
-                                </div>
-                            )}
+                            <div className="p-6">
+                                {hasCoordinates ? (
+                                    <div className="relative h-80 rounded-2xl overflow-hidden border border-white/15 shadow-inner shadow-black/40">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!mapRef.current) return;
+                                                mapRef.current.setView([latitude, longitude], DEFAULT_ZOOM);
+                                            }}
+                                            className="absolute top-4 right-4 z-[4200] inline-flex items-center gap-1 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold tracking-wide border border-white/30 hover:bg-black/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                                        >
+                                            Reset View
+                                        </button>
+                                        <div ref={mapContainerRef} className="w-full h-full" />
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-gray-300">
+                                        Coordinates unavailable.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
                 {activeImage && (
-                    <div className="fixed inset-0 z-[1100] flex items-center justify-center px-4">
+                    <div className="fixed inset-0 z-[4000] flex items-start justify-center px-4 pt-24 pb-6">
                         <div
                             className="absolute inset-0 bg-black/80"
                             onClick={() => setActiveImage(null)}
                         ></div>
                         <div
-                            className="relative z-[1200] bg-neutral-900 text-white w-full max-w-4xl rounded-2xl border border-white/10 shadow-2xl p-4"
+                            className="relative z-[4100] bg-neutral-900 text-white w-full max-w-[90vw] md:max-w-[1200px] rounded-2xl border border-white/10 shadow-2xl p-4 md:p-5 max-h-[80vh] overflow-y-auto"
                             role="dialog"
                             aria-modal="true"
                             aria-label={activeImage.alt || "Report image"}
@@ -837,7 +926,7 @@ const ReportCard = ({ report, auth }) => {
                             <img
                                 src={activeImage.src}
                                 alt={activeImage.alt || "Report image"}
-                                className="w-full h-auto rounded-xl object-contain max-h-[75vh]"
+                                className="w-full h-auto rounded-xl object-contain max-h-[65vh]"
                             />
                         </div>
                     </div>
@@ -894,7 +983,9 @@ const ReportCard = ({ report, auth }) => {
                                     />
                                 </svg>
                             </button>
-                            <span className={voteCountClass}>{report.votes ?? 0}</span>
+                            <span className={voteCountClass}>
+                                {report.votes ?? 0}
+                            </span>
                             <button
                                 type="button"
                                 className="flex items-center justify-center"
@@ -967,12 +1058,16 @@ const ReportCard = ({ report, auth }) => {
                         </button>
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center md:gap-8 text-sm text-gray-300">
-                        <span className="font-medium">
-                            Status:{" "}
-                            <span className="font-normal">{report.status}</span>
+                        <span className="font-medium flex items-center gap-2">
+                            Status:
+                            <span
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeClass}`}
+                            >
+                                {report.status}
+                            </span>
                         </span>
                         <span className="font-medium">
-                            Ticket I.D.:{" "}
+                            Ticket ID:{" "}
                             <span className="font-mono">
                                 {report.ticket_id}
                             </span>
@@ -1070,7 +1165,8 @@ const ReportCard = ({ report, auth }) => {
                     </form>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
     );
 };
 

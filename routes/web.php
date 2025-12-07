@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -51,6 +52,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/citizen/dashboard', [DashboardController::class, 'citizen'])
         ->name('citizen.dashboard');
+
+    Route::get('/citizen/reports/upvoted', [ReportController::class, 'upvoted'])
+        ->name('citizen.reports.upvoted');
+
+    Route::get('/citizen/reports/downvoted', [ReportController::class, 'downvoted'])
+        ->name('citizen.reports.downvoted');
 
     // Dashboard – protected, not accessible by general users
     // Route::get('/dashboard', function () {

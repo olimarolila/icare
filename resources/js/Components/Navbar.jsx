@@ -85,7 +85,7 @@ export default function Navbar({ auth }) {
                                 aria-haspopup="true"
                                 aria-expanded={userMenuOpen}
                             >
-                                <span className="text-sm">
+                                <span className="text-[1.2rem]">
                                     {auth.user.name}
                                 </span>
                                 <svg

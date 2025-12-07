@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Report;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class WelcomeController extends Controller
@@ -22,7 +23,7 @@ class WelcomeController extends Controller
         $pendingCount = Report::where('status', 'Pending')->whereNull('archived_at')->count();
 
         return Inertia::render('Welcome', [
-            'auth' => ['user' => auth()->user()],
+            'auth' => ['user' => Auth::user()],
             'reports' => $reports,
             'statusCounts' => [
                 'resolved' => $resolvedCount,
