@@ -138,12 +138,9 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = auth?.user;
     const [menuOpen, setMenuOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-    const dashboardRouteName = user
-        ? user.role === "admin"
-            ? "admin.dashboard"
-            : "citizen.dashboard"
-        : null;
-    const dashboardIsActive = dashboardRouteName
+    const isAdmin = user?.role === "admin";
+    const dashboardRouteName = "admin.dashboard";
+    const dashboardIsActive = isAdmin
         ? route().current(dashboardRouteName)
         : false;
     const profileIsActive = route().current("profile.edit");
@@ -164,7 +161,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </Link>
                             </div>
 
-                            {user?.role === "admin" && (
+                            {isAdmin && (
                                 <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                     <NavLink
                                         href={route(dashboardRouteName)}
@@ -214,25 +211,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                             Profile
                                         </NavLink>
                                     )}
-                                </div>
-                            )}
-
-                            {user?.role === "citizen" && (
-                                <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                    <NavLink
-                                        href={route(dashboardRouteName)}
-                                        active={dashboardIsActive}
-                                        className="text-white hover:text-yellow-400"
-                                    >
-                                        Dashboard
-                                    </NavLink>
-                                    <NavLink
-                                        href={route("profile.edit")}
-                                        active={profileIsActive}
-                                        className="text-white hover:text-yellow-400"
-                                    >
-                                        Profile
-                                    </NavLink>
                                 </div>
                             )}
                         </div>
@@ -328,7 +306,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     }
                 >
                     <div className="space-y-1 pb-3 pt-2">
-                        {user?.role === "admin" && (
+                        {isAdmin && (
                             <>
                                 <ResponsiveNavLink
                                     href={route(dashboardRouteName)}
@@ -377,24 +355,6 @@ export default function AuthenticatedLayout({ header, children }) {
                             </>
                         )}
 
-                        {user?.role === "citizen" && (
-                            <>
-                                <ResponsiveNavLink
-                                    href={route(dashboardRouteName)}
-                                    active={dashboardIsActive}
-                                    className="text-white hover:text-yellow-400"
-                                >
-                                    Dashboard
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
-                                    href={route("profile.edit")}
-                                    active={profileIsActive}
-                                    className="text-white hover:text-yellow-400"
-                                >
-                                    Profile
-                                </ResponsiveNavLink>
-                            </>
-                        )}
                     </div>
 
                     <div className="border-t border-gray-600 pb-1 pt-4">

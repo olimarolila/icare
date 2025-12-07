@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Middleware\AdminMiddleware;
 
@@ -50,6 +51,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/citizen/dashboard', [DashboardController::class, 'citizen'])
         ->name('citizen.dashboard');
+
+    Route::get('/citizen/reports/upvoted', [ReportController::class, 'upvoted'])
+        ->name('citizen.reports.upvoted');
+
+    Route::get('/citizen/reports/downvoted', [ReportController::class, 'downvoted'])
+        ->name('citizen.reports.downvoted');
 
     // Dashboard – protected, not accessible by general users
     // Route::get('/dashboard', function () {
@@ -153,7 +160,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
     Route::post('/admin/users/{user}/archive', function (Request $request, User $user) {
         $user->update([
             'archived_at' => now(),
-            'archived_by' => auth()->id(),
+            'archived_by' => Auth::id(),
         ]);
         return redirect()->route('admin.users')->with('success', 'User archived successfully.');
     })->name('admin.users.archive');
@@ -162,7 +169,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
     Route::delete('/admin/users/{user}', function (User $user) {
         $user->update([
             'archived_at' => now(),
-            'archived_by' => auth()->id(),
+            'archived_by' => Auth::id(),
         ]);
         return response()->json(['success' => true]);
     })->name('admin.users.destroy');
@@ -172,7 +179,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
         $report = \App\Models\Report::findOrFail($reportId);
         $report->update([
             'archived_at' => now(),
-            'archived_by' => auth()->id(),
+            'archived_by' => Auth::id(),
         ]);
         return redirect()->route('admin.reports')->with('success', 'Report archived successfully.');
     })->name('admin.reports.archive');

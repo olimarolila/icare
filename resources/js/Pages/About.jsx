@@ -28,26 +28,30 @@ const processSteps = [
     {
         label: "Submit a report",
         badge: "Residents",
-        description:
-            "Citizens upload photos, drop a pin, and describe the issue in minutes from any device.",
+        description: "Citizens upload photos, drop a pin, and describe the issue in minutes.",
+        state: "completed",
+        statusLabel: "Completed",
     },
     {
         label: "Ticket is created",
         badge: "System",
-        description:
-            "Each submission becomes a unique ticket with a status history and automatic notifications.",
+        description:"Each submission becomes a unique ticket with a status history.",
+        state: "current",
+        statusLabel: "In Progress",
     },
     {
         label: "Authorities take action",
         badge: "LGU / Agencies",
-        description:
-            "Coordinators assign tickets, attach notes, and update statuses as repairs progress.",
+        description: "Coordinators assign tickets and update statuses as repairs progress.",
+        state: "pending",
+        statusLabel: "Pending",
     },
     {
         label: "Insights & accountability",
         badge: "Admin Dashboard",
-        description:
-            "Dashboards show bottlenecks, hotspots, and SLA performance for data-driven briefings.",
+        description: "Resolved tickets include proof-of-work and timestamps.",
+        state: "pending",
+        statusLabel: "Resolved",
     },
 ];
 
@@ -115,7 +119,48 @@ const developers = [
 ];
 
 export default function About({ auth }) {
-    
+    const getStepVisual = (state = "pending") => {
+        if (state === "completed") {
+            return {
+                circleClass:
+                    "bg-emerald-500 text-white shadow-lg shadow-emerald-500/40",
+                connectorClass: "bg-gradient-to-r from-emerald-400 to-emerald-200",
+                statusClass: "text-emerald-300",
+                badgeClass: "text-emerald-300",
+                icon: (
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        className="w-5 h-5"
+                        fill="currentColor"
+                    >
+                        <path d="M16.707 5.293a1 1 0 0 0-1.414 0L8 12.586 4.707 9.293a1 1 0 1 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l8-8a1 1 0 0 0 0-1.414z" />
+                    </svg>
+                ),
+            };
+        }
+        if (state === "current") {
+            return {
+                circleClass:
+                    "bg-neutral-900 text-sky-400 border-2 border-sky-400 shadow-[0_0_25px_rgba(56,189,248,0.35)]",
+                connectorClass: "bg-gradient-to-r from-sky-400 to-sky-200",
+                statusClass: "text-sky-300",
+                badgeClass: "text-sky-400",
+                icon: (
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-sky-700/60">
+                        <span className="w-3 h-3 rounded-full bg-sky-400" />
+                    </span>
+                ),
+            };
+        }
+        return {
+            circleClass: "bg-white/10 text-white/60 border border-white/20",
+            connectorClass: "bg-white/10",
+            statusClass: "text-white/60",
+            badgeClass: "text-white/50",
+            icon: <span className="w-2 h-2 rounded-full bg-white/50" />,
+        };
+    };
 
     return (
         <div
@@ -304,22 +349,58 @@ export default function About({ auth }) {
                             <p className="text-xs uppercase tracking-[0.3em] text-white/60">How it works</p>
                             <h2 className="text-2xl md:text-3xl font-bold">From report to resolution</h2>
                         </div>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {processSteps.map((step, index) => (
+                        <div className="relative">
+                            <div
+                                className="absolute inset-0 -mx-6 rounded-[2.75rem] bg-gradient-to-r from-amber-500/15 via-white/10 to-sky-500/15 blur-3xl opacity-60 pointer-events-none"
+                                aria-hidden="true"
+                            />
+                            <div className="relative bg-neutral-900/95 text-white rounded-[2.75rem] border border-white/10 shadow-[0_30px_80px_rgba(0,0,0,0.65)] p-6 md:p-10 overflow-hidden">
                                 <div
-                                    key={step.label}
-                                    className="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col gap-3"
-                                >
-                                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/70">
-                                        <span>{step.badge}</span>
-                                        <span>Step {index + 1}</span>
+                                    className="absolute inset-x-10 top-4 h-px bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-400 opacity-40"
+                                    aria-hidden="true"
+                                />
+                                <div className="overflow-x-auto pb-2">
+                                    <div className="flex gap-8 min-w-[720px]">
+                                        {processSteps.map((step, index) => {
+                                            const visuals = getStepVisual(step.state);
+                                            const isLast = index === processSteps.length - 1;
+                                            return (
+                                                <div key={step.label} className="flex-1 flex flex-col gap-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div
+                                                            className={`w-12 h-12 rounded-full flex items-center justify-center ${visuals.circleClass}`}
+                                                        >
+                                                            {visuals.icon}
+                                                        </div>
+                                                        {!isLast && (
+                                                            <div
+                                                                className={`hidden md:block h-1 flex-1 rounded-full ${visuals.connectorClass}`}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p
+                                                            className={`text-[0.55rem] uppercase tracking-[0.45em] ${visuals.badgeClass}`}
+                                                        >
+                                                            {step.badge}
+                                                        </p>
+                                                        <p className="text-lg font-semibold text-white">{step.label}</p>
+                                                        <p className={`text-xs font-semibold ${visuals.statusClass}`}>
+                                                            {step.statusLabel}
+                                                        </p>
+                                                        <p className="text-sm text-white/70 leading-relaxed">
+                                                            {step.description}
+                                                        </p>
+                                                    </div>
+                                                    {!isLast && (
+                                                        <div className="md:hidden h-px w-full bg-slate-200 opacity-60" />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                    <h3 className="text-xl font-semibold text-white">{step.label}</h3>
-                                    <p className="text-sm text-white/80 leading-relaxed">
-                                        {step.description}
-                                    </p>
                                 </div>
-                            ))}
+                            </div>
                         </div>
                     </section>
 

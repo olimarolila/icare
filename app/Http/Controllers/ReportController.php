@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
@@ -97,74 +98,96 @@ class ReportController extends Controller
 
         $ticketId = 'TKT-' . strtoupper(uniqid());
 
-    $paths = [];
+        $paths = [];
 
-    if ($request->hasFile('images')) {
-        // Initialize Intervention Image manager with GD driver
-        $manager = new ImageManager(new Driver());
+        if ($request->hasFile('images')) {
+            // Initialize Intervention Image manager with GD driver (v3 syntax)
+            $manager = new ImageManager(new Driver());
 
-        // Watermark image path (public/images/logo_cat.png)
-        $watermarkPath = public_path('images/logo_cat.PNG');
-        $watermarkOriginal = null;
+            // Watermark image path (public/images/logo_cat3.png)
+            $watermarkPath = public_path('images/logo_cat3.PNG');
+            $watermarkOriginal = null;
 
-        if (is_file($watermarkPath)) {
-            $watermarkOriginal = $manager->read($watermarkPath);
+            if (is_file($watermarkPath)) {
+                $watermarkOriginal = $manager->read($watermarkPath);
+            }
+
+            foreach ($request->file('images') as $img) {
+                $imagePath = $img->getRealPath();
+                $image = $manager->read($imagePath);
+
+                // Manually handle orientation since Intervention v3 removed orientate()
+                if (function_exists('exif_read_data')) {
+                    $exif = @exif_read_data($imagePath);
+                    $orientation = $exif['Orientation'] ?? null;
+                    switch ($orientation) {
+                        case 3:
+                            $image = $image->rotate(180);
+                            break;
+                        case 6:
+                            $image = $image->rotate(-90);
+                            break;
+                        case 8:
+                            $image = $image->rotate(90);
+                            break;
+                        default:
+                            break; // already upright
+                    }
+                }
+
+                // Resize/scale only if larger than 1280x960 (preserve smaller images)
+                $maxWidth = 1280;
+                $maxHeight = 960;
+
+                if ($image->width() > $maxWidth || $image->height() > $maxHeight) {
+                    $scale = min($maxWidth / $image->width(), $maxHeight / $image->height());
+                    $image = $image->resize(
+                        (int) round($image->width() * $scale),
+                        (int) round($image->height() * $scale)
+                    );
+                }
+
+                // Apply watermark (bottom-right) if available
+                if ($watermarkOriginal) {
+                    // Scale watermark relative to image width (about 10% width)
+                    $wmWidth = (int) round($image->width() * 0.10);
+                    $wmHeight = (int) round(
+                        $watermarkOriginal->height() * ($wmWidth / $watermarkOriginal->width())
+                    );
+
+                    // Use a cloned copy so original watermark is not permanently resized
+                    $wm = (clone $watermarkOriginal)->resize($wmWidth, $wmHeight);
+
+                    // Place bottom-right with 12px margin and set opacity via place()
+                    $image = $image->place($wm, 'bottom-right', 12, 12, 40);
+                }
+
+                // Ensure destination filename with original extension
+                $ext = strtolower($img->getClientOriginalExtension() ?: 'jpg');
+
+                if ($ext === 'jpeg') {
+                    $ext = 'jpg';
+                }
+
+                if (!in_array($ext, ['jpg', 'png', 'webp'], true)) {
+                    $ext = 'jpg';
+                }
+
+                $filename = Str::uuid()->toString() . '.' . $ext;
+                $relativePath = 'reports/' . $filename;
+                $absolutePath = storage_path('app/public/' . $relativePath);
+
+                // Create directory if needed
+                if (!is_dir(dirname($absolutePath))) {
+                    mkdir(dirname($absolutePath), 0755, true);
+                }
+
+                // Save with quality (applies to jpg/webp; png mapped appropriately by driver)
+                $image->save($absolutePath, 85);
+
+                $paths[] = $relativePath;
+            }
         }
-
-        foreach ($request->file('images') as $img) {
-            // Read uploaded image and auto-rotate based on EXIF
-            $image = $manager->read($img->getRealPath())->orientate();
-
-            // Resize/scale only if larger than 1280x960 (preserve smaller images)
-            $maxWidth = 1280;
-            $maxHeight = 960;
-
-            if ($image->width() > $maxWidth || $image->height() > $maxHeight) {
-                $image = $image->scaleDown($maxWidth, $maxHeight);
-            }
-
-            // Apply watermark (bottom-right) if available
-            if ($watermarkOriginal) {
-                // Scale watermark relative to image width (about 10% width)
-                $wmWidth = (int) round($image->width() * 0.10);
-                $wmHeight = (int) round(
-                    $watermarkOriginal->height() * ($wmWidth / $watermarkOriginal->width())
-                );
-
-                // Use a cloned copy so original watermark is not permanently resized
-                $wm = $watermarkOriginal->clone()->resize($wmWidth, $wmHeight);
-
-                // Place bottom-right with 12px margin and 40% opacity
-                $image->place($wm, 'bottom-right', 12, 12, opacity: 40);
-            }
-
-            // Ensure destination filename with original extension
-            $ext = strtolower($img->getClientOriginalExtension() ?: 'jpg');
-
-            if ($ext === 'jpeg') {
-                $ext = 'jpg';
-            }
-
-            if (!in_array($ext, ['jpg', 'png', 'webp'], true)) {
-                $ext = 'jpg';
-            }
-
-            $filename = Str::uuid()->toString() . '.' . $ext;
-            $relativePath = 'reports/' . $filename;
-            $absolutePath = storage_path('app/public/' . $relativePath);
-
-            // Create directory if needed
-            if (!is_dir(dirname($absolutePath))) {
-                mkdir(dirname($absolutePath), 0755, true);
-            }
-
-            // Save with quality (applies to jpg/webp; png mapped appropriately by driver)
-            $image->save($absolutePath, quality: 85);
-
-            $paths[] = $relativePath;
-        }
-    }
-
 
         $report = Report::create([
             'ticket_id' => $ticketId,
@@ -177,7 +200,7 @@ class ReportController extends Controller
             'status' => 'Pending',
             'description' => $validated['description'] ?? null,
             'images' => $paths,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'submitted_at' => now(),
         ]);
 
@@ -267,7 +290,7 @@ class ReportController extends Controller
      */
     public function publicIndex(Request $request)
     {
-        $userId = auth()->id();
+        $userId = Auth::id();
         $perPage = (int) $request->input('perPage', 3);
         $perPage = max(3, min($perPage, 50));
 
@@ -332,6 +355,63 @@ class ReportController extends Controller
                 'recent_days' => $recentDays,
                 'perPage' => $perPage,
             ],
+        ]);
+    }
+
+    public function upvoted(Request $request)
+    {
+        return $this->renderUserVoteFeed(
+            $request,
+            1,
+            'Citizen/UpvotedReports',
+            'No upvoted post yet.'
+        );
+    }
+
+    public function downvoted(Request $request)
+    {
+        return $this->renderUserVoteFeed(
+            $request,
+            -1,
+            'Citizen/DownvotedReports',
+            'No downvoted post yet.'
+        );
+    }
+
+    protected function renderUserVoteFeed(Request $request, int $voteValue, string $view, string $emptyMessage)
+    {
+        $user = $request->user();
+        if (!$user) {
+            abort(403);
+        }
+
+        $perPage = (int) $request->input('perPage', 5);
+        $perPage = max(3, min($perPage, 20));
+
+        $reports = Report::with([
+                'user:id,name',
+                'comments' => function ($q) {
+                    $q->with('user:id,name')->latest()->take(20);
+                },
+            ])
+            ->withCount('comments')
+            ->whereNull('archived_at')
+            ->whereHas('votes', function ($q) use ($user, $voteValue) {
+                $q->where('user_id', $user->id)->where('value', $voteValue);
+            })
+            ->select('reports.*')
+            ->addSelect(['user_vote' => ReportVote::select('value')
+                ->whereColumn('report_id', 'reports.id')
+                ->where('user_id', $user->id)
+                ->limit(1)
+            ])
+            ->orderBy('submitted_at', 'desc')
+            ->paginate($perPage)
+            ->appends($request->query());
+
+        return Inertia::render($view, [
+            'reports' => $reports,
+            'emptyMessage' => $emptyMessage,
         ]);
     }
 
@@ -405,4 +485,3 @@ class ReportController extends Controller
         return redirect()->back()->with('success', 'Comment added successfully.');
     }
 }
-

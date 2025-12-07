@@ -39,7 +39,7 @@ const ResponsiveNavLink = ({
     </Link>
 );
 
-export default function CitizenLayout({ children, fullBleed = false }) {
+export default function CitizenLayout({ children }) {
     const { auth } = usePage().props;
     const user = auth?.user;
     const isCitizen = user?.role === "citizen";
@@ -51,13 +51,30 @@ export default function CitizenLayout({ children, fullBleed = false }) {
         ? route().current(dashboardRouteName)
         : false;
     const profileIsActive = isCitizen ? route().current("profile.edit") : false;
+    const upvotedIsActive = isCitizen
+        ? route().current("citizen.reports.upvoted")
+        : false;
+    const downvotedIsActive = isCitizen
+        ? route().current("citizen.reports.downvoted")
+        : false;
 
     return (
         <div
-            className={`min-h-screen flex flex-col ${
-                fullBleed ? "bg-transparent" : "bg-gray-100"
+            className={`relative min-h-screen flex flex-col ${
+                isCitizen ? "text-white" : "bg-gray-100"
             }`}
         >
+            {isCitizen && (
+                <div
+                    className="pointer-events-none fixed inset-0 z-0"
+                    aria-hidden="true"
+                >
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-fixed"
+                        style={{ backgroundImage: "url('/images/bg (reports).jpg')" }}
+                    />
+                </div>
+            )}
             {isCitizen && (
                 <nav className="sticky top-0 z-20 border-b border-[#7D7D7D] backdrop-blur-md bg-black">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -79,6 +96,26 @@ export default function CitizenLayout({ children, fullBleed = false }) {
                                     >
                                         Dashboard
                                     </NavLink>
+                                    <NavLink
+                                        href={route("citizen.reports.upvoted")}
+                                        active={upvotedIsActive}
+                                    >
+                                        Upvoted
+                                    </NavLink>
+                                    <NavLink
+                                        href={route("citizen.reports.downvoted")}
+                                        active={downvotedIsActive}
+                                    >
+                                        Downvoted
+                                    </NavLink>
+                                    {profileIsActive && (
+                                        <NavLink
+                                            href={route("profile.edit")}
+                                            active
+                                        >
+                                            Profile
+                                        </NavLink>
+                                    )}
                                 </div>
                             </div>
 
@@ -195,12 +232,28 @@ export default function CitizenLayout({ children, fullBleed = false }) {
                                 Dashboard
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
-                                href={route("profile.edit")}
-                                active={profileIsActive}
+                                href={route("citizen.reports.upvoted")}
+                                active={upvotedIsActive}
                                 onClick={() => setMenuOpen(false)}
                             >
-                                Profile
+                                Upvoted
                             </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                href={route("citizen.reports.downvoted")}
+                                active={downvotedIsActive}
+                                onClick={() => setMenuOpen(false)}
+                            >
+                                Downvoted
+                            </ResponsiveNavLink>
+                            {profileIsActive && (
+                                <ResponsiveNavLink
+                                    href={route("profile.edit")}
+                                    active
+                                    onClick={() => setMenuOpen(false)}
+                                >
+                                    Profile
+                                </ResponsiveNavLink>
+                            )}
                         </div>
 
                         <div className="border-t border-gray-600 pb-1 pt-4">
@@ -231,20 +284,14 @@ export default function CitizenLayout({ children, fullBleed = false }) {
             )}
 
             <div
-                className={`${
+                className={
                     isCitizen
-                        ? fullBleed
-                            ? "flex-1 w-full pb-10"
-                            : "flex-1 w-full px-6 py-10"
+                        ? "relative z-10 flex-1 w-full px-6 md:px-12 lg:px-20 xl:px-24 py-10"
                         : "flex flex-1 flex-col items-center pt-6 sm:justify-center sm:pt-0"
-                }`}
+                }
             >
                 {isCitizen ? (
-                    <div
-                        className={fullBleed ? "w-full" : "mx-auto w-full max-w-6xl"}
-                    >
-                        {children}
-                    </div>
+                    <div className="mx-auto w-full max-w-8xl">{children}</div>
                 ) : (
                     <div className="w-full max-w-md">
                         <div className="flex justify-center">
