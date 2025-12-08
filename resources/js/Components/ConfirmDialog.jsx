@@ -65,7 +65,9 @@ export default function ConfirmDialog({
                     >
                         <path d="M10 .5a9.5 9.5 0 109.5 9.5A9.51 9.51 0 0010 .5Zm.5 5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0ZM12 15H8a1 1 0 110-2h1v-3H8a1 1 0 110-2h2a1 1 0 011 1v4h1a1 1 0 010 2z" />
                     </svg>
-                    <h2 className="text-lg font-semibold">{title}</h2>
+                    <h2 className="text-lg text-gray-900 font-semibold">
+                        {title}
+                    </h2>
                 </div>
 
                 <div className="p-5">

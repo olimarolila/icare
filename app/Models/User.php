@@ -25,6 +25,14 @@ class User extends Authenticatable
         'role_description',
         'archived_at',
         'archived_by',
+        'report_banned',
+        'report_ban_reason',
+        'report_banned_at',
+        'report_banned_by',
+        'banned',
+        'ban_reason',
+        'banned_at',
+        'banned_by',
     ];
 
     /**
@@ -48,6 +56,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'archived_at' => 'datetime',
+            'banned'        => 'boolean',
+            'report_banned' => 'boolean',
         ];
     }
 

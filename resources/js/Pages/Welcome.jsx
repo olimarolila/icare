@@ -12,7 +12,6 @@ export default function Welcome({
     const [selectedReport, setSelectedReport] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
-    const [currentIndex, setCurrentIndex] = useState(0);
     const [activeStep, setActiveStep] = useState("submit");
     const [showQuote, setShowQuote] = useState(false);
     const [quote, setQuote] = useState(null);
@@ -35,13 +34,13 @@ export default function Welcome({
             label: "Authorities take action",
             badge: "LGU / Agencies",
             description:
-                "Local authorities review tickets, assign them to the right departments, and update the status as work progresses. Notes and updates can be logged along the way for better context.",
+                "Local authorities review tickets and update the status as work progresses. Notes and updates can be logged along the way for better context.",
         },
         insights: {
             label: "Progress & insights",
             badge: "Admin Dashboard",
             description:
-                "The admin dashboard shows real-time metrics such as total reports, average response and resolution times, and heatmaps of recurring problem areas—helping leaders prioritize resources and demonstrate accountability.",
+                "The admin dashboard provides real-time visibility into report metrics, status breakdown, and category trends, helping administrators track and manage community issues effectively.",
         },
     };
 
@@ -56,16 +55,6 @@ export default function Welcome({
         setShowModal(false);
         setSelectedReport(null);
         setSelectedImage(null);
-    };
-
-    const goToPrevious = () => {
-        setCurrentIndex((prev) =>
-            prev > 0 ? prev - 2 : Math.max(0, reports.length - 2)
-        );
-    };
-
-    const goToNext = () => {
-        setCurrentIndex((prev) => (prev + 1) % reports.length);
     };
 
     const fetchQuote = async () => {
@@ -389,23 +378,6 @@ export default function Welcome({
                                             "This report contributes to a hotspot cluster for lighting issues in the area."}
                                     </p>
                                 </div>
-
-                                {/* Tiny metrics row */}
-                                <div className="flex items-center justify-between gap-3 pt-1 text-[10px] text-neutral-300">
-                                    <div>
-                                        <p className="uppercase tracking-wide opacity-70">
-                                            Sample metrics
-                                        </p>
-                                        <p className="font-mono">
-                                            1,248 reports • 3.2 days avg.
-                                            resolve
-                                        </p>
-                                    </div>
-                                    <p className="text-right opacity-70">
-                                        Heatmaps highlight recurring problem
-                                        areas for smarter planning.
-                                    </p>
-                                </div>
                             </div>
 
                             <p className="text-[11px] text-neutral-500">
@@ -418,12 +390,12 @@ export default function Welcome({
                 </div>
             </section>
 
-            {/* Latest Reports */}
-            <section className="w-full px-6 md:px-20 lg:px-40 py-16 bg-neutral-950 text-white min-h-[500px]">
+            {/* Top Reports */}
+            <section className="w-full px-6 md:px-20 lg:px-40 py-16 bg-neutral-950 text-white">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-center justify-between mb-10">
                         <h2 className="text-3xl md:text-4xl font-semibold">
-                            Latest Reports
+                            Top Reports
                         </h2>
                         <Link
                             href={route("reports")}
@@ -432,167 +404,103 @@ export default function Welcome({
                             View All →
                         </Link>
                     </div>
-                    <div className="relative">
-                        {reports.length > 2 && (
-                            <>
-                                <button
-                                    onClick={goToPrevious}
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition"
-                                    aria-label="Previous"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                        className="w-6 h-6"
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {reports.length > 0 ? (
+                            reports.map((report) => {
+                                const images = Array.isArray(report.images)
+                                    ? report.images
+                                    : [];
+                                const date = report.created_at
+                                    ? new Date(
+                                          report.created_at
+                                      ).toLocaleDateString()
+                                    : "";
+                                // First sentence + ellipsis logic
+                                const rawDesc =
+                                    report.description ||
+                                    "No description provided.";
+                                let firstSentence = rawDesc;
+                                if (rawDesc !== "No description provided.") {
+                                    const match =
+                                        rawDesc.match(/^[^.!?]*[.!?]/); // up to first terminator
+                                    if (match) firstSentence = match[0].trim();
+                                    // Remove trailing punctuation for cleaner ellipsis
+                                    firstSentence = firstSentence.replace(
+                                        /[.!?]+$/,
+                                        ""
+                                    );
+                                    if (rawDesc.length > firstSentence.length) {
+                                        firstSentence += "...";
+                                    }
+                                }
+                                return (
+                                    <div
+                                        key={report.id}
+                                        onClick={() => openModal(report)}
+                                        className="bg-neutral-900/95 text-gray-100 rounded-xl border border-white/10 shadow-xl p-6 hover:border-yellow-400 transition cursor-pointer h-full flex flex-col"
                                     >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M15.75 19.5L8.25 12l7.5-7.5"
-                                        />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={goToNext}
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition"
-                                    aria-label="Next"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={2}
-                                        stroke="currentColor"
-                                        className="w-6 h-6"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                                        />
-                                    </svg>
-                                </button>
-                            </>
-                        )}
-                        <div className="flex gap-6 overflow-hidden pb-4 min-h-[350px]">
-                            {reports.length > 0 ? (
-                                reports
-                                    .slice(currentIndex, currentIndex + 2)
-                                    .map((report) => {
-                                        const images = Array.isArray(
-                                            report.images
-                                        )
-                                            ? report.images
-                                            : [];
-                                        const date = report.created_at
-                                            ? new Date(
-                                                  report.created_at
-                                              ).toLocaleDateString()
-                                            : "";
-                                        // First sentence + ellipsis logic
-                                        const rawDesc =
-                                            report.description ||
-                                            "No description provided.";
-                                        let firstSentence = rawDesc;
-                                        if (
-                                            rawDesc !==
-                                            "No description provided."
-                                        ) {
-                                            const match =
-                                                rawDesc.match(/^[^.!?]*[.!?]/); // up to first terminator
-                                            if (match)
-                                                firstSentence = match[0].trim();
-                                            // Remove trailing punctuation for cleaner ellipsis
-                                            firstSentence =
-                                                firstSentence.replace(
-                                                    /[.!?]+$/,
-                                                    ""
-                                                );
-                                            if (
-                                                rawDesc.length >
-                                                firstSentence.length
-                                            ) {
-                                                firstSentence += "...";
-                                            }
-                                        }
-                                        return (
-                                            <div
-                                                key={report.id}
-                                                onClick={() =>
-                                                    openModal(report)
-                                                }
-                                                className="min-w-[280px] md:min-w-[340px] bg-neutral-900/95 text-gray-100 rounded-xl border border-white/10 shadow-xl p-6 snap-start hover:border-yellow-400 transition cursor-pointer"
-                                            >
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-sm font-semibold">
-                                                            {(
-                                                                report.user
-                                                                    ?.name ||
-                                                                "Guest"
-                                                            )
-                                                                .charAt(0)
-                                                                .toUpperCase()}
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-semibold text-sm">
-                                                                {report.user
-                                                                    ?.name ||
-                                                                    "Guest"}
-                                                            </span>
-                                                            <span className="text-gray-400 text-xs">
-                                                                {
-                                                                    report.category
-                                                                }
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-xs text-gray-400 font-mono">
-                                                        {date}
-                                                    </div>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-sm font-semibold">
+                                                    {(
+                                                        report.user?.name ||
+                                                        "Guest"
+                                                    )
+                                                        .charAt(0)
+                                                        .toUpperCase()}
                                                 </div>
-                                                <h3 className="text-lg font-semibold mb-2 line-clamp-1">
-                                                    {report.subject}
-                                                </h3>
-                                                <p className="text-sm text-gray-300 leading-relaxed mb-4">
-                                                    {firstSentence}
-                                                </p>
-                                                {images.length > 0 && (
-                                                    <div className="grid grid-cols-3 gap-2 mb-4">
-                                                        {images
-                                                            .slice(0, 3)
-                                                            .map((img, idx) => (
-                                                                <img
-                                                                    key={idx}
-                                                                    src={`/storage/${img}`}
-                                                                    className="w-full h-20 object-cover rounded-lg border border-white/10"
-                                                                />
-                                                            ))}
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center justify-start mt-3">
-                                                    <span className="text-xs text-gray-400">
-                                                        Ticket ID:{" "}
-                                                        <span className="font-mono">
-                                                            {report.ticket_id}
-                                                        </span>
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold text-sm">
+                                                        {report.user?.name ||
+                                                            "Guest"}
+                                                    </span>
+                                                    <span className="text-gray-400 text-xs">
+                                                        {report.category}
                                                     </span>
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                            ) : (
-                                <div className="flex items-center justify-center w-full text-gray-400 text-lg">
-                                    <p>
-                                        No reports available at the moment.
-                                        Check back soon!
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                                            <div className="text-xs text-gray-400 font-mono">
+                                                {date}
+                                            </div>
+                                        </div>
+                                        <h3 className="text-lg font-semibold mb-2 line-clamp-1">
+                                            {report.subject}
+                                        </h3>
+                                        <p className="text-sm text-gray-300 leading-relaxed mb-4">
+                                            {firstSentence}
+                                        </p>
+                                        {images.length > 0 && (
+                                            <div className="grid grid-cols-3 gap-2 mb-4">
+                                                {images
+                                                    .slice(0, 3)
+                                                    .map((img, idx) => (
+                                                        <img
+                                                            key={idx}
+                                                            src={`/storage/${img}`}
+                                                            className="w-full h-20 object-cover rounded-lg border border-white/10"
+                                                        />
+                                                    ))}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-start mt-3">
+                                            <span className="text-xs text-gray-400">
+                                                Ticket ID:{" "}
+                                                <span className="font-mono">
+                                                    {report.ticket_id}
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="col-span-full flex items-center justify-center py-12 text-gray-400 text-lg">
+                                <p>
+                                    No reports available at the moment. Check
+                                    back soon!
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

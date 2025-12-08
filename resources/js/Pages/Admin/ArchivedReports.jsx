@@ -15,6 +15,18 @@ export default function ArchivedReports() {
     const [sort, setSort] = useState(filters.sort || "archived_at");
     const [direction, setDirection] = useState(filters.direction || "desc");
 
+    const CATEGORY_OPTIONS = [
+        "Building & Facilities",
+        "Flood Control Works",
+        "Parks & Public Spaces",
+        "Road Works",
+        "Streetlights & Electrical",
+        "Traffic & Signage",
+        "Waste Management",
+        "Water Supply & Plumbing",
+        "Others",
+    ];
+
     // Debounce global search
     useEffect(() => {
         const handle = setTimeout(() => {
@@ -23,16 +35,21 @@ export default function ArchivedReports() {
         return () => clearTimeout(handle);
     }, [search]);
 
-    const applyFilters = (page = reports.current_page || 1) => {
+    const applyFilters = (
+        page = reports.current_page || 1,
+        customSort = sort,
+        customDirection = direction,
+        customCategory = null
+    ) => {
         router.get(
             route("admin.reports.archived"),
             {
                 page,
                 perPage,
                 search,
-                category,
-                sort,
-                direction,
+                category: customCategory !== null ? customCategory : category,
+                sort: customSort,
+                direction: customDirection,
             },
             { preserveState: true, preserveScroll: true }
         );
@@ -48,13 +65,19 @@ export default function ArchivedReports() {
     };
 
     const handleSort = (col) => {
+        let newDirection = direction;
+        let newSort = sort;
+
         if (sort === col) {
-            setDirection(direction === "asc" ? "desc" : "asc");
+            newDirection = direction === "asc" ? "desc" : "asc";
         } else {
-            setSort(col);
-            setDirection("asc");
+            newSort = col;
+            newDirection = "asc";
         }
-        setTimeout(() => applyFilters(1), 0);
+
+        setSort(newSort);
+        setDirection(newDirection);
+        applyFilters(1, newSort, newDirection);
     };
 
     const openModal = (report) => {
@@ -79,47 +102,55 @@ export default function ArchivedReports() {
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg p-6">
                         {/* Search and Controls */}
-                        <div className="mb-4 space-y-3">
-                            <div className="flex flex-wrap gap-3 items-center justify-between">
-                                <div className="flex gap-2 items-center flex-wrap">
-                                    <input
-                                        value={search}
-                                        onChange={(e) =>
-                                            setSearch(e.target.value)
-                                        }
-                                        placeholder="Global search..."
-                                        className="border rounded px-3 py-2 text-sm"
-                                    />
-                                    <input
-                                        value={category}
-                                        onChange={(e) =>
-                                            setCategory(e.target.value)
-                                        }
-                                        onBlur={() => applyFilters()}
-                                        placeholder="Filter by Category"
-                                        className="border rounded px-3 py-2 text-sm"
-                                    />
-                                    <select
-                                        value={perPage}
-                                        onChange={(e) => {
-                                            setPerPage(e.target.value);
-                                            applyFilters(1);
-                                        }}
-                                        className="border rounded px-8 py-2 text-sm"
-                                    >
-                                        {[10, 25, 50, 100].map((n) => (
-                                            <option key={n} value={n}>
-                                                {n} / page
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <button
-                                        onClick={clearFilters}
-                                        className="text-xs px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
-                                    >
-                                        Clear Filters
-                                    </button>
-                                </div>
+                        <div className="mb-4">
+                            <div className="flex flex-wrap gap-3 items-center">
+                                <input
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Global search..."
+                                    className="border rounded px-3 py-2 text-sm flex-1 min-w-[160px]"
+                                />
+                                <select
+                                    value={category}
+                                    onChange={(e) => {
+                                        const newCategory = e.target.value;
+                                        setCategory(newCategory);
+                                        applyFilters(
+                                            1,
+                                            sort,
+                                            direction,
+                                            newCategory
+                                        );
+                                    }}
+                                    className="border rounded px-7 py-2 text-sm min-w-[160px]"
+                                >
+                                    <option value="">All Categories</option>
+                                    {CATEGORY_OPTIONS.map((option) => (
+                                        <option key={option} value={option}>
+                                            {option}
+                                        </option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={perPage}
+                                    onChange={(e) => {
+                                        setPerPage(e.target.value);
+                                        applyFilters(1);
+                                    }}
+                                    className="border rounded px-6 py-2 text-sm"
+                                >
+                                    {[10, 25, 50, 100].map((n) => (
+                                        <option key={n} value={n}>
+                                            {n} / page
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={clearFilters}
+                                    className="text-sm px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                                >
+                                    Reset Filters
+                                </button>
                             </div>
                         </div>
 

@@ -28,21 +28,24 @@ const processSteps = [
     {
         label: "Submit a report",
         badge: "Residents",
-        description: "Citizens upload photos, drop a pin, and describe the issue in minutes.",
+        description:
+            "Citizens upload photos, drop a pin, and describe the issue in minutes.",
         state: "completed",
         statusLabel: "Completed",
     },
     {
         label: "Ticket is created",
         badge: "System",
-        description:"Each submission becomes a unique ticket with a status history.",
+        description:
+            "Each submission becomes a unique ticket with a status history.",
         state: "current",
         statusLabel: "In Progress",
     },
     {
         label: "Authorities take action",
         badge: "LGU / Agencies",
-        description: "Coordinators assign tickets and update statuses as repairs progress.",
+        description:
+            "Coordinators assign tickets and update statuses as repairs progress.",
         state: "pending",
         statusLabel: "Pending",
     },
@@ -57,13 +60,11 @@ const processSteps = [
 
 const testimonials = [
     {
-        quote:
-            "With iCARE, our barangay finally tracks every streetlight ticket—no concern slips through the cracks.",
+        quote: "With iCARE, our barangay finally tracks every streetlight ticket—no concern slips through the cracks.",
         name: "Brgy. Operations Head",
     },
     {
-        quote:
-            "I reported flooding on my phone and watched the status move to Resolved in three days.",
+        quote: "I reported flooding on my phone and watched the status move to Resolved in three days.",
         name: "Community Volunteer",
     },
 ];
@@ -124,7 +125,8 @@ export default function About({ auth }) {
             return {
                 circleClass:
                     "bg-emerald-500 text-white shadow-lg shadow-emerald-500/40",
-                connectorClass: "bg-gradient-to-r from-emerald-400 to-emerald-200",
+                connectorClass:
+                    "bg-gradient-to-r from-emerald-400 to-emerald-200",
                 statusClass: "text-emerald-300",
                 badgeClass: "text-emerald-300",
                 icon: (
@@ -179,22 +181,51 @@ export default function About({ auth }) {
                         </h1>
                         <div className="h-1 w-32 bg-white/70" />
                         <p className="text-sm md:text-base lg:text-lg leading-relaxed tracking-wide text-justify text-white/90">
-                            Integrated Community Assistance & Reporting Environment, short for iCARE, is a civic reporting platform where citizens can submit infrastructure concerns with supporting photos, locations, and descriptions. Each report is tracked through the statuses <span className="font-semibold">Pending</span>, <span className="font-semibold">In Progress</span>, and <span className="font-semibold">Resolved</span>, empowering barangay officials to prioritize fixes while keeping the community informed through transparent ticket timelines and analytics.
+                            Integrated Community Assistance & Reporting
+                            Environment, short for iCARE, is a civic reporting
+                            platform where citizens can submit infrastructure
+                            concerns with supporting photos, locations, and
+                            descriptions. Each report is tracked through the
+                            statuses{" "}
+                            <span className="font-semibold">Pending</span>,{" "}
+                            <span className="font-semibold">In Progress</span>,
+                            and <span className="font-semibold">Resolved</span>,
+                            empowering barangay officials to prioritize fixes
+                            while keeping the community informed through
+                            transparent ticket timelines and analytics.
                         </p>
                     </section>
 
                     {/* Mission & Values */}
                     <section className="grid gap-8 lg:grid-cols-[1.1fr_minmax(0,1fr)] items-start lg:items-center">
                         <div className="space-y-5">
-                            <p className="text-xs uppercase tracking-[0.25em] text-white/60">Mission</p>
-                            <h2 className="text-2xl md:text-3xl font-semibold">Why we built iCARE</h2>
+                            <p className="text-xs uppercase tracking-[0.25em] text-white/60">
+                                Mission
+                            </p>
+                            <h2 className="text-2xl md:text-3xl font-semibold">
+                                Why we built iCARE
+                            </h2>
                             <p className="text-sm md:text-base lg:text-lg text-white/90 leading-relaxed text-justify">
-                                We believe every sidewalk crack, broken light, or drainage issue deserves a response that residents can track. iCARE streamlines the feedback loop between citizens and LGUs so that data, not guesswork, guides community investments.
+                                We believe every sidewalk crack, broken light,
+                                or drainage issue deserves a response that
+                                residents can track. iCARE streamlines the
+                                feedback loop between citizens and LGUs so that
+                                data, not guesswork, guides community
+                                investments.
                             </p>
                             <ul className="space-y-2 text-sm text-white/80 leading-relaxed list-disc pl-5">
-                                <li>Turn everyday complaints into actionable tickets with unique IDs.</li>
-                                <li>Keep barangay offices accountable with public timelines and audit logs.</li>
-                                <li>Empower data-driven planning through response metrics and heatmaps.</li>
+                                <li>
+                                    Turn everyday complaints into actionable
+                                    tickets with unique IDs.
+                                </li>
+                                <li>
+                                    Keep barangay offices accountable with
+                                    public timelines and audit logs.
+                                </li>
+                                <li>
+                                    Empower data-driven planning through
+                                    response metrics and heatmaps.
+                                </li>
                             </ul>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -225,10 +256,16 @@ export default function About({ auth }) {
                         />
                         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-white/60">Team</p>
-                                <h2 className="text-2xl md:text-3xl font-bold">Meet the Developers</h2>
+                                <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                                    Team
+                                </p>
+                                <h2 className="text-2xl md:text-3xl font-bold">
+                                    Meet the Developers
+                                </h2>
                                 <p className="text-sm text-white/70 mt-2 max-w-2xl">
-                                    A student crew blending research, design, and engineering to keep iCARE reliable for every barangay.
+                                    A student crew blending research, design,
+                                    and engineering to keep iCARE reliable for
+                                    every barangay.
                                 </p>
                             </div>
                             <div className="hidden md:flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.4em] text-white/50">
@@ -262,9 +299,15 @@ export default function About({ auth }) {
                                             </div>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-[0.65rem] uppercase tracking-[0.4em] text-white/50">Core Team</p>
-                                            <p className="text-lg font-semibold tracking-wide">{dev.name}</p>
-                                            <p className="text-sm text-white/70">{dev.role}</p>
+                                            <p className="text-[0.65rem] uppercase tracking-[0.4em] text-white/50">
+                                                Core Team
+                                            </p>
+                                            <p className="text-lg font-semibold tracking-wide">
+                                                {dev.name}
+                                            </p>
+                                            <p className="text-sm text-white/70">
+                                                {dev.role}
+                                            </p>
                                         </div>
                                         <div className="flex flex-wrap justify-center gap-2">
                                             {dev.tags.map((tag) => (
@@ -289,8 +332,12 @@ export default function About({ auth }) {
                             aria-hidden="true"
                         />
                         <div className="relative space-y-2">
-                            <p className="text-xs uppercase tracking-[0.3em] text-white/60">Impact</p>
-                            <h2 className="text-2xl md:text-3xl font-bold">Sustainable Development Goals</h2>
+                            <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                                Impact
+                            </p>
+                            <h2 className="text-2xl md:text-3xl font-bold">
+                                Sustainable Development Goals
+                            </h2>
                         </div>
                         <div className="relative flex flex-col xl:flex-row gap-8 xl:gap-12">
                             <div className="flex-1 bg-white/5 border border-white/10 rounded-3xl p-6 lg:p-8 shadow-2xl space-y-4">
@@ -299,7 +346,15 @@ export default function About({ auth }) {
                                     <span>Citywide outcomes</span>
                                 </div>
                                 <p className="text-sm md:text-base lg:text-lg text-white/90 leading-relaxed">
-                                    The iCARE platform powers SDG 11 by offering a responsive digital channel for unsafe roads, broken streetlights, and flooding incidents so LGUs can prioritize resilient infrastructure. It pushes SDG 16 forward by reinforcing transparency through real-time ticket statuses, audit logs of government actions, and analytics that keep agencies accountable.
+                                    The iCARE platform powers SDG 11 by offering
+                                    a responsive digital channel for unsafe
+                                    roads, broken streetlights, and flooding
+                                    incidents so LGUs can prioritize resilient
+                                    infrastructure. It pushes SDG 16 forward by
+                                    reinforcing transparency through real-time
+                                    ticket statuses, audit logs of government
+                                    actions, and analytics that keep agencies
+                                    accountable.
                                 </p>
                                 <div className="grid sm:grid-cols-2 gap-4 pt-2">
                                     {sdgs.map((goal) => (
@@ -311,8 +366,12 @@ export default function About({ auth }) {
                                                 {goal.number}
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-sm font-semibold text-white">{goal.title}</p>
-                                                <p className="text-xs text-white/70 leading-relaxed">{goal.focus}</p>
+                                                <p className="text-sm font-semibold text-white">
+                                                    {goal.title}
+                                                </p>
+                                                <p className="text-xs text-white/70 leading-relaxed">
+                                                    {goal.focus}
+                                                </p>
                                             </div>
                                         </div>
                                     ))}
@@ -326,10 +385,16 @@ export default function About({ auth }) {
                                     >
                                         <div className="flex items-center justify-between text-[0.65rem] uppercase tracking-[0.35em] text-white/80">
                                             <span>Goal {goal.number}</span>
-                                            <span className="px-2 py-1 border border-white/40 rounded-full">UN SDG</span>
+                                            <span className="px-2 py-1 border border-white/40 rounded-full">
+                                                UN SDG
+                                            </span>
                                         </div>
-                                        <h3 className="text-xl font-semibold text-white">{goal.title}</h3>
-                                        <p className="text-sm text-white/80 leading-relaxed">{goal.description}</p>
+                                        <h3 className="text-xl font-semibold text-white">
+                                            {goal.title}
+                                        </h3>
+                                        <p className="text-sm text-white/80 leading-relaxed">
+                                            {goal.description}
+                                        </p>
                                         <div className="relative w-full aspect-square rounded-2xl border border-white/20 bg-black/20 overflow-hidden">
                                             <img
                                                 src={goal.image}
@@ -343,7 +408,7 @@ export default function About({ auth }) {
                         </div>
                     </section>
 
-                    {/* Process timeline */}
+                    {/* Process timeline
                     <section className="space-y-6">
                         <div className="space-y-2">
                             <p className="text-xs uppercase tracking-[0.3em] text-white/60">How it works</p>
@@ -403,12 +468,16 @@ export default function About({ auth }) {
                             </div>
                         </div>
                     </section>
-
+ */}
                     {/* Testimonials */}
                     <section className="space-y-6">
                         <div className="space-y-2">
-                            <p className="text-xs uppercase tracking-[0.3em] text-white/60">Voices</p>
-                            <h2 className="text-2xl md:text-3xl font-bold">What people are saying</h2>
+                            <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                                Voices
+                            </p>
+                            <h2 className="text-2xl md:text-3xl font-bold">
+                                What people are saying
+                            </h2>
                         </div>
                         <div className="grid gap-4 md:grid-cols-2">
                             {testimonials.map((t, idx) => (
@@ -431,10 +500,16 @@ export default function About({ auth }) {
                     <section className="grid gap-4 md:grid-cols-2">
                         <div className="bg-green-500/20 border border-green-400/30 rounded-2xl p-6 flex flex-col gap-4">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-white/70">Residents</p>
-                                <h3 className="text-2xl font-semibold">Start submitting reports</h3>
+                                <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+                                    Residents
+                                </p>
+                                <h3 className="text-2xl font-semibold">
+                                    Start submitting reports
+                                </h3>
                                 <p className="text-sm text-white/80 leading-relaxed mt-2">
-                                    Spot an issue in your neighborhood? Share details, photos, and a pin so officials can act quickly.
+                                    Spot an issue in your neighborhood? Share
+                                    details, photos, and a pin so officials can
+                                    act quickly.
                                 </p>
                             </div>
                             <Link
@@ -446,10 +521,16 @@ export default function About({ auth }) {
                         </div>
                         <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-2xl p-6 flex flex-col gap-4">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-white/70">Local leaders</p>
-                                <h3 className="text-2xl font-semibold">Bring iCARE to your barangay</h3>
+                                <p className="text-xs uppercase tracking-[0.3em] text-white/70">
+                                    Local leaders
+                                </p>
+                                <h3 className="text-2xl font-semibold">
+                                    Bring iCARE to your barangay
+                                </h3>
                                 <p className="text-sm text-white/80 leading-relaxed mt-2">
-                                    Need a walkthrough or want to onboard more agencies? Let us know and we'll set up an orientation.
+                                    Need a walkthrough or want to onboard more
+                                    agencies? Let us know and we'll set up an
+                                    orientation.
                                 </p>
                             </div>
                             <Link

@@ -15,9 +15,24 @@ export default function AdminReports() {
     // Filter states
     const [search, setSearch] = useState(filters.search || "");
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
+    const [categoryFilter, setCategoryFilter] = useState(
+        filters.category || ""
+    );
     const [perPage, setPerPage] = useState(filters.perPage || 10);
     const [sort, setSort] = useState(filters.sort || "submitted_at");
     const [direction, setDirection] = useState(filters.direction || "desc");
+
+    const CATEGORY_OPTIONS = [
+        "Building & Facilities",
+        "Flood Control Works",
+        "Parks & Public Spaces",
+        "Road Works",
+        "Streetlights & Electrical",
+        "Traffic & Signage",
+        "Waste Management",
+        "Water Supply & Plumbing",
+        "Others",
+    ];
 
     // Debounce global search
     useEffect(() => {
@@ -29,7 +44,10 @@ export default function AdminReports() {
 
     const applyFilters = (
         page = reports.current_page || 1,
-        customStatus = null
+        customStatus = null,
+        customSort = sort,
+        customDirection = direction,
+        customCategory = null
     ) => {
         router.get(
             route("admin.reports"),
@@ -38,8 +56,10 @@ export default function AdminReports() {
                 perPage,
                 search,
                 status: customStatus !== null ? customStatus : statusFilter,
-                sort,
-                direction,
+                category:
+                    customCategory !== null ? customCategory : categoryFilter,
+                sort: customSort,
+                direction: customDirection,
             },
             { preserveState: true, preserveScroll: true }
         );
@@ -48,6 +68,7 @@ export default function AdminReports() {
     const clearFilters = () => {
         setSearch("");
         setStatusFilter("");
+        setCategoryFilter("");
         router.get(
             route("admin.reports"),
             { page: 1, perPage },
@@ -82,13 +103,19 @@ export default function AdminReports() {
     };
 
     const handleSort = (col) => {
+        let newDirection = direction;
+        let newSort = sort;
+
         if (sort === col) {
-            setDirection(direction === "asc" ? "desc" : "asc");
+            newDirection = direction === "asc" ? "desc" : "asc";
         } else {
-            setSort(col);
-            setDirection("asc");
+            newSort = col;
+            newDirection = "asc";
         }
-        setTimeout(() => applyFilters(1), 0);
+
+        setSort(newSort);
+        setDirection(newDirection);
+        applyFilters(1, null, newSort, newDirection);
     };
 
     return (
@@ -159,6 +186,28 @@ export default function AdminReports() {
                                             Resolved
                                         </option>
                                     </select>
+                                    <select
+                                        value={categoryFilter}
+                                        onChange={(e) => {
+                                            const newCategory = e.target.value;
+                                            setCategoryFilter(newCategory);
+                                            applyFilters(
+                                                1,
+                                                null,
+                                                sort,
+                                                direction,
+                                                newCategory
+                                            );
+                                        }}
+                                        className="border rounded px-7 py-2 text-sm"
+                                    >
+                                        <option value="">All Categories</option>
+                                        {CATEGORY_OPTIONS.map((option) => (
+                                            <option key={option} value={option}>
+                                                {option}
+                                            </option>
+                                        ))}
+                                    </select>
                                     <button
                                         onClick={clearFilters}
                                         className="text-sm px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
@@ -172,9 +221,6 @@ export default function AdminReports() {
                                 <table className="min-w-full border-collapse rounded-xl overflow-hidden w-full">
                                     <thead>
                                         <tr className="bg-black text-white">
-                                            {/* <th className="px-4 py-3 text-left">
-                                                ID
-                                            </th> */}
                                             <th
                                                 className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
                                                 onClick={() =>
@@ -188,8 +234,18 @@ export default function AdminReports() {
                                                         : "▼"
                                                     : ""}
                                             </th>
-                                            <th className="px-4 py-3 text-left whitespace-nowrap">
-                                                Posted By
+                                            <th
+                                                className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
+                                                onClick={() =>
+                                                    handleSort("user_id")
+                                                }
+                                            >
+                                                Posted By{" "}
+                                                {sort === "user_id"
+                                                    ? direction === "asc"
+                                                        ? "▲"
+                                                        : "▼"
+                                                    : ""}
                                             </th>
                                             <th
                                                 className="px-4 py-3 text-left cursor-pointer whitespace-nowrap"
@@ -278,7 +334,7 @@ export default function AdminReports() {
                                         {reports.data.length === 0 ? (
                                             <tr>
                                                 <td
-                                                    colSpan="10"
+                                                    colSpan="9"
                                                     className="px-4 py-6 text-center text-gray-500"
                                                 >
                                                     No reports yet.
@@ -290,9 +346,6 @@ export default function AdminReports() {
                                                     key={r.id}
                                                     className="border-b text-sm text-gray-800"
                                                 >
-                                                    {/* <td className="px-4 py-2">
-                                                        {r.id}
-                                                    </td> */}
                                                     <td className="px-4 py-2">
                                                         {r.ticket_id}
                                                     </td>

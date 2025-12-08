@@ -31,9 +31,9 @@ class ReportController extends Controller
         ];
 
         // Sortable columns whitelist
-        $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'location_name', 'status', 'submitted_at', 'subject', 'votes'];
+        $allowedSorts = ['id', 'ticket_id', 'category', 'street', 'location_name', 'status', 'submitted_at', 'subject', 'votes', 'user_id'];
         if (!in_array($sort, $allowedSorts)) {
-            $sort = 'votes';
+            $sort = 'submitted_at';
         }
         $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
 
@@ -86,6 +86,14 @@ class ReportController extends Controller
      */
     public function store(Request $request)
     {
+        // Check if user is authenticated and banned (platform-wide or report-specific)
+        if (auth()->check() && (auth()->user()->banned || auth()->user()->report_banned)) {
+            $message = auth()->user()->banned 
+                ? 'You are banned from the platform and cannot post reports.' 
+                : 'You are banned from posting reports.';
+            return redirect()->route('reports')->with('error', $message);
+        }
+
         $validated = $request->validate([
             'category' => 'required|string|max:255',
             'street' => 'nullable|string|max:255',
@@ -421,6 +429,13 @@ class ReportController extends Controller
      */
     public function vote(Request $request, Report $report)
     {
+        if (auth()->check() && auth()->user()->banned) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'You have been banned from the platform.'], 403);
+            }
+            return redirect()->route('reports')->with('error', 'You have been banned from the platform.');
+        }
+
         $data = $request->validate([
             'direction' => 'required|in:up,down',
         ]);
@@ -471,6 +486,13 @@ class ReportController extends Controller
      */
     public function comment(Request $request, Report $report)
     {
+        if (auth()->check() && auth()->user()->banned) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'You have been banned from the platform.'], 403);
+            }
+            return redirect()->route('reports')->with('error', 'You have been banned from the platform.');
+        }
+
         $validated = $request->validate([
             'body' => 'required|string|max:500',
         ]);
@@ -512,5 +534,93 @@ class ReportController extends Controller
         return redirect()->route('admin.archives', ['tab' => 'reports'])
             ->with('success', 'Report restored successfully.');
     }
+
+    public function archivedIndex(Request $request)
+{
+    $perPage   = (int) $request->input('perPage', 10);
+    $search    = $request->input('search');
+    $category  = $request->input('category');
+    $sort      = $request->input('sort', 'archived_at');
+    $direction = $request->input('direction', 'desc');
+
+    // Columns you allow sorting by (must match what ArchivedReports.jsx uses)
+    $allowedSorts = [
+        'id',
+        'ticket_id',
+        'user_id',
+        'category',
+        'street',
+        'status',
+        'subject',
+        'votes',
+        'archived_at',
+    ];
+
+    if (!in_array($sort, $allowedSorts)) {
+        $sort = 'archived_at';
+    }
+
+    $direction = in_array($direction, ['asc', 'desc']) ? $direction : 'desc';
+
+    $query = Report::query()
+        ->whereNotNull('archived_at')     // <<< DIFFERENCE from index(): archived only
+        ->orderBy($sort, $direction);
+
+    // Global search (same pattern as index)
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('ticket_id', 'like', "%{$search}%")
+              ->orWhere('category', 'like', "%{$search}%")
+              ->orWhere('street', 'like', "%{$search}%")
+              ->orWhere('location_name', 'like', "%{$search}%")
+              ->orWhere('subject', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%")
+              ->orWhere('status', 'like', "%{$search}%");
+        });
+    }
+
+    // Category filter (you have `category` state in JSX)
+    if (!empty($category)) {
+        $query->where('category', $category);
+    }
+
+    $reports = $query
+        ->with([
+            'user:id,name,email',
+            'archivedByUser:id,name',       // for selected.archived_by_user in modal
+        ])
+        ->select([
+            'id',
+            'ticket_id',
+            'category',
+            'street',
+            'location_name',
+            'latitude',
+            'longitude',
+            'subject',
+            'status',
+            'submitted_at',
+            'description',
+            'images',
+            'votes',
+            'user_id',
+            'archived_at',
+            'archived_by',
+        ])
+        ->paginate($perPage)
+        ->appends($request->query());
+
+    return Inertia::render('Admin/ArchivedReports', [
+        'reports' => $reports,
+        'filters' => [
+            'search'     => $search,
+            'category'   => $category,
+            'perPage'    => $perPage,
+            'sort'       => $sort,
+            'direction'  => $direction,
+        ],
+    ]);
+}
+
 }
 

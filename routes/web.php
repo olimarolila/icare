@@ -86,13 +86,10 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
     Route::get('/admin/dashboard', [DashboardController::class, 'admin'])
         ->name('admin.dashboard');
 
-    Route::get('/admin/forum', function () {
-        return Inertia::render('Admin/Forum');
-    })->name('admin.forum');
-
     // Reports management
     Route::get('/admin/reports', [ReportController::class, 'index'])->name('admin.reports');
     Route::get('/admin/reports/export', [ReportController::class, 'export'])->name('admin.reports.export');
+    Route::get('/admin/reports/archived', [ReportController::class, 'archivedIndex'])->name('admin.reports.archived');
     Route::patch('/admin/reports/{report}', [ReportController::class, 'update'])->name('admin.reports.update');
     Route::post('/admin/reports/{report}/archive', [ReportController::class, 'archive'])->name('admin.reports.archive');
     Route::post('/admin/reports/{report}/restore', [ReportController::class, 'restore'])->name('admin.reports.restore');
@@ -103,6 +100,10 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
     Route::get('/admin/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::patch('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::post('/admin/users/{user}/archive', [UserController::class, 'archive'])->name('admin.users.archive');
+    Route::post('/admin/users/{user}/ban', [UserController::class, 'ban'])->name('admin.users.ban');
+    Route::post('/admin/users/{user}/unban', [UserController::class, 'unban'])->name('admin.users.unban');
+    Route::post('/admin/users/{user}/ban-user', [UserController::class, 'banUser'])->name('admin.users.ban-user');
+    Route::post('/admin/users/{user}/unban-user', [UserController::class, 'unbanUser'])->name('admin.users.unban-user');
     Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
     // Archives management
