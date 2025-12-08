@@ -97,8 +97,6 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
     // Users management
     Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users');
     Route::get('/admin/users/all', [UserController::class, 'all'])->name('admin.users.all');
-    Route::get('/admin/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
-    Route::patch('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
     Route::post('/admin/users/{user}/archive', [UserController::class, 'archive'])->name('admin.users.archive');
     Route::post('/admin/users/{user}/ban', [UserController::class, 'ban'])->name('admin.users.ban');
     Route::post('/admin/users/{user}/unban', [UserController::class, 'unban'])->name('admin.users.unban');

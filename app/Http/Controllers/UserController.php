@@ -63,33 +63,6 @@ class UserController extends Controller
     }
 
     /**
-     * Show the form for editing a user.
-     */
-    public function edit(User $user)
-    {
-        return Inertia::render('Admin/Users/Edit', [
-            'user' => $user,
-        ]);
-    }
-
-    /**
-     * Update the specified user.
-     */
-    public function update(Request $request, User $user)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'role' => 'nullable|string|max:50',
-            'role_description' => 'nullable|string|max:255',
-        ]);
-        
-        $user->update($data);
-        
-        return redirect()->route('admin.users')->with('success', 'User updated successfully.');
-    }
-
-    /**
      * Archive the specified user.
      */
     public function archive(Request $request, User $user)
