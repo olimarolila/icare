@@ -127,4 +127,72 @@ class UserController extends Controller
         
         return redirect()->route('admin.archives', ['tab' => 'users'])->with('success', 'User restored successfully.');
     }
+
+    /**
+     * Ban a user from posting reports.
+     */
+    public function ban(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $user->update([
+            'report_banned' => true,
+            'report_ban_reason' => $data['reason'],
+            'report_banned_at' => now(),
+            'report_banned_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.users')->with('success', "User {$user->name} has been banned from posting reports.");
+    }
+
+    /**
+     * Unban a user from posting reports.
+     */
+    public function unban(User $user)
+    {
+        $user->update([
+            'report_banned' => false,
+            'report_ban_reason' => null,
+            'report_banned_at' => null,
+            'report_banned_by' => null,
+        ]);
+
+        return redirect()->route('admin.users')->with('success', "User {$user->name} has been unbanned from posting reports.");
+    }
+
+    /**
+     * Ban a user completely (from all platform activity).
+     */
+    public function banUser(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $user->update([
+            'banned' => true,
+            'ban_reason' => $data['reason'],
+            'banned_at' => now(),
+            'banned_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.users')->with('success', "User {$user->name} has been banned from the platform.");
+    }
+
+    /**
+     * Unban a user completely.
+     */
+    public function unbanUser(User $user)
+    {
+        $user->update([
+            'banned' => false,
+            'ban_reason' => null,
+            'banned_at' => null,
+            'banned_by' => null,
+        ]);
+
+        return redirect()->route('admin.users')->with('success', "User {$user->name} has been unbanned from the platform.");
+    }
 }

@@ -171,13 +171,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                         Dashboard
                                     </NavLink>
                                     <NavLink
-                                        href={route("admin.forum")}
-                                        active={route().current("admin.forum")}
-                                        className="text-white hover:text-yellow-400"
-                                    >
-                                        Forum
-                                    </NavLink>
-                                    <NavLink
                                         href={route("admin.reports")}
                                         active={route().current(
                                             "admin.reports"
@@ -316,13 +309,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Dashboard
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink
-                                    href={route("admin.forum")}
-                                    active={route().current("admin.forum")}
-                                    className="text-white hover:text-yellow-400"
-                                >
-                                    Forum
-                                </ResponsiveNavLink>
-                                <ResponsiveNavLink
                                     href={route("admin.reports")}
                                     active={route().current("admin.reports")}
                                     className="text-white hover:text-yellow-400"
@@ -354,7 +340,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                 )}
                             </>
                         )}
-
                     </div>
 
                     <div className="border-t border-gray-600 pb-1 pt-4">
@@ -400,12 +385,6 @@ export default function AuthenticatedLayout({ header, children }) {
                             className="block py-1 hover:text-yellow-400 transition-colors"
                         >
                             Dashboard
-                        </Link>
-                        <Link
-                            href={"/admin/forum"}
-                            className="block py-1 hover:text-yellow-400 transition-colors"
-                        >
-                            Forum
                         </Link>
                         <Link
                             href={"/admin/reports"}

@@ -9,6 +9,10 @@ export default function AdminUsers() {
     const [selected, setSelected] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [userToArchive, setUserToArchive] = useState(null);
+    const [userToBan, setUserToBan] = useState(null);
+    const [banReason, setBanReason] = useState("");
+    const [userToBanPlatform, setUserToBanPlatform] = useState(null);
+    const [platformBanReason, setPlatformBanReason] = useState("");
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -31,8 +35,11 @@ export default function AdminUsers() {
         return () => clearTimeout(handle);
     }, [search]);
 
-    // DataTables integration (client-side over all users)
+    // DataTables integration (client-side over all users) - DISABLED
     useEffect(() => {
+        // DataTables disabled to avoid conflicts with React rendering
+        return () => {};
+
         let cssLink;
         const cssHref =
             "https://cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css";
@@ -47,62 +54,7 @@ export default function AdminUsers() {
         let script = document.querySelector(`script[src="${jsSrc}"]`);
 
         const initFromData = (data) => {
-            try {
-                if (window.DataTable && !dtInitialized.current) {
-                    const table = document.getElementById("users-table");
-                    if (table) {
-                        // clear existing tbody
-                        const tbody = table.querySelector("tbody");
-                        tbody.innerHTML = "";
-                        data.forEach((u) => {
-                            const tr = document.createElement("tr");
-                            tr.className = "border-b";
-                            tr.innerHTML = `
-                                <td class="px-4 py-2">${escapeHtml(u.name)}</td>
-                                <td class="px-4 py-2">${escapeHtml(
-                                    u.email
-                                )}</td>
-                                <td class="px-4 py-2">${escapeHtml(
-                                    u.role || "-"
-                                )}</td>
-                                <td class="px-4 py-2"><div class="flex gap-2"><a href="${route(
-                                    "admin.users.edit",
-                                    u.id
-                                )}" class="text-blue-600 hover:underline">Edit</a> <button data-id="${
-                                u.id
-                            }" data-email="${escapeHtml(
-                                u.email
-                            )}" class="text-red-600 hover:underline archive-btn">Archive</button></div></td>
-                            `;
-                            tbody.appendChild(tr);
-                        });
-
-                        // eslint-disable-next-line no-undef
-                        dtRef.current = new window.DataTable(table, {
-                            perPage: Number(perPage) || 25,
-                            searchable: true,
-                            sortable: true,
-                        });
-                        dtInitialized.current = true;
-                        setDtActive(true);
-
-                        // attach archive handlers
-                        table
-                            .querySelectorAll(".archive-btn")
-                            .forEach((btn) => {
-                                btn.addEventListener("click", (e) => {
-                                    const id = btn.getAttribute("data-id");
-                                    const email =
-                                        btn.getAttribute("data-email");
-                                    // Find user from data and trigger dialog
-                                    setUserToArchive({ id, email });
-                                });
-                            });
-                    }
-                }
-            } catch (e) {
-                console.error("DataTable init error", e);
-            }
+            // DataTables disabled - using React rendering instead
         };
 
         const initDataLoad = () => {
@@ -152,10 +104,21 @@ export default function AdminUsers() {
             .replace(/'/g, "&#039;");
     };
 
-    const applyFilters = (page = 1) => {
+    const applyFilters = (
+        page = 1,
+        customSort = sort,
+        customDirection = direction
+    ) => {
         router.get(
             route("admin.users"),
-            { page, perPage, search, role: roleFilter, sort, direction },
+            {
+                page,
+                perPage,
+                search,
+                role: roleFilter,
+                sort: customSort,
+                direction: customDirection,
+            },
             { preserveState: true, preserveScroll: true }
         );
     };
@@ -198,14 +161,19 @@ export default function AdminUsers() {
     };
 
     const handleSort = (col) => {
+        let newDirection = direction;
+        let newSort = sort;
+
         if (sort === col) {
-            setDirection(direction === "asc" ? "desc" : "asc");
+            newDirection = direction === "asc" ? "desc" : "asc";
         } else {
-            setSort(col);
-            setDirection("asc");
+            newSort = col;
+            newDirection = "asc";
         }
-        // trigger
-        setTimeout(() => applyFilters(1), 0);
+
+        setSort(newSort);
+        setDirection(newDirection);
+        applyFilters(1, newSort, newDirection);
     };
 
     return (
@@ -264,7 +232,7 @@ export default function AdminUsers() {
                                             setRoleFilter(e.target.value);
                                             applyFilters(1);
                                         }}
-                                        className="border rounded px-3 py-2 text-sm"
+                                        className="border rounded px-4 py-2 text-sm"
                                     >
                                         <option value="">All Roles</option>
                                         <option value="admin">admin</option>
@@ -279,7 +247,7 @@ export default function AdminUsers() {
                                             setPerPage(e.target.value);
                                             applyFilters(1);
                                         }}
-                                        className="border rounded px-3 py-2 text-sm"
+                                        className="border rounded px-5 py-2 text-sm"
                                     >
                                         {[10, 25, 50, 100].map((n) => (
                                             <option key={n} value={n}>
@@ -340,6 +308,9 @@ export default function AdminUsers() {
                                                     : ""}
                                             </th>
                                             <th className="px-4 py-3 text-left">
+                                                Status
+                                            </th>
+                                            <th className="px-4 py-3 text-left">
                                                 Actions
                                             </th>
                                         </tr>
@@ -348,7 +319,7 @@ export default function AdminUsers() {
                                         {users.data.length === 0 ? (
                                             <tr>
                                                 <td
-                                                    colSpan="4"
+                                                    colSpan="5"
                                                     className="px-4 py-6 text-center text-gray-500"
                                                 >
                                                     No users found.
@@ -370,7 +341,40 @@ export default function AdminUsers() {
                                                         {u.role || "-"}
                                                     </td>
                                                     <td className="px-4 py-2">
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-col gap-1">
+                                                            {Boolean(
+                                                                u.banned
+                                                            ) && (
+                                                                <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                                                    Platform Ban
+                                                                </span>
+                                                            )}
+                                                            {Boolean(
+                                                                u.report_banned
+                                                            ) &&
+                                                                !Boolean(
+                                                                    u.banned
+                                                                ) && (
+                                                                    <span className="inline-block bg-orange-100 text-orange-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                                                        Posting
+                                                                        Ban
+                                                                    </span>
+                                                                )}
+                                                            {!Boolean(
+                                                                u.banned
+                                                            ) &&
+                                                                !Boolean(
+                                                                    u.report_banned
+                                                                ) && (
+                                                                    <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                                                        Active
+                                                                    </span>
+                                                                )}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="px-4 py-2">
+                                                        <div className="flex gap-2 flex-wrap">
                                                             <button
                                                                 onClick={() =>
                                                                     openModal(u)
@@ -381,17 +385,18 @@ export default function AdminUsers() {
                                                                     xmlns="http://www.w3.org/2000/svg"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
-                                                                    stroke-width="1.5"
+                                                                    strokeWidth="1.5"
                                                                     stroke="currentColor"
-                                                                    class="size-6"
+                                                                    className="size-6"
                                                                 >
                                                                     <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
                                                                         d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
                                                                     />
                                                                 </svg>
                                                             </button>
+
                                                             <button
                                                                 onClick={() =>
                                                                     archiveUser(
@@ -404,13 +409,13 @@ export default function AdminUsers() {
                                                                     xmlns="http://www.w3.org/2000/svg"
                                                                     fill="none"
                                                                     viewBox="0 0 24 24"
-                                                                    stroke-width="1.5"
+                                                                    strokeWidth="1.5"
                                                                     stroke="currentColor"
-                                                                    class="size-6"
+                                                                    className="size-6"
                                                                 >
                                                                     <path
-                                                                        stroke-linecap="round"
-                                                                        stroke-linejoin="round"
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
                                                                         d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"
                                                                     />
                                                                 </svg>
@@ -425,10 +430,7 @@ export default function AdminUsers() {
                             </div>
 
                             {/* Pagination */}
-                            <div
-                                className="flex items-center justify-end mt-4"
-                                style={{ display: dtActive ? "none" : "flex" }}
-                            >
+                            <div className="flex items-center justify-end mt-4">
                                 <div className="flex gap-1 flex-wrap">
                                     {users.links &&
                                         users.links.map((l, i) => (
@@ -479,6 +481,56 @@ export default function AdminUsers() {
                                             onSubmit={submitUpdate}
                                             className="px-6 py-4 space-y-4"
                                         >
+                                            {/* Ban Status Section */}
+                                            {(selected.banned ||
+                                                selected.report_banned) && (
+                                                <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                                                    <h4 className="font-semibold text-red-900 mb-2">
+                                                        Ban Status
+                                                    </h4>
+                                                    {selected.banned && (
+                                                        <div className="text-sm text-red-800 mb-2">
+                                                            <p>
+                                                                <strong>
+                                                                    Platform Ban
+                                                                </strong>
+                                                            </p>
+                                                            <p>
+                                                                Reason:{" "}
+                                                                {selected.ban_reason ||
+                                                                    "No reason provided"}
+                                                            </p>
+                                                            <p>
+                                                                Banned at:{" "}
+                                                                {new Date(
+                                                                    selected.banned_at
+                                                                ).toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    {selected.report_banned && (
+                                                        <div className="text-sm text-orange-800">
+                                                            <p>
+                                                                <strong>
+                                                                    Posting Ban
+                                                                </strong>
+                                                            </p>
+                                                            <p>
+                                                                Reason:{" "}
+                                                                {selected.report_ban_reason ||
+                                                                    "No reason provided"}
+                                                            </p>
+                                                            <p>
+                                                                Banned at:{" "}
+                                                                {new Date(
+                                                                    selected.report_banned_at
+                                                                ).toLocaleString()}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             <div>
                                                 <label className="block text-sm text-gray-600">
                                                     Name
@@ -545,7 +597,68 @@ export default function AdminUsers() {
                                                     className="w-full border rounded px-3 py-2"
                                                 />
                                             </div>
-                                            <div className="flex justify-end gap-3">
+                                            <div className="flex justify-end gap-3 flex-wrap">
+                                                {!selected.report_banned ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            closeModal();
+                                                            setUserToBan(
+                                                                selected
+                                                            );
+                                                        }}
+                                                        className="px-4 py-2 rounded-md bg-orange-600 text-white hover:bg-orange-700 transition"
+                                                    >
+                                                        Posting Ban
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            router.post(
+                                                                route(
+                                                                    "admin.users.unban",
+                                                                    selected.id
+                                                                )
+                                                            );
+                                                            closeModal();
+                                                        }}
+                                                        className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition"
+                                                    >
+                                                        Lift Posting Ban
+                                                    </button>
+                                                )}
+
+                                                {!selected.banned ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            closeModal();
+                                                            setUserToBanPlatform(
+                                                                selected
+                                                            );
+                                                        }}
+                                                        className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                                                    >
+                                                        Platform Ban
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            router.post(
+                                                                route(
+                                                                    "admin.users.unban-user",
+                                                                    selected.id
+                                                                )
+                                                            );
+                                                            closeModal();
+                                                        }}
+                                                        className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700 transition"
+                                                    >
+                                                        Lift Platform Ban
+                                                    </button>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={closeModal}
@@ -572,128 +685,8 @@ export default function AdminUsers() {
             <ConfirmDialog
                 open={!!userToArchive}
                 onConfirm={() => {
-                    const userId = userToArchive.id;
-
-                    // Check if this is from DataTables (when we only have id and email)
-                    if (dtActive && typeof userId === "string") {
-                        // Use fetch for DataTables integration
-                        fetch(route("admin.users.destroy", userId), {
-                            method: "DELETE",
-                            headers: {
-                                "X-CSRF-TOKEN": document
-                                    .querySelector('meta[name="csrf-token"]')
-                                    .getAttribute("content"),
-                                Accept: "application/json",
-                            },
-                        }).then((r) => {
-                            if (r.ok) {
-                                // Reload DataTable
-                                try {
-                                    dtRef.current.destroy();
-                                } catch (e) {}
-                                dtInitialized.current = false;
-                                setDtActive(false);
-                                setTimeout(() => {
-                                    fetch(route("admin.users.all"))
-                                        .then((r) => r.json())
-                                        .then((data) => {
-                                            if (window.DataTable) {
-                                                const initFromData = (data) => {
-                                                    const table =
-                                                        document.getElementById(
-                                                            "users-table"
-                                                        );
-                                                    if (table) {
-                                                        const tbody =
-                                                            table.querySelector(
-                                                                "tbody"
-                                                            );
-                                                        tbody.innerHTML = "";
-                                                        data.forEach((u) => {
-                                                            const tr =
-                                                                document.createElement(
-                                                                    "tr"
-                                                                );
-                                                            tr.className =
-                                                                "border-b";
-                                                            tr.innerHTML = `
-                                                                <td class="px-4 py-2">${escapeHtml(
-                                                                    u.name
-                                                                )}</td>
-                                                                <td class="px-4 py-2">${escapeHtml(
-                                                                    u.email
-                                                                )}</td>
-                                                                <td class="px-4 py-2">${escapeHtml(
-                                                                    u.role ||
-                                                                        "-"
-                                                                )}</td>
-                                                                <td class="px-4 py-2"><div class="flex gap-2"><a href="${route(
-                                                                    "admin.users.edit",
-                                                                    u.id
-                                                                )}" class="text-blue-600 hover:underline">Edit</a> <button data-id="${
-                                                                u.id
-                                                            }" data-email="${escapeHtml(
-                                                                u.email
-                                                            )}" class="text-red-600 hover:underline archive-btn">Archive</button></div></td>
-                                                            `;
-                                                            tbody.appendChild(
-                                                                tr
-                                                            );
-                                                        });
-                                                        dtRef.current =
-                                                            new window.DataTable(
-                                                                table,
-                                                                {
-                                                                    perPage:
-                                                                        Number(
-                                                                            perPage
-                                                                        ) || 25,
-                                                                    searchable: true,
-                                                                    sortable: true,
-                                                                }
-                                                            );
-                                                        dtInitialized.current = true;
-                                                        setDtActive(true);
-
-                                                        // Re-attach handlers
-                                                        table
-                                                            .querySelectorAll(
-                                                                ".archive-btn"
-                                                            )
-                                                            .forEach((btn) => {
-                                                                btn.addEventListener(
-                                                                    "click",
-                                                                    (e) => {
-                                                                        const id =
-                                                                            btn.getAttribute(
-                                                                                "data-id"
-                                                                            );
-                                                                        const email =
-                                                                            btn.getAttribute(
-                                                                                "data-email"
-                                                                            );
-                                                                        setUserToArchive(
-                                                                            {
-                                                                                id,
-                                                                                email,
-                                                                            }
-                                                                        );
-                                                                    }
-                                                                );
-                                                            });
-                                                    }
-                                                };
-                                                initFromData(data);
-                                            }
-                                        });
-                                }, 200);
-                            }
-                        });
-                    } else {
-                        // Regular Inertia route for pagination view
-                        router.post(route("admin.users.archive", userId));
-                    }
-
+                    // Use Inertia route for archiving
+                    router.post(route("admin.users.archive", userToArchive.id));
                     setUserToArchive(null);
                 }}
                 onCancel={() => setUserToArchive(null)}
@@ -703,6 +696,172 @@ export default function AdminUsers() {
                 cancelText="Cancel"
                 variant="warning"
             />
+
+            {userToBan && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden">
+                        <div className="flex justify-between items-center px-6 py-4 bg-black text-white">
+                            <h3 className="text-lg font-semibold">
+                                Ban User From Posting
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setUserToBan(null);
+                                    setBanReason("");
+                                }}
+                                className="text-white hover:text-yellow-400"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                router.post(
+                                    route("admin.users.ban", userToBan.id),
+                                    { reason: banReason },
+                                    {
+                                        onSuccess: () => {
+                                            setUserToBan(null);
+                                            setBanReason("");
+                                        },
+                                    }
+                                );
+                            }}
+                            className="px-6 py-4 space-y-4"
+                        >
+                            <div>
+                                <p className="text-sm text-gray-600 mb-2">
+                                    User:{" "}
+                                    <span className="font-semibold">
+                                        {userToBan.name}
+                                    </span>{" "}
+                                    ({userToBan.email})
+                                </p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600 mb-2">
+                                    Ban Reason
+                                </label>
+                                <textarea
+                                    value={banReason}
+                                    onChange={(e) =>
+                                        setBanReason(e.target.value)
+                                    }
+                                    placeholder="Explain why this user is being banned (e.g., repeated trolling, harassment, spam...)"
+                                    className="w-full border rounded px-3 py-2 h-24"
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setUserToBan(null);
+                                        setBanReason("");
+                                    }}
+                                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                                >
+                                    Ban User
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {userToBanPlatform && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden">
+                        <div className="flex justify-between items-center px-6 py-4 bg-red-600 text-white">
+                            <h3 className="text-lg font-semibold">
+                                Ban User From Platform
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setUserToBanPlatform(null);
+                                    setPlatformBanReason("");
+                                }}
+                                className="text-white hover:text-yellow-400"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                router.post(
+                                    route(
+                                        "admin.users.ban-user",
+                                        userToBanPlatform.id
+                                    ),
+                                    { reason: platformBanReason },
+                                    {
+                                        onSuccess: () => {
+                                            setUserToBanPlatform(null);
+                                            setPlatformBanReason("");
+                                        },
+                                    }
+                                );
+                            }}
+                            className="px-6 py-4 space-y-4"
+                        >
+                            <div>
+                                <p className="text-sm text-gray-600 mb-2">
+                                    User:{" "}
+                                    <span className="font-semibold">
+                                        {userToBanPlatform.name}
+                                    </span>{" "}
+                                    ({userToBanPlatform.email})
+                                </p>
+                                <p className="text-sm text-red-600 font-medium">
+                                    This will prevent the user from posting
+                                    reports, commenting, voting, and all other
+                                    platform activities.
+                                </p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-600 mb-2">
+                                    Ban Reason
+                                </label>
+                                <textarea
+                                    value={platformBanReason}
+                                    onChange={(e) =>
+                                        setPlatformBanReason(e.target.value)
+                                    }
+                                    placeholder="Explain why this user is being banned from the platform..."
+                                    className="w-full border rounded px-3 py-2 h-24"
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setUserToBanPlatform(null);
+                                        setPlatformBanReason("");
+                                    }}
+                                    className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                                >
+                                    Ban From Platform
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

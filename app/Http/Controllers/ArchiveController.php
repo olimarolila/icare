@@ -32,10 +32,11 @@ class ArchiveController extends Controller
         $reportPerPage = (int) $request->input('reportPerPage', 10);
         $reportSearch = $request->input('reportSearch');
         $reportStatus = $request->input('reportStatus');
+        $reportCategory = $request->input('reportCategory');
         $reportSort = $request->input('reportSort', 'archived_at');
         $reportDirection = $request->input('reportDirection', 'desc');
         
-        $allowedReportSorts = ['ticket_id', 'category', 'status', 'archived_at'];
+        $allowedReportSorts = ['ticket_id', 'category', 'status', 'archived_at', 'user_id', 'votes', 'subject', 'street'];
         if (!in_array($reportSort, $allowedReportSorts)) {
             $reportSort = 'archived_at';
         }
@@ -66,6 +67,9 @@ class ArchiveController extends Controller
         if ($reportStatus) {
             $reportsQuery->where('status', $reportStatus);
         }
+        if ($reportCategory) {
+            $reportsQuery->where('category', $reportCategory);
+        }
         $reports = $reportsQuery->orderBy($reportSort, $reportDirection)->paginate($reportPerPage, ['*'], 'page')->appends($request->query());
 
         return Inertia::render('Admin/Archives', [
@@ -79,6 +83,7 @@ class ArchiveController extends Controller
                 'userDirection' => $userDirection,
                 'reportSearch' => $reportSearch,
                 'reportStatus' => $reportStatus,
+                'reportCategory' => $reportCategory,
                 'reportPerPage' => $reportPerPage,
                 'reportSort' => $reportSort,
                 'reportDirection' => $reportDirection,

@@ -2,6 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import FlashMessages from "@/Components/FlashMessages";
 import { usePage, Link, router } from "@inertiajs/react";
 import { useState } from "react";
+import Footer from "@/Components/Footer";
 
 export default function AdminDashboard() {
     const {
@@ -591,6 +592,7 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
+                <Footer />
             </AuthenticatedLayout>
         </>
     );

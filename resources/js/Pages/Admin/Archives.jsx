@@ -34,6 +34,9 @@ export default function Archives() {
     const [reportStatus, setReportStatus] = useState(
         filters.reportStatus || ""
     );
+    const [reportCategory, setReportCategory] = useState(
+        filters.reportCategory || ""
+    );
     const [reportPerPage, setReportPerPage] = useState(
         filters.reportPerPage || 10
     );
@@ -49,7 +52,27 @@ export default function Archives() {
         return () => clearTimeout(handle);
     }, [userSearch, reportSearch]);
 
-    const applyFilters = (page = 1, customReportStatus = null) => {
+    const CATEGORY_OPTIONS = [
+        "Building & Facilities",
+        "Flood Control Works",
+        "Parks & Public Spaces",
+        "Road Works",
+        "Streetlights & Electrical",
+        "Traffic & Signage",
+        "Waste Management",
+        "Water Supply & Plumbing",
+        "Others",
+    ];
+
+    const applyFilters = (
+        page = 1,
+        customReportStatus = null,
+        customUserSort = userSort,
+        customUserDirection = userDirection,
+        customReportSort = reportSort,
+        customReportDirection = reportDirection,
+        customReportCategory = null
+    ) => {
         router.get(
             route("admin.archives"),
             {
@@ -57,16 +80,20 @@ export default function Archives() {
                 tab: activeTab,
                 userSearch,
                 userPerPage,
-                userSort,
-                userDirection,
+                userSort: customUserSort,
+                userDirection: customUserDirection,
                 reportSearch,
                 reportStatus:
                     customReportStatus !== null
                         ? customReportStatus
                         : reportStatus,
+                reportCategory:
+                    customReportCategory !== null
+                        ? customReportCategory
+                        : reportCategory,
                 reportPerPage,
-                reportSort,
-                reportDirection,
+                reportSort: customReportSort,
+                reportDirection: customReportDirection,
             },
             { preserveState: true, preserveScroll: true }
         );
@@ -83,31 +110,50 @@ export default function Archives() {
     const clearReportFilters = () => {
         setReportSearch("");
         setReportStatus("");
-        router.get(
-            route("admin.archives"),
-            { page: 1, tab: activeTab, reportPerPage },
-            { preserveState: true, preserveScroll: true }
-        );
+        setReportCategory("");
+        setReportPerPage(10);
+        setReportSort("archived_at");
+        setReportDirection("desc");
+        applyFilters(1, "", userSort, userDirection, "archived_at", "desc", "");
     };
 
     const handleUserSort = (col) => {
+        let newDirection = userDirection;
+        let newSort = userSort;
+
         if (userSort === col) {
-            setUserDirection(userDirection === "asc" ? "desc" : "asc");
+            newDirection = userDirection === "asc" ? "desc" : "asc";
         } else {
-            setUserSort(col);
-            setUserDirection("asc");
+            newSort = col;
+            newDirection = "asc";
         }
-        setTimeout(() => applyFilters(1), 0);
+
+        setUserSort(newSort);
+        setUserDirection(newDirection);
+        applyFilters(
+            1,
+            null,
+            newSort,
+            newDirection,
+            reportSort,
+            reportDirection
+        );
     };
 
     const handleReportSort = (col) => {
+        let newDirection = reportDirection;
+        let newSort = reportSort;
+
         if (reportSort === col) {
-            setReportDirection(reportDirection === "asc" ? "desc" : "asc");
+            newDirection = reportDirection === "asc" ? "desc" : "asc";
         } else {
-            setReportSort(col);
-            setReportDirection("asc");
+            newSort = col;
+            newDirection = "asc";
         }
-        setTimeout(() => applyFilters(1), 0);
+
+        setReportSort(newSort);
+        setReportDirection(newDirection);
+        applyFilters(1, null, userSort, userDirection, newSort, newDirection);
     };
 
     const switchTab = (tab) => {
@@ -342,7 +388,7 @@ export default function Archives() {
                                                                         xmlns="http://www.w3.org/2000/svg"
                                                                         fill="none"
                                                                         viewBox="0 0 24 24"
-                                                                        stroke-width="1.5"
+                                                                        strokeWidth="1.5"
                                                                         stroke="currentColor"
                                                                         class="size-6"
                                                                     >
@@ -453,6 +499,40 @@ export default function Archives() {
                                                     Resolved
                                                 </option>
                                             </select>
+                                            <select
+                                                value={reportCategory}
+                                                onChange={(e) => {
+                                                    const newCategory =
+                                                        e.target.value;
+                                                    setReportCategory(
+                                                        newCategory
+                                                    );
+                                                    applyFilters(
+                                                        1,
+                                                        reportStatus,
+                                                        userSort,
+                                                        userDirection,
+                                                        reportSort,
+                                                        reportDirection,
+                                                        newCategory
+                                                    );
+                                                }}
+                                                className="border rounded px-3 py-2 text-sm min-w-[180px]"
+                                            >
+                                                <option value="">
+                                                    All Categories
+                                                </option>
+                                                {CATEGORY_OPTIONS.map(
+                                                    (option) => (
+                                                        <option
+                                                            key={option}
+                                                            value={option}
+                                                        >
+                                                            {option}
+                                                        </option>
+                                                    )
+                                                )}
+                                            </select>
                                             <button
                                                 onClick={clearReportFilters}
                                                 className="text-sm px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
@@ -466,10 +546,6 @@ export default function Archives() {
                                         <table className="min-w-full border-collapse rounded-xl overflow-hidden">
                                             <thead>
                                                 <tr className="bg-black text-white">
-                                                    {/* <th className="px-4 py-3 text-left whitespace-nowrap">
-                                                        ID
-                                                    </th> */}
-
                                                     <th
                                                         className="px-4 py-3 text-left whitespace-nowrap cursor-pointer"
                                                         onClick={() =>
@@ -481,6 +557,24 @@ export default function Archives() {
                                                         Ticket ID{" "}
                                                         {reportSort ===
                                                         "ticket_id"
+                                                            ? reportDirection ===
+                                                              "asc"
+                                                                ? "▲"
+                                                                : "▼"
+                                                            : ""}
+                                                    </th>
+
+                                                    <th
+                                                        className="px-4 py-3 text-left whitespace-nowrap cursor-pointer"
+                                                        onClick={() =>
+                                                            handleReportSort(
+                                                                "user_id"
+                                                            )
+                                                        }
+                                                    >
+                                                        Posted By{" "}
+                                                        {reportSort ===
+                                                        "user_id"
                                                             ? reportDirection ===
                                                               "asc"
                                                                 ? "▲"
@@ -535,6 +629,23 @@ export default function Archives() {
                                                         className="px-4 py-3 text-left whitespace-nowrap cursor-pointer"
                                                         onClick={() =>
                                                             handleReportSort(
+                                                                "votes"
+                                                            )
+                                                        }
+                                                    >
+                                                        Votes{" "}
+                                                        {reportSort === "votes"
+                                                            ? reportDirection ===
+                                                              "asc"
+                                                                ? "▲"
+                                                                : "▼"
+                                                            : ""}
+                                                    </th>
+
+                                                    <th
+                                                        className="px-4 py-3 text-left whitespace-nowrap cursor-pointer"
+                                                        onClick={() =>
+                                                            handleReportSort(
                                                                 "archived_at"
                                                             )
                                                         }
@@ -563,7 +674,7 @@ export default function Archives() {
                                                 {reports.data.length === 0 ? (
                                                     <tr>
                                                         <td
-                                                            colSpan="9"
+                                                            colSpan="10"
                                                             className="px-4 py-6 text-center text-gray-500"
                                                         >
                                                             No archived reports
@@ -574,27 +685,85 @@ export default function Archives() {
                                                     reports.data.map((r) => (
                                                         <tr
                                                             key={r.id}
-                                                            className="border-b"
+                                                            className="border-b text-sm text-gray-800"
                                                         >
-                                                            {/* <td className="px-4 py-2">
-                                                                {r.id}
-                                                            </td> */}
                                                             <td className="px-4 py-2">
                                                                 {r.ticket_id}
+                                                            </td>
+                                                            <td className="px-4 py-2 max-w-[150px] group relative">
+                                                                {r.user ? (
+                                                                    <div className="text-sm truncate">
+                                                                        <div className="font-medium truncate">
+                                                                            {
+                                                                                r
+                                                                                    .user
+                                                                                    .name
+                                                                            }
+                                                                        </div>
+                                                                        <div className="text-gray-500 text-xs truncate">
+                                                                            {
+                                                                                r
+                                                                                    .user
+                                                                                    .email
+                                                                            }
+                                                                        </div>
+                                                                        <div className="hidden group-hover:block absolute left-0 top-0 bg-white border border-gray-300 shadow-lg p-2 z-10 w-max max-w-sm">
+                                                                            <div className="font-medium">
+                                                                                {
+                                                                                    r
+                                                                                        .user
+                                                                                        .name
+                                                                                }
+                                                                            </div>
+                                                                            <div className="text-gray-500 text-xs">
+                                                                                {
+                                                                                    r
+                                                                                        .user
+                                                                                        .email
+                                                                                }
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-gray-400">
+                                                                        Guest
+                                                                    </span>
+                                                                )}
                                                             </td>
                                                             <td className="px-4 py-2">
                                                                 {r.category}
                                                             </td>
-                                                            <td className="px-4 py-2">
-                                                                {r.subject ||
-                                                                    "-"}
+                                                            <td className="px-4 py-2 max-w-[200px] group relative">
+                                                                <div className="truncate">
+                                                                    {r.subject ||
+                                                                        "-"}
+                                                                </div>
+                                                                {r.subject && (
+                                                                    <div className="hidden group-hover:block absolute left-0 top-0 bg-white border border-gray-300 shadow-lg p-2 z-10 w-max max-w-sm">
+                                                                        {
+                                                                            r.subject
+                                                                        }
+                                                                    </div>
+                                                                )}
                                                             </td>
-                                                            <td className="px-4 py-2">
-                                                                {r.street ||
-                                                                    "-"}
+                                                            <td className="px-4 py-2 max-w-[200px] group relative">
+                                                                <div className="truncate">
+                                                                    {r.street ||
+                                                                        "-"}
+                                                                </div>
+                                                                {r.street && (
+                                                                    <div className="hidden group-hover:block absolute left-0 top-0 bg-white border border-gray-300 shadow-lg p-2 z-10 w-max max-w-sm">
+                                                                        {
+                                                                            r.street
+                                                                        }
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                             <td className="px-4 py-2">
                                                                 {r.status}
+                                                            </td>
+                                                            <td className="px-4 py-2">
+                                                                {r.votes || 0}
                                                             </td>
                                                             <td className="px-4 py-2">
                                                                 {r.archived_at
@@ -646,7 +815,7 @@ export default function Archives() {
                                                                             xmlns="http://www.w3.org/2000/svg"
                                                                             fill="none"
                                                                             viewBox="0 0 24 24"
-                                                                            stroke-width="1.5"
+                                                                            strokeWidth="1.5"
                                                                             stroke="currentColor"
                                                                             class="size-6"
                                                                         >

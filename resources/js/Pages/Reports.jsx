@@ -15,19 +15,40 @@ const formatSubject = (text = "") => {
 };
 
 const REPORT_CATEGORIES = [
-    {name: "Building & Facilities", desc: "e.g., damaged public buildings, waiting sheds",},
-    {name: "Flood Control Works",desc: "e.g., drainage, clogged canals, dikes, flooding",},
-    {name: "Parks & Public Spaces",desc: "e.g., playground equipment, benches, landscaping",},
-    {name: "Road Works", desc: "e.g., potholes, damaged pavements" },
-    {name: "Streetlights & Electrical", desc: "e.g., broken or missing streetlights, exposed wiring",},
-    {name: "Traffic & Signage",desc: "e.g., missing road signs, damaged traffic lights",},
-    {name: "Waste Management",desc: "e.g., uncollected garbage, illegal dumping",},
-    {name: "Water Supply & Plumbing",desc: "e.g., leaks, broken pipes, low water pressure",},
-    {name: "Others",desc: "if the concern doesn't fit the categories above",},
+    {
+        name: "Building & Facilities",
+        desc: "e.g., damaged public buildings, waiting sheds",
+    },
+    {
+        name: "Flood Control Works",
+        desc: "e.g., drainage, clogged canals, dikes, flooding",
+    },
+    {
+        name: "Parks & Public Spaces",
+        desc: "e.g., playground equipment, benches, landscaping",
+    },
+    { name: "Road Works", desc: "e.g., potholes, damaged pavements" },
+    {
+        name: "Streetlights & Electrical",
+        desc: "e.g., broken or missing streetlights, exposed wiring",
+    },
+    {
+        name: "Traffic & Signage",
+        desc: "e.g., missing road signs, damaged traffic lights",
+    },
+    {
+        name: "Waste Management",
+        desc: "e.g., uncollected garbage, illegal dumping",
+    },
+    {
+        name: "Water Supply & Plumbing",
+        desc: "e.g., leaks, broken pipes, low water pressure",
+    },
+    { name: "Others", desc: "if the concern doesn't fit the categories above" },
 ];
 
 // Collapsible Report Form component embedded in Reports page
-const CollapsibleReportForm = ({ auth }) => {
+const CollapsibleReportForm = ({ auth, setShowBanModal }) => {
     const categories = REPORT_CATEGORIES;
 
     const [selected, setSelected] = useState(null);
@@ -99,15 +120,23 @@ const CollapsibleReportForm = ({ auth }) => {
     }, []);
 
     useEffect(() => {
-        if (!mapRef.current || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        if (
+            !mapRef.current ||
+            !Number.isFinite(latitude) ||
+            !Number.isFinite(longitude)
+        ) {
             return;
         }
         if (markerRef.current) {
             markerRef.current.setLatLng([latitude, longitude]);
         }
-        mapRef.current.setView([latitude, longitude], mapRef.current.getZoom() || 13, {
-            animate: true,
-        });
+        mapRef.current.setView(
+            [latitude, longitude],
+            mapRef.current.getZoom() || 13,
+            {
+                animate: true,
+            }
+        );
     }, [latitude, longitude]);
 
     const reverseGeocode = async (lat, lng) => {
@@ -198,6 +227,11 @@ const CollapsibleReportForm = ({ auth }) => {
             return;
         }
 
+        if (auth?.user?.banned || auth?.user?.report_banned) {
+            setShowBanModal(true);
+            return;
+        }
+
         const newErrors = {};
         if (!selected?.name) newErrors.category = "Please select a category.";
         if (!subject.trim()) newErrors.subject = "Please enter a main subject.";
@@ -279,6 +313,27 @@ const CollapsibleReportForm = ({ auth }) => {
                             .
                         </div>
                     )}
+                    {/* Ban notice */}
+                    {isLoggedIn &&
+                        (auth?.user?.banned || auth?.user?.report_banned) && (
+                            <div className="mb-4 p-4 rounded-lg border border-red-500/40 bg-red-500/10 text-red-200">
+                                <p className="font-semibold mb-2">
+                                    Your account has been restricted
+                                </p>
+                                <p className="mb-3">
+                                    {auth?.user?.banned
+                                        ? "You are currently banned from the platform and cannot post reports."
+                                        : "You are currently banned from posting reports."}{" "}
+                                    <button
+                                        onClick={() => setShowBanModal(true)}
+                                        className="underline font-semibold text-red-300 hover:text-red-200"
+                                    >
+                                        Click here to view details
+                                    </button>
+                                    .
+                                </p>
+                            </div>
+                        )}
 
                     {/* Subheading with attention icon */}
                     <form
@@ -305,7 +360,11 @@ const CollapsibleReportForm = ({ auth }) => {
                                     }));
                                 }
                             }}
-                            disabled={!isLoggedIn}
+                            disabled={
+                                !isLoggedIn ||
+                                auth?.user?.banned ||
+                                auth?.user?.report_banned
+                            }
                             aria-invalid={Boolean(errors.category)}
                         >
                             <option value="" disabled>
@@ -345,12 +404,21 @@ const CollapsibleReportForm = ({ auth }) => {
                                             handleSearch();
                                         }
                                     }}
-                                    disabled={!isLoggedIn}
+                                    disabled={
+                                        !isLoggedIn ||
+                                        auth?.user?.banned ||
+                                        auth?.user?.report_banned
+                                    }
                                 />
                                 <button
                                     type="button"
                                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg disabled:opacity-50"
-                                    disabled={searching || !isLoggedIn}
+                                    disabled={
+                                        searching ||
+                                        !isLoggedIn ||
+                                        auth?.user?.banned ||
+                                        auth?.user?.report_banned
+                                    }
                                     onClick={handleSearch}
                                 >
                                     {searching ? "Searching..." : "Search"}
@@ -371,7 +439,11 @@ const CollapsibleReportForm = ({ auth }) => {
                                             onClick={() =>
                                                 applySearchResult(result)
                                             }
-                                            disabled={!isLoggedIn}
+                                            disabled={
+                                                !isLoggedIn ||
+                                                auth?.user?.banned ||
+                                                auth?.user?.report_banned
+                                            }
                                         >
                                             {result.display_name}
                                         </button>
@@ -459,7 +531,12 @@ const CollapsibleReportForm = ({ auth }) => {
                             className="hidden"
                             id="uploadInput"
                             onChange={(e) => {
-                                if (!isLoggedIn) return;
+                                if (
+                                    !isLoggedIn ||
+                                    auth?.user?.banned ||
+                                    auth?.user?.report_banned
+                                )
+                                    return;
                                 const files = Array.from(e.target.files);
                                 if (images.length + files.length > 6) {
                                     alert(
@@ -473,7 +550,11 @@ const CollapsibleReportForm = ({ auth }) => {
                                 }));
                                 setImages((prev) => [...prev, ...newPreviews]);
                             }}
-                            disabled={!isLoggedIn}
+                            disabled={
+                                !isLoggedIn ||
+                                auth?.user?.banned ||
+                                auth?.user?.report_banned
+                            }
                         />
 
                         <div
@@ -484,14 +565,24 @@ const CollapsibleReportForm = ({ auth }) => {
                             } text-white/80`}
                             onDragOver={(e) => {
                                 e.preventDefault();
-                                if (!isLoggedIn) return;
+                                if (
+                                    !isLoggedIn ||
+                                    auth?.user?.banned ||
+                                    auth?.user?.report_banned
+                                )
+                                    return;
                                 setIsDragging(true);
                             }}
                             onDragLeave={() => setIsDragging(false)}
                             onDrop={(e) => {
                                 e.preventDefault();
                                 setIsDragging(false);
-                                if (!isLoggedIn) return;
+                                if (
+                                    !isLoggedIn ||
+                                    auth?.user?.banned ||
+                                    auth?.user?.report_banned
+                                )
+                                    return;
                                 const files = Array.from(
                                     e.dataTransfer.files
                                 ).filter((f) => f.type.startsWith("image/"));
@@ -507,7 +598,11 @@ const CollapsibleReportForm = ({ auth }) => {
                                 }));
                                 setImages((prev) => [...prev, ...dropped]);
                             }}
-                            aria-disabled={!isLoggedIn}
+                            aria-disabled={
+                                !isLoggedIn ||
+                                auth?.user?.banned ||
+                                auth?.user?.report_banned
+                            }
                         >
                             <p className="text-sm flex items-center justify-center gap-2">
                                 <svg
@@ -568,7 +663,11 @@ const CollapsibleReportForm = ({ auth }) => {
                         <button
                             type="submit"
                             className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg disabled:opacity-50"
-                            disabled={!isLoggedIn}
+                            disabled={
+                                !isLoggedIn ||
+                                auth?.user?.banned ||
+                                auth?.user?.report_banned
+                            }
                         >
                             SUBMIT
                         </button>
@@ -708,7 +807,10 @@ export const ReportCard = ({ report, auth }) => {
     return (
         <section className="w-full" key={report.id}>
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-950/95 via-neutral-900/90 to-neutral-800/80 text-gray-100 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
-                <div className="pointer-events-none absolute inset-0 opacity-40 blur-[120px]" aria-hidden="true" />
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-40 blur-[120px]"
+                    aria-hidden="true"
+                />
                 <div className="relative p-6 md:p-8 space-y-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-4">
@@ -779,7 +881,10 @@ export const ReportCard = ({ report, auth }) => {
                         <h2 className="text-2xl md:text-3xl font-semibold text-white">
                             {formatSubject(report.subject)}
                         </h2>
-                        <div className="h-px w-full bg-white/10" aria-hidden="true"></div>
+                        <div
+                            className="h-px w-full bg-white/10"
+                            aria-hidden="true"
+                        ></div>
                         <p className="text-sm md:text-base text-gray-200 leading-relaxed">
                             {report.description || "No description provided."}
                         </p>
@@ -805,7 +910,9 @@ export const ReportCard = ({ report, auth }) => {
                                             onClick={() =>
                                                 setActiveImage({
                                                     src: `/storage/${img}`,
-                                                    alt: `Report Image ${idx + 1}`,
+                                                    alt: `Report Image ${
+                                                        idx + 1
+                                                    }`,
                                                 })
                                             }
                                         >
@@ -864,327 +971,341 @@ export const ReportCard = ({ report, auth }) => {
                             </div>
                         </div>
                     )}
-                {isMapModalOpen && (
-                    <div className="fixed inset-0 z-[4000] flex items-start justify-center px-4 pt-24 pb-6">
-                        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" aria-hidden="true"></div>
-                        <div
-                            className="relative z-[4100] w-full max-w-3xl rounded-3xl bg-gradient-to-b from-neutral-900 via-neutral-900/95 to-neutral-950 text-white border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.7)]"
-                            role="dialog"
-                            aria-modal="true"
-                            aria-label={`Map for ${formatSubject(report.subject)}`}
-                        >
-                            <div className="flex items-start justify-between gap-4 p-6 border-b border-white/10">
-                                <div className="space-y-1">
-                                    <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-gray-300">
-                                        <span className="size-2 rounded-full bg-emerald-400"></span>
-                                        Map Preview
+                    {isMapModalOpen && (
+                        <div className="fixed inset-0 z-[4000] flex items-start justify-center px-4 pt-24 pb-6">
+                            <div
+                                className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                                aria-hidden="true"
+                            ></div>
+                            <div
+                                className="relative z-[4100] w-full max-w-3xl rounded-3xl bg-gradient-to-b from-neutral-900 via-neutral-900/95 to-neutral-950 text-white border border-white/10 shadow-[0_40px_120px_rgba(0,0,0,0.7)]"
+                                role="dialog"
+                                aria-modal="true"
+                                aria-label={`Map for ${formatSubject(
+                                    report.subject
+                                )}`}
+                            >
+                                <div className="flex items-start justify-between gap-4 p-6 border-b border-white/10">
+                                    <div className="space-y-1">
+                                        <div className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs uppercase tracking-wide text-gray-300">
+                                            <span className="size-2 rounded-full bg-emerald-400"></span>
+                                            Map Preview
+                                        </div>
+                                        <h4 className="text-2xl font-semibold">
+                                            {formatSubject(report.subject)}
+                                        </h4>
+                                        <p className="text-sm text-gray-300 text-justify">
+                                            {locationLabel}
+                                        </p>
+                                        {hasCoordinates && (
+                                            <div className="text-xs text-gray-400 font-mono">
+                                                Lat {latitude?.toFixed(5)} · Lng{" "}
+                                                {longitude?.toFixed(5)}
+                                            </div>
+                                        )}
                                     </div>
-                                    <h4 className="text-2xl font-semibold">{formatSubject(report.subject)}</h4>
-                                    <p className="text-sm text-gray-300 text-justify">
-                                        {locationLabel}
-                                    </p>
-                                    {hasCoordinates && (
-                                        <div className="text-xs text-gray-400 font-mono">
-                                            Lat {latitude?.toFixed(5)} · Lng {longitude?.toFixed(5)}
+                                    <button
+                                        type="button"
+                                        className="rounded-full border border-white/20 px-3 py-1 text-sm text-gray-300 hover:bg-white/10"
+                                        onClick={() => setMapModalOpen(false)}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                                <div className="p-6">
+                                    {hasCoordinates ? (
+                                        <div className="relative h-80 rounded-2xl overflow-hidden border border-white/15 shadow-inner shadow-black/40">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (!mapRef.current) return;
+                                                    mapRef.current.setView(
+                                                        [latitude, longitude],
+                                                        DEFAULT_ZOOM
+                                                    );
+                                                }}
+                                                className="absolute top-4 right-4 z-[4200] inline-flex items-center gap-1 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold tracking-wide border border-white/30 hover:bg-black/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                                            >
+                                                Reset View
+                                            </button>
+                                            <div
+                                                ref={mapContainerRef}
+                                                className="w-full h-full"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-gray-300">
+                                            Coordinates unavailable.
                                         </div>
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    )}
+                    {activeImage && (
+                        <div className="fixed inset-0 z-[4000] flex items-start justify-center px-4 pt-24 pb-6">
+                            <div
+                                className="absolute inset-0 bg-black/80"
+                                onClick={() => setActiveImage(null)}
+                            ></div>
+                            <div
+                                className="relative z-[4100] bg-neutral-900 text-white w-full max-w-[90vw] md:max-w-[1200px] rounded-2xl border border-white/10 shadow-2xl p-4 md:p-5 max-h-[80vh] overflow-y-auto"
+                                role="dialog"
+                                aria-modal="true"
+                                aria-label={activeImage.alt || "Report image"}
+                            >
                                 <button
                                     type="button"
-                                    className="rounded-full border border-white/20 px-3 py-1 text-sm text-gray-300 hover:bg-white/10"
-                                    onClick={() => setMapModalOpen(false)}
+                                    className="absolute top-4 right-4 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/80"
+                                    onClick={() => setActiveImage(null)}
+                                    aria-label="Close image modal"
                                 >
-                                    Close
+                                    ✕
+                                </button>
+                                <img
+                                    src={activeImage.src}
+                                    alt={activeImage.alt || "Report image"}
+                                    className="w-full h-auto rounded-xl object-contain max-h-[65vh]"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className={votePillClass}>
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-center"
+                                    aria-label="upvote"
+                                    onClick={() => {
+                                        if (!auth?.user) {
+                                            router.reload({
+                                                only: ["flash"],
+                                                data: {
+                                                    flash: {
+                                                        error: "Please log in to vote.",
+                                                    },
+                                                },
+                                                preserveScroll: true,
+                                                preserveState: true,
+                                                onSuccess: (page) => {
+                                                    page.props.flash = {
+                                                        error: "Please log in to vote.",
+                                                    };
+                                                },
+                                            });
+                                            return;
+                                        }
+                                        router.post(
+                                            route("reports.vote", report.id),
+                                            { direction: "up" },
+                                            { preserveScroll: true }
+                                        );
+                                    }}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20"
+                                        className={`w-4 h-4 ${
+                                            isUpvoted
+                                                ? "text-white"
+                                                : "text-gray-300 hover:text-gray-100"
+                                        }`}
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d={
+                                                isUpvoted
+                                                    ? "M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10z"
+                                                    : "M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10zM2.989 9.179H7.84v5.731c0 1.13.81 2.163 1.934 2.278a2.163 2.163 0 002.386-2.15V9.179h4.851L10 2.163 2.989 9.179z"
+                                            }
+                                        />
+                                    </svg>
+                                </button>
+                                <span className={voteCountClass}>
+                                    {report.votes ?? 0}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-center"
+                                    aria-label="downvote"
+                                    onClick={() => {
+                                        if (!auth?.user) {
+                                            router.reload({
+                                                only: ["flash"],
+                                                preserveScroll: true,
+                                                preserveState: true,
+                                                onSuccess: (page) => {
+                                                    page.props.flash = {
+                                                        error: "Please log in to vote.",
+                                                    };
+                                                },
+                                            });
+                                            return;
+                                        }
+                                        router.post(
+                                            route("reports.vote", report.id),
+                                            { direction: "down" },
+                                            { preserveScroll: true }
+                                        );
+                                    }}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20"
+                                        className={`w-4 h-4 ${
+                                            isDownvoted
+                                                ? "text-white"
+                                                : "text-gray-300 hover:text-gray-100"
+                                        }`}
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            d={
+                                                isDownvoted
+                                                    ? "M10 1a3.966 3.966 0 013.96 3.962V9.02h3.202c.706 0 1.335.42 1.605 1.073.27.652.122 1.396-.377 1.895l-7.754 7.759a.925.925 0 01-1.272 0l-7.754-7.76a1.734 1.734 0 01-.376-1.894c.27-.652.9-1.073 1.605-1.073h3.202V4.962A3.965 3.965 0 0110 1z"
+                                                    : "M10 1a3.966 3.966 0 013.96 3.962V9.02h3.202c.706 0 1.335.42 1.605 1.073.27.652.122 1.396-.377 1.895l-7.754 7.759a.925.925 0 01-1.272 0l-7.754-7.76a1.734 1.734 0 01-.376-1.894c.27-.652.9-1.073 1.605-1.073h3.202V4.962A3.965 3.965 0 0110 1zm7.01 9.82h-4.85V5.09c0-1.13-.81-2.163-1.934-2.278a2.163 2.163 0 00-2.386 2.15v5.859H2.989l7.01 7.016 7.012-7.016z"
+                                            }
+                                        />
+                                    </svg>
                                 </button>
                             </div>
-                            <div className="p-6">
-                                {hasCoordinates ? (
-                                    <div className="relative h-80 rounded-2xl overflow-hidden border border-white/15 shadow-inner shadow-black/40">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (!mapRef.current) return;
-                                                mapRef.current.setView([latitude, longitude], DEFAULT_ZOOM);
-                                            }}
-                                            className="absolute top-4 right-4 z-[4200] inline-flex items-center gap-1 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold tracking-wide border border-white/30 hover:bg-black/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-                                        >
-                                            Reset View
-                                        </button>
-                                        <div ref={mapContainerRef} className="w-full h-full" />
-                                    </div>
-                                ) : (
-                                    <div className="text-sm text-gray-300">
-                                        Coordinates unavailable.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {activeImage && (
-                    <div className="fixed inset-0 z-[4000] flex items-start justify-center px-4 pt-24 pb-6">
-                        <div
-                            className="absolute inset-0 bg-black/80"
-                            onClick={() => setActiveImage(null)}
-                        ></div>
-                        <div
-                            className="relative z-[4100] bg-neutral-900 text-white w-full max-w-[90vw] md:max-w-[1200px] rounded-2xl border border-white/10 shadow-2xl p-4 md:p-5 max-h-[80vh] overflow-y-auto"
-                            role="dialog"
-                            aria-modal="true"
-                            aria-label={activeImage.alt || "Report image"}
-                        >
                             <button
                                 type="button"
-                                className="absolute top-4 right-4 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/80"
-                                onClick={() => setActiveImage(null)}
-                                aria-label="Close image modal"
-                            >
-                                ✕
-                            </button>
-                            <img
-                                src={activeImage.src}
-                                alt={activeImage.alt || "Report image"}
-                                className="w-full h-auto rounded-xl object-contain max-h-[65vh]"
-                            />
-                        </div>
-                    </div>
-                )}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className={votePillClass}>
-                            <button
-                                type="button"
-                                className="flex items-center justify-center"
-                                aria-label="upvote"
-                                onClick={() => {
-                                    if (!auth?.user) {
-                                        router.reload({
-                                            only: ["flash"],
-                                            data: {
-                                                flash: {
-                                                    error: "Please log in to vote.",
-                                                },
-                                            },
-                                            preserveScroll: true,
-                                            preserveState: true,
-                                            onSuccess: (page) => {
-                                                page.props.flash = {
-                                                    error: "Please log in to vote.",
-                                                };
-                                            },
-                                        });
-                                        return;
-                                    }
-                                    router.post(
-                                        route("reports.vote", report.id),
-                                        { direction: "up" },
-                                        { preserveScroll: true }
-                                    );
-                                }}
+                                className="flex items-center gap-2 bg-black/40 rounded-full px-4 py-2"
+                                aria-label="comments"
+                                onClick={() => setCommentsOpen((v) => !v)}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
                                     className={`w-4 h-4 ${
-                                        isUpvoted
-                                            ? "text-white"
+                                        commentsOpen
+                                            ? "text-green-400"
                                             : "text-gray-300 hover:text-gray-100"
                                     }`}
                                     fill="currentColor"
                                 >
-                                    <path
-                                        d={
-                                            isUpvoted
-                                                ? "M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10z"
-                                                : "M10 19a3.966 3.966 0 01-3.96-3.962V10.98H2.838a1.731 1.731 0 01-1.605-1.073 1.734 1.734 0 01.377-1.895L9.364.254a.925.925 0 011.272 0l7.754 7.759c.498.499.646 1.242.376 1.894-.27.652-.9 1.073-1.605 1.073h-3.202v4.058A3.965 3.965 0 019.999 19H10zM2.989 9.179H7.84v5.731c0 1.13.81 2.163 1.934 2.278a2.163 2.163 0 002.386-2.15V9.179h4.851L10 2.163 2.989 9.179z"
-                                        }
-                                    />
+                                    <path d="M10 1a9 9 0 00-9 9c0 1.947.79 3.58 1.935 4.957L.231 17.661A.784.784 0 00.785 19H10a9 9 0 009-9 9 9 0 00-9-9zm0 16.2H6.162c-.994.004-1.907.053-3.045.144l-.076-.188a36.981 36.981 0 002.328-2.087l-1.05-1.263C3.297 12.576 2.8 11.331 2.8 10c0-3.97 3.23-7.2 7.2-7.2s7.2 3.23 7.2 7.2-3.23 7.2-7.2 7.2z" />
                                 </svg>
-                            </button>
-                            <span className={voteCountClass}>
-                                {report.votes ?? 0}
-                            </span>
-                            <button
-                                type="button"
-                                className="flex items-center justify-center"
-                                aria-label="downvote"
-                                onClick={() => {
-                                    if (!auth?.user) {
-                                        router.reload({
-                                            only: ["flash"],
-                                            preserveScroll: true,
-                                            preserveState: true,
-                                            onSuccess: (page) => {
-                                                page.props.flash = {
-                                                    error: "Please log in to vote.",
-                                                };
-                                            },
-                                        });
-                                        return;
-                                    }
-                                    router.post(
-                                        route("reports.vote", report.id),
-                                        { direction: "down" },
-                                        { preserveScroll: true }
-                                    );
-                                }}
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20"
-                                    className={`w-4 h-4 ${
-                                        isDownvoted
-                                            ? "text-white"
-                                            : "text-gray-300 hover:text-gray-100"
-                                    }`}
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        d={
-                                            isDownvoted
-                                                ? "M10 1a3.966 3.966 0 013.96 3.962V9.02h3.202c.706 0 1.335.42 1.605 1.073.27.652.122 1.396-.377 1.895l-7.754 7.759a.925.925 0 01-1.272 0l-7.754-7.76a1.734 1.734 0 01-.376-1.894c.27-.652.9-1.073 1.605-1.073h3.202V4.962A3.965 3.965 0 0110 1z"
-                                                : "M10 1a3.966 3.966 0 013.96 3.962V9.02h3.202c.706 0 1.335.42 1.605 1.073.27.652.122 1.396-.377 1.895l-7.754 7.759a.925.925 0 01-1.272 0l-7.754-7.76a1.734 1.734 0 01-.376-1.894c.27-.652.9-1.073 1.605-1.073h3.202V4.962A3.965 3.965 0 0110 1zm7.01 9.82h-4.85V5.09c0-1.13-.81-2.163-1.934-2.278a2.163 2.163 0 00-2.386 2.15v5.859H2.989l7.01 7.016 7.012-7.016z"
-                                        }
-                                    />
-                                </svg>
+                                <span className="text-sm">
+                                    {report.comments_count ??
+                                        (Array.isArray(report.comments)
+                                            ? report.comments.length
+                                            : 0)}
+                                </span>
                             </button>
                         </div>
-                        <button
-                            type="button"
-                            className="flex items-center gap-2 bg-black/40 rounded-full px-4 py-2"
-                            aria-label="comments"
-                            onClick={() => setCommentsOpen((v) => !v)}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20"
-                                className={`w-4 h-4 ${
-                                    commentsOpen
-                                        ? "text-green-400"
-                                        : "text-gray-300 hover:text-gray-100"
-                                }`}
-                                fill="currentColor"
-                            >
-                                <path d="M10 1a9 9 0 00-9 9c0 1.947.79 3.58 1.935 4.957L.231 17.661A.784.784 0 00.785 19H10a9 9 0 009-9 9 9 0 00-9-9zm0 16.2H6.162c-.994.004-1.907.053-3.045.144l-.076-.188a36.981 36.981 0 002.328-2.087l-1.05-1.263C3.297 12.576 2.8 11.331 2.8 10c0-3.97 3.23-7.2 7.2-7.2s7.2 3.23 7.2 7.2-3.23 7.2-7.2 7.2z" />
-                            </svg>
-                            <span className="text-sm">
-                                {report.comments_count ??
-                                    (Array.isArray(report.comments)
-                                        ? report.comments.length
-                                        : 0)}
-                            </span>
-                        </button>
-                    </div>
-                    <div className="flex flex-col md:flex-row md:items-center md:gap-8 text-sm text-gray-300">
-                        <span className="font-medium flex items-center gap-2">
-                            Status:
-                            <span
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeClass}`}
-                            >
-                                {report.status}
-                            </span>
-                        </span>
-                        <span className="font-medium">
-                            Ticket ID:{" "}
-                            <span className="font-mono">
-                                {report.ticket_id}
-                            </span>
-                        </span>
-                    </div>
-                </div>
-                {/* Comments Section */}
-                <div
-                    id={`comments-${report.id}`}
-                    className={`${commentsOpen ? "" : "hidden"} mt-4`}
-                >
-                    <div className="space-y-3">
-                        {Array.isArray(report.comments) &&
-                        report.comments.length > 0 ? (
-                            report.comments.map((c) => (
-                                <div
-                                    key={c.id}
-                                    className="bg-black/30 border border-white/10 rounded-lg p-3"
+                        <div className="flex flex-col md:flex-row md:items-center md:gap-8 text-sm text-gray-300">
+                            <span className="font-medium flex items-center gap-2">
+                                Status:
+                                <span
+                                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${statusBadgeClass}`}
                                 >
-                                    <div className="text-xs text-gray-400 mb-1">
-                                        <span className="font-semibold">
-                                            {c.user?.name ?? "User"}
-                                        </span>
-                                        <span className="mx-2">•</span>
-                                        <span>
-                                            {new Date(
-                                                c.created_at
-                                            ).toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm text-gray-100">
-                                        {c.body}
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="text-sm text-gray-400 italic">
-                                No comments yet.
-                            </div>
-                        )}
+                                    {report.status}
+                                </span>
+                            </span>
+                            <span className="font-medium">
+                                Ticket ID:{" "}
+                                <span className="font-mono">
+                                    {report.ticket_id}
+                                </span>
+                            </span>
+                        </div>
                     </div>
-                    <form
-                        className="mt-3 flex items-center gap-2"
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            if (!auth?.user) {
-                                router.reload({
-                                    only: ["flash"],
-                                    preserveScroll: true,
-                                    preserveState: true,
-                                    onSuccess: (page) => {
-                                        page.props.flash = {
-                                            error: "Please log in to comment.",
-                                        };
-                                    },
-                                });
-                                return;
-                            }
-                            const form = e.currentTarget;
-                            const input =
-                                form.querySelector('input[name="body"]');
-                            const body = input?.value?.trim();
-                            if (!body) return;
-                            router.post(
-                                route("reports.comment", report.id),
-                                { body },
-                                {
-                                    preserveScroll: true,
-                                    onSuccess: () => {
-                                        if (input) input.value = "";
-                                    },
-                                }
-                            );
-                        }}
+                    {/* Comments Section */}
+                    <div
+                        id={`comments-${report.id}`}
+                        className={`${commentsOpen ? "" : "hidden"} mt-4`}
                     >
-                        <input
-                            type="text"
-                            name="body"
-                            className="flex-1 px-3 py-2 rounded-lg bg-white/90 text-black placeholder-gray-500"
-                            placeholder={
-                                auth?.user
-                                    ? "Add a comment..."
-                                    : "Log in to comment"
-                            }
-                            disabled={!auth?.user}
-                            maxLength={500}
-                        />
-                        <button
-                            type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg disabled:opacity-50"
-                            disabled={!auth?.user}
+                        <div className="space-y-3">
+                            {Array.isArray(report.comments) &&
+                            report.comments.length > 0 ? (
+                                report.comments.map((c) => (
+                                    <div
+                                        key={c.id}
+                                        className="bg-black/30 border border-white/10 rounded-lg p-3"
+                                    >
+                                        <div className="text-xs text-gray-400 mb-1">
+                                            <span className="font-semibold">
+                                                {c.user?.name ?? "User"}
+                                            </span>
+                                            <span className="mx-2">•</span>
+                                            <span>
+                                                {new Date(
+                                                    c.created_at
+                                                ).toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <div className="text-sm text-gray-100">
+                                            {c.body}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-sm text-gray-400 italic">
+                                    No comments yet.
+                                </div>
+                            )}
+                        </div>
+                        <form
+                            className="mt-3 flex items-center gap-2"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                if (!auth?.user) {
+                                    router.reload({
+                                        only: ["flash"],
+                                        preserveScroll: true,
+                                        preserveState: true,
+                                        onSuccess: (page) => {
+                                            page.props.flash = {
+                                                error: "Please log in to comment.",
+                                            };
+                                        },
+                                    });
+                                    return;
+                                }
+                                const form = e.currentTarget;
+                                const input =
+                                    form.querySelector('input[name="body"]');
+                                const body = input?.value?.trim();
+                                if (!body) return;
+                                router.post(
+                                    route("reports.comment", report.id),
+                                    { body },
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => {
+                                            if (input) input.value = "";
+                                        },
+                                    }
+                                );
+                            }}
                         >
-                            Post
-                        </button>
-                    </form>
+                            <input
+                                type="text"
+                                name="body"
+                                className="flex-1 px-3 py-2 rounded-lg bg-white/90 text-black placeholder-gray-500"
+                                placeholder={
+                                    auth?.user
+                                        ? "Add a comment..."
+                                        : "Log in to comment"
+                                }
+                                disabled={!auth?.user}
+                                maxLength={500}
+                            />
+                            <button
+                                type="submit"
+                                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg disabled:opacity-50"
+                                disabled={!auth?.user}
+                            >
+                                Post
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
     );
 };
 
@@ -1204,6 +1325,7 @@ export default function Reports({
     const [showQuote, setShowQuote] = useState(false);
     const [quote, setQuote] = useState(null);
     const [loadingQuote, setLoadingQuote] = useState(false);
+    const [showBanModal, setShowBanModal] = useState(false);
 
     const sortOptions = [
         { value: "votes", label: "Top", direction: "desc" },
@@ -1313,7 +1435,10 @@ export default function Reports({
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                     {/* Left: Collapsible Report Form */}
                     <div className="md:col-span-4 lg:col-span-5 xl:col-span-4">
-                        <CollapsibleReportForm auth={auth} />
+                        <CollapsibleReportForm
+                            auth={auth}
+                            setShowBanModal={setShowBanModal}
+                        />
                     </div>
                     {/* Right: Reports list */}
                     <div className="md:col-span-8 lg:col-span-7 xl:col-span-8 flex flex-col items-start space-y-6 w-full">
@@ -1499,6 +1624,149 @@ export default function Reports({
                 </div>
             </main>
             {/* Footer at the bottom */}
+            {/* Ban Info Modal */}
+            {showBanModal &&
+                (auth?.user?.banned || auth?.user?.report_banned) && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                        <div className="bg-neutral-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-white/10">
+                            {/* Header - Dark with red accent */}
+                            <div className="bg-neutral-950 border-b border-red-600/30 px-6 py-6">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="w-3 h-3 rounded-full bg-red-600"></div>
+                                            <span className="text-xs uppercase tracking-widest text-red-400 font-semibold">
+                                                Restricted
+                                            </span>
+                                        </div>
+                                        <h2 className="text-xl font-bold text-white">
+                                            Account Restricted
+                                        </h2>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowBanModal(false)}
+                                        className="text-gray-400 hover:text-white transition mt-1"
+                                    >
+                                        <svg
+                                            className="w-5 h-5"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M6 18L18 6M6 6l12 12"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="px-6 py-6 space-y-5">
+                                {/* Ban Reason */}
+                                <div>
+                                    <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-2">
+                                        Reason
+                                    </p>
+                                    <p className="text-sm text-gray-300 leading-relaxed bg-neutral-800/50 rounded-lg p-3 border border-white/5">
+                                        {(auth.user.banned
+                                            ? auth.user.ban_reason
+                                            : auth.user.report_ban_reason) ||
+                                            "No reason provided"}
+                                    </p>
+                                </div>
+
+                                {/* Ban Date */}
+                                <div>
+                                    <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-2">
+                                        Restricted Since
+                                    </p>
+                                    <p className="text-sm text-gray-300 font-mono">
+                                        {(
+                                            auth.user.banned
+                                                ? auth.user.banned_at
+                                                : auth.user.report_banned_at
+                                        )
+                                            ? new Date(
+                                                  auth.user.banned
+                                                      ? auth.user.banned_at
+                                                      : auth.user
+                                                            .report_banned_at
+                                              ).toLocaleDateString("en-US", {
+                                                  year: "numeric",
+                                                  month: "short",
+                                                  day: "numeric",
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                              })
+                                            : "Unknown"}
+                                    </p>
+                                </div>
+
+                                {/* What You Can Still Do */}
+                                {auth.user.banned ? (
+                                    <div>
+                                        <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-2">
+                                            Platform Ban
+                                        </p>
+                                        <p className="text-sm text-red-400">
+                                            You are banned from all platform
+                                            activities including voting,
+                                            commenting, and posting reports.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p className="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-2">
+                                            You Can Still
+                                        </p>
+                                        <ul className="text-sm text-gray-300 space-y-1">
+                                            <li className="flex items-center gap-2">
+                                                <span className="text-green-500">
+                                                    ✓
+                                                </span>
+                                                View reports
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <span className="text-green-500">
+                                                    ✓
+                                                </span>
+                                                Vote on reports
+                                            </li>
+                                            <li className="flex items-center gap-2">
+                                                <span className="text-green-500">
+                                                    ✓
+                                                </span>
+                                                Comment on reports
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {/* Appeal Section */}
+                                <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-3">
+                                    <p className="text-xs text-red-400/80 text-center">
+                                        To appeal this restriction, contact an
+                                        administrator
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="bg-neutral-950 border-t border-white/5 px-6 py-4 flex gap-3">
+                                <button
+                                    onClick={() => setShowBanModal(false)}
+                                    className="flex-1 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white text-sm font-medium rounded-lg transition"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             {/* Floating Cat with Quote */}
             {showQuote && (
                 <div className="fixed bottom-[200px] right-6 z-50 max-w-sm">
