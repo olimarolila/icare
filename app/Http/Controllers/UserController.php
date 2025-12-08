@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -94,8 +95,8 @@ class UserController extends Controller
     public function archive(Request $request, User $user)
     {
         $user->update([
-            'archived_at' => now(),
-            'archived_by' => auth()->id(),
+			'archived_at' => now(),
+			'archived_by' => Auth::id(),
         ]);
         
         return redirect()->route('admin.users')->with('success', 'User archived successfully.');
@@ -107,8 +108,8 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $user->update([
-            'archived_at' => now(),
-            'archived_by' => auth()->id(),
+			'archived_at' => now(),
+			'archived_by' => Auth::id(),
         ]);
         
         return response()->json(['success' => true]);

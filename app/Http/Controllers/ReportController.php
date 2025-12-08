@@ -515,7 +515,7 @@ class ReportController extends Controller
     {
         $report->update([
             'archived_at' => now(),
-            'archived_by' => auth()->id(),
+			'archived_by' => Auth::id(),
         ]);
 
         return redirect()->route('admin.reports')->with('success', 'Report archived successfully.');
