@@ -210,8 +210,8 @@ export default function AdminDashboard() {
                 <div className="py-12">
                     <div className="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
                         {/* Overview Section */}
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
+                        <div className="px-4 sm:px-0">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4">
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900">
                                         Overview
@@ -364,7 +364,7 @@ export default function AdminDashboard() {
 
                                     {/* From/To Date Filters */}
                                     {range === "custom" && (
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex flex-wrap items-center gap-2 max-w-full overflow-x-auto">
                                             <input
                                                 type="date"
                                                 value={fromDateInput}
@@ -406,7 +406,7 @@ export default function AdminDashboard() {
                             </div>
 
                             {/* Metric Cards */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* Total Tickets */}
                                 <div className="bg-orange-500 text-white rounded-lg p-6 shadow-md">
                                     <div className="flex items-center justify-between">
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
                                 Issues Discovered
                             </h3>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 {/* Category List */}
                                 <div>
                                     <h4 className="text-sm font-semibold text-gray-700 mb-4">

@@ -838,42 +838,6 @@ export const ReportCard = ({ report, auth }) => {
                                     <span className="ml-1">| {timeStr}</span>
                                 )}
                             </span>
-                            <div
-                                className="relative flex items-center"
-                                ref={reportActionRef}
-                            >
-                                <button
-                                    type="button"
-                                    className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white transition hover:border-yellow-400 hover:text-yellow-400"
-                                    aria-label="Report post"
-                                    aria-haspopup="true"
-                                    aria-expanded={reportPopupOpen}
-                                    onClick={() =>
-                                        setReportPopupOpen((prev) => !prev)
-                                    }
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.5}
-                                        stroke="currentColor"
-                                        className="size-6"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-                                        />
-                                    </svg>
-                                </button>
-                                {reportPopupOpen && (
-                                    <div className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-black/80 px-3 py-1 text-[11px] font-semibold tracking-wide text-white shadow-lg">
-                                        Report Post
-                                    </div>
-                                )}
-                            </div>
                         </div>
                     </div>
 

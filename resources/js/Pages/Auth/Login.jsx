@@ -31,14 +31,13 @@ export default function Login({ auth, status, canResetPassword }) {
                 style={{ backgroundImage: "url('/images/bg (homepage).jpg')" }}
             >
                 {/* Left-side main content */}
-                <main className="relative z-10 flex flex-col items-start justify-center min-h-[93vh] px-8 md:px-32 lg:px-40">
+                <main className="relative z-10 flex flex-col items-start justify-center min-h-[93vh] px-4 md:px-32 lg:px-40">
                     {/* CAT + BUBBLE WRAPPER */}
-                    <div className="relative pl-40">
+                    <div className="relative w-full flex flex-col items-center md:items-start md:pl-40 -mt-80 md:mt-0">
                         {/* SPEECH BUBBLE ABOVE CAT */}
-                        <div className="speech-bubble absolute -top-20 left-10 bg-white text-black p-4 rounded-xl shadow-xl max-w-xs mt-40">
-                            <p className="text-sm md:text-base font-small">
-                                Let’s keep the community safe together! Log in
-                                to report.
+                        <div className="speech-bubble bg-white text-black p-4 rounded-xl shadow-xl max-w-xs mb-2 md:absolute md:-top-10 md:left-10 md:mt-40">
+                            <p className="text-sm md:text-base">
+                                Let's keep the community safe together! Log in to report.
                             </p>
                         </div>
 
@@ -46,48 +45,56 @@ export default function Login({ auth, status, canResetPassword }) {
                         <img
                             src="/images/cat pc.png"
                             alt="Floating Cat"
-                            className="floating-cat w-96 md:w-[28rem] lg:w-[32rem] object-contain mb-6 drop-shadow-lg translate-x-10 mt-40"
+                            className="floating-cat w-64 md:w-[28rem] lg:w-[32rem] object-contain mb-4 drop-shadow-lg md:translate-x-10 md:mt-30"
                         />
                     </div>
 
                     <style>
                         {`
-        .floating-cat {
-            animation: float 4s ease-in-out infinite;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
+                            .floating-cat {
+                                animation: float 4s ease-in-out infinite;
+                            }
+                            @keyframes float {
+                                0% { transform: translateY(0px); }
+                                50% { transform: translateY(-12px); }
+                                100% { transform: translateY(0px); }
+                            }
 
-        .speech-bubble {
-            animation: float 4s ease-in-out infinite;
-        }
+                            .speech-bubble {
+                                animation: float 4s ease-in-out infinite;
+                                position: relative;
+                            }
 
-        /* smoother tail */
-        .speech-bubble::after {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            left: 160px;
-            width: 18px;
-            height: 18px;
-            background: white;
-            transform: rotate(45deg);
-            border-radius: 3px;
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-        `}
+                            /* smoother tail */
+                            .speech-bubble::after {
+                                content: "";
+                                position: absolute;
+                                bottom: -10px;
+                                left: 50%;
+                                transform: translateX(-50%) rotate(45deg);
+                                width: 18px;
+                                height: 18px;
+                                background: white;
+                                border-radius: 3px;
+                                box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+                            }
+
+                            @media (min-width: 768px) {
+                                .speech-bubble::after {
+                                    left: 160px;
+                                    transform: rotate(45deg);
+                                }
+                            }
+                        `}
                     </style>
                 </main>
             </div>
 
             {/* LOGIN FORM */}
-            <div className="relative z-20 flex items-start justify-end h-screen pt-40 mt-10 mr-80 px-4">
+            <div className="relative z-20 flex items-start justify-center md:justify-end h-screen pt-72 md:pt-40 mt-4 md:mt-10 px-4 md:mr-80">
                 <div
                     className="w-full max-w-lg bg-black/70 backdrop-blur-xl border border-white/10
-                    rounded-xl shadow-xl p-8 text-white animate-slide-up"
+                    rounded-xl shadow-xl p-6 sm:p-8 text-white animate-slide-up"
                 >
                     <h2 className="text-center text-2xl font-semibold mb-5">
                         Log In
@@ -109,6 +116,7 @@ export default function Login({ auth, status, canResetPassword }) {
                                 onChange={(e) =>
                                     setData("email", e.target.value)
                                 }
+                                maxLength={100}
                                 className="mt-1 w-full px-4 py-2 bg-white/10 border border-white/20
                                  rounded-md focus:ring-2 focus:ring-yellow-400 outline-none"
                             />
@@ -129,6 +137,7 @@ export default function Login({ auth, status, canResetPassword }) {
                                     onChange={(e) =>
                                         setData("password", e.target.value)
                                     }
+                                    maxLength={100}
                                     className="mt-1 w-full px-4 py-2 pr-12 bg-white/10 border border-white/20 rounded-md focus:ring-2 focus:ring-yellow-400 outline-none"
                                 />
                                 <button
@@ -275,31 +284,12 @@ export default function Login({ auth, status, canResetPassword }) {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
                 `}
             </style>
-
-            {/* FLOATING CAT
-            <img
-                src="/images/logo_cat3.png"
-                alt="Floating Cat"
-                className="floating-cat w-32 md:w-48 lg:w-60 z-50 pointer-events-none"
-            />
-
-            <style>
-                {`
-    .floating-cat {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        animation: float 4s ease-in-out infinite;
-    }
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-12px); }
-        100% { transform: translateY(0px); }
-    }
-    `}
-            </style> */}
         </div>
     );
 }
