@@ -167,10 +167,10 @@ export default function Welcome({
             </div>
 
             {/* Counters */}
-            <section className="w-full px-8 md:px-20 lg:px-40 relative z-20">
+            <section className="w-full px-8 md:px-20 lg:px-40 relative z-10">
                 <div
                     ref={counterRef}
-                    className="bg-black text-white rounded-3xl shadow-2xl p-10 -mt-20 md:-mt-24 lg:-mt-28 relative z-30 border border-white/10"
+                    className="bg-black text-white rounded-3xl shadow-2xl p-10 -mt-20 md:-mt-24 lg:-mt-28 relative z-10 border border-white/10"
                 >
                     <h2 className="text-3xl md:text-4xl font-semibold mb-10">
                         Report Status Overview
@@ -668,9 +668,9 @@ export default function Welcome({
                     </div>
                 </div>
             )}
-
+            <div className="container my-5"></div>
             {/* Explore iCARE */}
-            <section className="w-full py-16 px-6 md:px-20 lg:px-40 bg-white text-black space-y-12">
+            {/* <section className="w-full py-16 px-6 md:px-20 lg:px-40 bg-white text-black space-y-12">
                 <h2 className="text-3xl md:text-4xl font-semibold">
                     Explore iCARE
                 </h2>
@@ -692,7 +692,7 @@ export default function Welcome({
                         </div>
                     </div>
                 </Link>
-            </section>
+            </section> */}
 
             {/* Floating Cat with Quote */}
             {showQuote && (
