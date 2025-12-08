@@ -538,7 +538,9 @@ export default function AdminUsers() {
                                                         Role Description
                                                     </label>
                                                     <p className="mt-1 text-gray-900">
-                                                        {selected.role_description}
+                                                        {
+                                                            selected.role_description
+                                                        }
                                                     </p>
                                                 </div>
                                             )}
