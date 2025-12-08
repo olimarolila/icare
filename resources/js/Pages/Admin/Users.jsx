@@ -13,12 +13,6 @@ export default function AdminUsers() {
     const [banReason, setBanReason] = useState("");
     const [userToBanPlatform, setUserToBanPlatform] = useState(null);
     const [platformBanReason, setPlatformBanReason] = useState("");
-    const [form, setForm] = useState({
-        name: "",
-        email: "",
-        role: "",
-        role_description: "",
-    });
 
     const dtRef = useRef(null);
     const dtInitialized = useRef(false);
@@ -134,26 +128,12 @@ export default function AdminUsers() {
 
     const openModal = (u) => {
         setSelected(u);
-        setForm({
-            name: u.name || "",
-            email: u.email || "",
-            role: u.role || "",
-            role_description: u.role_description || "",
-        });
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
         setSelected(null);
-    };
-
-    const submitUpdate = (e) => {
-        e.preventDefault();
-        if (!selected) return;
-        router.patch(route("admin.users.update", selected.id), form, {
-            onSuccess: () => closeModal(),
-        });
     };
 
     const archiveUser = (u) => {
@@ -468,7 +448,7 @@ export default function AdminUsers() {
                                     <div className="bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden">
                                         <div className="flex justify-between items-center px-6 py-4 bg-black text-white">
                                             <h3 className="text-lg font-semibold">
-                                                Edit User
+                                                User Details
                                             </h3>
                                             <button
                                                 onClick={closeModal}
@@ -477,10 +457,7 @@ export default function AdminUsers() {
                                                 ✕
                                             </button>
                                         </div>
-                                        <form
-                                            onSubmit={submitUpdate}
-                                            className="px-6 py-4 space-y-4"
-                                        >
+                                        <div className="px-6 py-4 space-y-4">
                                             {/* Ban Status Section */}
                                             {(selected.banned ||
                                                 selected.report_banned) && (
@@ -532,72 +509,42 @@ export default function AdminUsers() {
                                             )}
 
                                             <div>
-                                                <label className="block text-sm text-gray-600">
+                                                <label className="block text-sm font-semibold text-gray-700">
                                                     Name
                                                 </label>
-                                                <input
-                                                    value={form.name}
-                                                    onChange={(e) =>
-                                                        setForm((f) => ({
-                                                            ...f,
-                                                            name: e.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                    className="w-full border rounded px-3 py-2"
-                                                />
+                                                <p className="mt-1 text-gray-900">
+                                                    {selected.name}
+                                                </p>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-gray-600">
+                                                <label className="block text-sm font-semibold text-gray-700">
                                                     Email
                                                 </label>
-                                                <input
-                                                    value={form.email}
-                                                    onChange={(e) =>
-                                                        setForm((f) => ({
-                                                            ...f,
-                                                            email: e.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                    className="w-full border rounded px-3 py-2"
-                                                />
+                                                <p className="mt-1 text-gray-900">
+                                                    {selected.email}
+                                                </p>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-gray-600">
+                                                <label className="block text-sm font-semibold text-gray-700">
                                                     Role
                                                 </label>
-                                                <input
-                                                    value={form.role}
-                                                    onChange={(e) =>
-                                                        setForm((f) => ({
-                                                            ...f,
-                                                            role: e.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                    className="w-full border rounded px-3 py-2"
-                                                />
+                                                <p className="mt-1 text-gray-900">
+                                                    {selected.role || "N/A"}
+                                                </p>
                                             </div>
-                                            <div>
-                                                <label className="block text-sm text-gray-600">
-                                                    Role Description
-                                                </label>
-                                                <input
-                                                    value={
-                                                        form.role_description
-                                                    }
-                                                    onChange={(e) =>
-                                                        setForm((f) => ({
-                                                            ...f,
-                                                            role_description:
-                                                                e.target.value,
-                                                        }))
-                                                    }
-                                                    className="w-full border rounded px-3 py-2"
-                                                />
-                                            </div>
-                                            <div className="flex justify-end gap-3 flex-wrap">
+                                            {selected.role_description && (
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700">
+                                                        Role Description
+                                                    </label>
+                                                    <p className="mt-1 text-gray-900">
+                                                        {
+                                                            selected.role_description
+                                                        }
+                                                    </p>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-end gap-3 flex-wrap pt-4">
                                                 {!selected.report_banned ? (
                                                     <button
                                                         type="button"
@@ -664,16 +611,10 @@ export default function AdminUsers() {
                                                     onClick={closeModal}
                                                     className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
                                                 >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    className="px-4 py-2 rounded-md bg-black text-white hover:bg-yellow-500 hover:text-black transition"
-                                                >
-                                                    Save
+                                                    Close
                                                 </button>
                                             </div>
-                                        </form>
+                                        </div>
                                     </div>
                                 </div>
                             )}
