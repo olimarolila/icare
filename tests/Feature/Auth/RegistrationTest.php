@@ -25,7 +25,9 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('citizen.dashboard', absolute: false));
+		// After registration, user should NOT be auto-logged in
+		$this->assertGuest();
+		// User should be redirected to the login page to authenticate
+		$response->assertRedirect(route('login'));
     }
 }
