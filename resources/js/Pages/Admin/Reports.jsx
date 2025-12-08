@@ -21,6 +21,8 @@ export default function AdminReports() {
     const [perPage, setPerPage] = useState(filters.perPage || 10);
     const [sort, setSort] = useState(filters.sort || "submitted_at");
     const [direction, setDirection] = useState(filters.direction || "desc");
+    const [fromDate, setFromDate] = useState(filters.from || "");
+    const [toDate, setToDate] = useState(filters.to || "");
 
     const CATEGORY_OPTIONS = [
         "Building & Facilities",
@@ -208,11 +210,47 @@ export default function AdminReports() {
                                             </option>
                                         ))}
                                     </select>
+                                    <input
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={(e) =>
+                                            setFromDate(e.target.value)
+                                        }
+                                        className="border rounded px-3 py-2 text-sm"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={toDate}
+                                        onChange={(e) =>
+                                            setToDate(e.target.value)
+                                        }
+                                        className="border rounded px-3 py-2 text-sm"
+                                    />
                                     <button
                                         onClick={clearFilters}
                                         className="text-sm px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
                                     >
                                         Reset Filters
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const url = route(
+                                                "admin.reports.export.pdf",
+                                                {
+                                                    from:
+                                                        fromDate ||
+                                                        undefined,
+                                                    to:
+                                                        toDate ||
+                                                        undefined,
+                                                }
+                                            );
+                                            window.open(url, "_blank");
+                                        }}
+                                        className="text-sm px-4 py-2 rounded bg-black text-white hover:bg-gray-800"
+                                    >
+                                        Export PDF
                                     </button>
                                 </div>
                             </div>

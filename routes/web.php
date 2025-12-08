@@ -89,6 +89,7 @@ Route::middleware(['auth', 'verified', AdminMiddleware::class])->group(function 
     // Reports management
     Route::get('/admin/reports', [ReportController::class, 'index'])->name('admin.reports');
     Route::get('/admin/reports/export', [ReportController::class, 'export'])->name('admin.reports.export');
+    Route::get('/admin/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('admin.reports.export.pdf');
     Route::get('/admin/reports/archived', [ReportController::class, 'archivedIndex'])->name('admin.reports.archived');
     Route::patch('/admin/reports/{report}', [ReportController::class, 'update'])->name('admin.reports.update');
     Route::post('/admin/reports/{report}/archive', [ReportController::class, 'archive'])->name('admin.reports.archive');

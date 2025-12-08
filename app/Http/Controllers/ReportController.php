@@ -10,6 +10,7 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
@@ -292,6 +293,52 @@ class ReportController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export reports to PDF filtered by optional date range.
+     */
+    public function exportPdf(Request $request)
+    {
+        $validated = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+        ]);
+
+        $query = Report::query()->with('user');
+
+        if (!empty($validated['from'])) {
+            $query->whereDate('submitted_at', '>=', $validated['from']);
+        }
+
+        if (!empty($validated['to'])) {
+            $query->whereDate('submitted_at', '<=', $validated['to']);
+        }
+
+        $reports = $query
+            ->orderByDesc('submitted_at')
+            ->get([
+                'id',
+                'ticket_id',
+                'category',
+                'street',
+                'location_name',
+                'subject',
+                'status',
+                'submitted_at',
+                'votes',
+                'user_id',
+            ]);
+
+        $pdf = Pdf::loadView('admin.reports_pdf', [
+            'reports' => $reports,
+            'from' => $validated['from'] ?? null,
+            'to' => $validated['to'] ?? null,
+        ])->setPaper('letter', 'portrait');
+
+        $filename = 'reports_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     /**
