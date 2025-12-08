@@ -49,6 +49,12 @@ const CollapsibleReportForm = ({ auth }) => {
     const mapRef = useRef(null);
     const markerRef = useRef(null);
 
+    // Helper: accept only locations whose resolved name contains "Philippines"
+    const isWithinPhilippines = (name) => {
+        if (!name || typeof name !== "string") return false;
+        return name.toLowerCase().includes("philippines");
+    };
+
     const buildFallbackLabel = (lat, lng) =>
         `Pinned at ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 
@@ -66,11 +72,17 @@ const CollapsibleReportForm = ({ auth }) => {
                 maxZoom: 19,
             }).addTo(map);
             markerRef.current = L.marker([latitude, longitude]).addTo(map);
-            map.on("click", ({ latlng }) => {
+            map.on("click", async ({ latlng }) => {
                 if (!isLoggedIn) return;
+                const { displayName, fallbackName } = await reverseGeocode(
+                    latlng.lat,
+                    latlng.lng
+                );
+                const resolved = displayName || fallbackName || "";
                 setLatitude(latlng.lat);
                 setLongitude(latlng.lng);
-                reverseGeocode(latlng.lat, latlng.lng);
+                setLocationName(resolved);
+                setLocationQuery(resolved);
                 if (errors.location) {
                     setErrors((prev) => ({ ...prev, location: undefined }));
                 }
@@ -103,20 +115,23 @@ const CollapsibleReportForm = ({ auth }) => {
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
             );
+            const fallbackName = buildFallbackLabel(lat, lng);
             if (!response.ok) {
-                const label = buildFallbackLabel(lat, lng);
-                setLocationName(label);
-                setLocationQuery(label);
-                return;
+                setLocationName(fallbackName);
+                setLocationQuery(fallbackName);
+                return { displayName: null, fallbackName };
             }
             const data = await response.json();
-            const label = data?.display_name ?? buildFallbackLabel(lat, lng);
+            const displayName = data?.display_name ?? null;
+            const label = displayName ?? fallbackName;
             setLocationName(label);
             setLocationQuery(label);
+            return { displayName, fallbackName };
         } catch (error) {
-            const label = buildFallbackLabel(lat, lng);
-            setLocationName(label);
-            setLocationQuery(label);
+            const fallbackName = buildFallbackLabel(lat, lng);
+            setLocationName(fallbackName);
+            setLocationQuery(fallbackName);
+            return { displayName: null, fallbackName };
         }
     };
 
@@ -162,8 +177,9 @@ const CollapsibleReportForm = ({ auth }) => {
             setLongitude(lng);
         }
         if (result.display_name) {
-            setLocationName(result.display_name);
-            setLocationQuery(result.display_name);
+            const name = result.display_name;
+            setLocationName(name);
+            setLocationQuery(name);
         }
         if (errors.location) {
             setErrors((prev) => ({ ...prev, location: undefined }));
@@ -192,6 +208,8 @@ const CollapsibleReportForm = ({ auth }) => {
         ) {
             newErrors.location =
                 "Please pick a location on the map or via search.";
+        } else if (!isWithinPhilippines(locationName)) {
+            newErrors.location = "Reports must be within Philippines only.";
         }
         if (!description.trim())
             newErrors.description = "Please enter a description.";
