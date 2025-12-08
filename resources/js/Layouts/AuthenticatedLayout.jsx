@@ -340,7 +340,6 @@ export default function AuthenticatedLayout({ header, children }) {
                                 )}
                             </>
                         )}
-
                     </div>
 
                     <div className="border-t border-gray-600 pb-1 pt-4">

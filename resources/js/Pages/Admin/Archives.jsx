@@ -114,15 +114,7 @@ export default function Archives() {
         setReportPerPage(10);
         setReportSort("archived_at");
         setReportDirection("desc");
-        applyFilters(
-            1,
-            "",
-            userSort,
-            userDirection,
-            "archived_at",
-            "desc",
-            ""
-        );
+        applyFilters(1, "", userSort, userDirection, "archived_at", "desc", "");
     };
 
     const handleUserSort = (col) => {
@@ -512,7 +504,9 @@ export default function Archives() {
                                                 onChange={(e) => {
                                                     const newCategory =
                                                         e.target.value;
-                                                    setReportCategory(newCategory);
+                                                    setReportCategory(
+                                                        newCategory
+                                                    );
                                                     applyFilters(
                                                         1,
                                                         reportStatus,
@@ -525,12 +519,19 @@ export default function Archives() {
                                                 }}
                                                 className="border rounded px-3 py-2 text-sm min-w-[180px]"
                                             >
-                                                <option value="">All Categories</option>
-                                                {CATEGORY_OPTIONS.map((option) => (
-                                                    <option key={option} value={option}>
-                                                        {option}
-                                                    </option>
-                                                ))}
+                                                <option value="">
+                                                    All Categories
+                                                </option>
+                                                {CATEGORY_OPTIONS.map(
+                                                    (option) => (
+                                                        <option
+                                                            key={option}
+                                                            value={option}
+                                                        >
+                                                            {option}
+                                                        </option>
+                                                    )
+                                                )}
                                             </select>
                                             <button
                                                 onClick={clearReportFilters}
